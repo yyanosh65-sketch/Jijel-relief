@@ -79,7 +79,7 @@ export const CONVOY_CARGO_OPTIONS: Array<{
   value: ConvoyCargoType;
   labelAr: string;
 }> = [
-  { value: "food", labelAr: "أغذية" },
+  { value: "food", labelAr: "مؤن" },
   { value: "farm_equipment", labelAr: "عتاد فلاحي" },
   { value: "blankets", labelAr: "أغطية" },
   { value: "medicine", labelAr: "أدوية" },

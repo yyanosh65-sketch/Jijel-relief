@@ -8,9 +8,9 @@ import { db } from "@/db";
 import {
   convoyCargoTypeEnum,
   convoyEntryPointEnum,
-  convoys,
+  incomingConvoys,
   convoyVehicleTypeEnum,
-  type Convoy,
+  type IncomingConvoy,
 } from "@/db/schema";
 import { buildConvoyGuideAssignUrl } from "@/lib/convoys";
 import { isValidAlgerianPhone, normalizeAlgerianPhone } from "@/lib/phone";
@@ -32,7 +32,7 @@ const registerConvoySchema = z.object({
 export type RegisterConvoyInput = z.infer<typeof registerConvoySchema>;
 
 export type RegisterConvoyResult = {
-  convoy: Convoy;
+  convoy: IncomingConvoy;
   guideAssignPath: string;
 };
 
@@ -88,7 +88,7 @@ export async function registerConvoy(
     }
 
     const [convoy] = await db
-      .insert(convoys)
+      .insert(incomingConvoys)
       .values({
         departureWilaya: input.departureWilaya,
         driverName: input.driverName,
@@ -125,7 +125,7 @@ export async function assignWelcomingGuide(
   convoyId: number,
   guideName: string,
   guidePhone: string,
-): Promise<ActionResult<Convoy>> {
+): Promise<ActionResult<IncomingConvoy>> {
   try {
     if (!guideName.trim() || !isValidAlgerianPhone(guidePhone)) {
       return {
@@ -135,13 +135,13 @@ export async function assignWelcomingGuide(
     }
 
     const [convoy] = await db
-      .update(convoys)
+      .update(incomingConvoys)
       .set({
         welcomingGuideName: guideName.trim(),
         welcomingGuidePhone: normalizeAlgerianPhone(guidePhone),
         status: "en_route",
       })
-      .where(eq(convoys.id, convoyId))
+      .where(eq(incomingConvoys.id, convoyId))
       .returning();
 
     if (!convoy) {

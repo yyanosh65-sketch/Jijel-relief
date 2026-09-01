@@ -213,7 +213,7 @@ export const communityHelpers = pgTable("community_helpers", {
     .notNull(),
 });
 
-export const convoys = pgTable("convoys", {
+export const incomingConvoys = pgTable("incoming_convoys", {
   id: serial("id").primaryKey(),
   departureWilaya: text("departure_wilaya").notNull(),
   driverName: text("driver_name").notNull(),
@@ -231,6 +231,9 @@ export const convoys = pgTable("convoys", {
     .defaultNow()
     .notNull(),
 });
+
+/** @deprecated Use incomingConvoys */
+export const convoys = incomingConvoys;
 
 export const locationsRelations = relations(locations, ({ many }) => ({
   needs: many(needs),
@@ -266,7 +269,9 @@ export type CommunityHelper = typeof communityHelpers.$inferSelect;
 export type HelperSkill = (typeof helperSkillEnum.enumValues)[number];
 export type HelperStatus = (typeof helperStatusEnum.enumValues)[number];
 export type UrgentAlert = typeof urgentAlerts.$inferSelect;
-export type Convoy = typeof convoys.$inferSelect;
+export type IncomingConvoy = typeof incomingConvoys.$inferSelect;
+/** @deprecated Use IncomingConvoy */
+export type Convoy = IncomingConvoy;
 export type ConvoyVehicleType = (typeof convoyVehicleTypeEnum.enumValues)[number];
 export type ConvoyCargoType = (typeof convoyCargoTypeEnum.enumValues)[number];
 export type ConvoyEntryPoint = (typeof convoyEntryPointEnum.enumValues)[number];

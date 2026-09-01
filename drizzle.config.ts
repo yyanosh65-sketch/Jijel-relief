@@ -1,11 +1,20 @@
-import { defineConfig } from 'drizzle-kit';
-import * as dotenv from 'dotenv';
-dotenv.config({ path: '.env.local' });
+import { resolve } from "node:path";
+
+import { config } from "dotenv";
+import { defineConfig } from "drizzle-kit";
+
+config({ path: resolve(process.cwd(), "jijel-recovery/.env.local") });
+
+const databaseUrl =
+  process.env.DATABASE_URL ??
+  process.env.DATABASE_URL_LOCAL ??
+  "postgresql://jijel:jijel_dev@127.0.0.1:5432/jijel_recovery";
+
 export default defineConfig({
-  schema: './src/db/schema.ts',
-  out: './drizzle/migrations',
-  dialect: 'postgresql',
+  schema: "./jijel-recovery/src/db/schema.ts",
+  out: "./jijel-recovery/drizzle/migrations",
+  dialect: "postgresql",
   dbCredentials: {
-    url: process.env.DATABASE_URL!,
+    url: databaseUrl,
   },
 });
