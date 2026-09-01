@@ -107,6 +107,9 @@ export const needs = pgTable("needs", {
   quantityFulfilled: integer("quantity_fulfilled").notNull().default(0),
   contactName: text("contact_name"),
   contactPhone: text("contact_phone"),
+  contactWhatsapp: text("contact_whatsapp"),
+  mediaUrls: text("media_urls").array().notNull().default([]),
+  voiceNoteData: text("voice_note_data"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

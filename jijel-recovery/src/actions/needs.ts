@@ -17,6 +17,8 @@ import {
   type NeedUrgency,
   type Pledge,
 } from "@/db/schema";
+import { getDairaForCommune } from "@/lib/locations";
+import { normalizeAlgerianPhone } from "@/lib/phone";
 import type { ActionResult } from "@/lib/types";
 
 const createNeedSchema = z.object({
@@ -42,6 +44,33 @@ const createNeedSchema = z.object({
   contactName: z.string().trim().optional(),
   contactPhone: z.string().trim().optional(),
 });
+
+const damageReportSchema = z.object({
+  intakeCategory: z.enum(["olive", "livestock", "roof", "water"]),
+  quantity: z.coerce.number().int().min(1).max(100_000),
+  unit: z.string().trim().min(1).max(32),
+  description: z.string().max(2000).optional(),
+  contactName: z.string().trim().min(2).max(120),
+  contactPhone: z.string().trim().min(9).max(20),
+  contactWhatsapp: z.string().trim().min(9).max(20).optional(),
+  commune: z.string().trim().min(1).max(120),
+  village: z.string().trim().max(120).optional(),
+  daira: z.string().trim().min(1).max(120),
+  lat: z.coerce.number().min(-90).max(90),
+  lng: z.coerce.number().min(-180).max(180),
+  mediaUrls: z.array(z.string().max(2_000_000)).max(5).optional(),
+  voiceNoteData: z.string().max(2_000_000).optional(),
+});
+
+const INTAKE_CATEGORY_MAP: Record<
+  z.infer<typeof damageReportSchema>["intakeCategory"],
+  { category: NeedCategory; titleAr: string }
+> = {
+  olive: { category: "other", titleAr: "زيتون" },
+  livestock: { category: "food", titleAr: "مواشي" },
+  roof: { category: "shelter", titleAr: "سقف" },
+  water: { category: "water", titleAr: "دوزان ماء" },
+};
 
 const getNeedsFiltersSchema = z.object({
   category: z.enum(needCategoryEnum.enumValues).optional(),
@@ -74,6 +103,10 @@ export type MapNeed = NeedWithRelations & {
   lng: number;
 };
 
+export type SubmitDamageReportResult =
+  | { ok: true; id: number }
+  | { ok: false; error: string };
+
 function formDataToObject(formData: FormData): Record<string, FormDataEntryValue> {
   return Object.fromEntries(formData.entries());
 }
@@ -82,6 +115,125 @@ function revalidateNeedPaths(): void {
   revalidatePath("/");
   revalidatePath("/needs");
   revalidatePath("/map");
+  revalidatePath("/report");
+}
+
+function parseMediaUrls(formData: FormData): string[] | null {
+  const mediaRaw = formData.get("mediaUrls");
+
+  if (typeof mediaRaw !== "string" || !mediaRaw.trim()) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(mediaRaw) as unknown;
+
+    if (!Array.isArray(parsed)) {
+      return null;
+    }
+
+    return parsed.filter((item): item is string => typeof item === "string");
+  } catch {
+    return null;
+  }
+}
+
+export async function submitDamageReport(
+  formData: FormData,
+): Promise<SubmitDamageReportResult> {
+  const mediaUrls = parseMediaUrls(formData);
+
+  if (mediaUrls === null) {
+    return { ok: false, error: "تنسيق الوسائط غير صالح." };
+  }
+
+  const whatsappRaw = formData.get("contactWhatsapp");
+  const whatsappNormalized =
+    typeof whatsappRaw === "string" && whatsappRaw.trim()
+      ? normalizeAlgerianPhone(whatsappRaw)
+      : undefined;
+
+  const commune = String(formData.get("commune") ?? "").trim();
+  const dairaFromForm = String(formData.get("daira") ?? "").trim();
+  const resolvedDaira = dairaFromForm || getDairaForCommune(commune) || "";
+
+  const parsed = damageReportSchema.safeParse({
+    intakeCategory: formData.get("intakeCategory"),
+    quantity: formData.get("quantity"),
+    unit: formData.get("unit"),
+    description: formData.get("description") || undefined,
+    contactName: formData.get("contactName"),
+    contactPhone: normalizeAlgerianPhone(String(formData.get("contactPhone") ?? "")),
+    contactWhatsapp: whatsappNormalized,
+    commune,
+    village: formData.get("village") || undefined,
+    daira: resolvedDaira,
+    lat: formData.get("lat"),
+    lng: formData.get("lng"),
+    mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
+    voiceNoteData:
+      typeof formData.get("voiceNoteData") === "string" &&
+      String(formData.get("voiceNoteData")).trim()
+        ? String(formData.get("voiceNoteData")).trim()
+        : undefined,
+  });
+
+  if (!parsed.success) {
+    return { ok: false, error: "تحقق من الحقول المطلوبة وأعد المحاولة." };
+  }
+
+  const input = parsed.data;
+  const mapping = INTAKE_CATEGORY_MAP[input.intakeCategory];
+  const locationLabel = input.village
+    ? `${input.commune} — ${input.village}`
+    : input.commune;
+  const title = `${mapping.titleAr} — ${input.quantity} ${input.unit}`;
+  const descriptionParts = [
+    `طلب مساعدة: ${mapping.titleAr}`,
+    `الكمية: ${input.quantity} ${input.unit}`,
+    input.village ? `الدشرة: ${input.village}` : null,
+    input.description?.trim() ? input.description.trim() : null,
+  ].filter(Boolean);
+
+  try {
+    const needId = await db.transaction(async (tx) => {
+      const [location] = await tx
+        .insert(locations)
+        .values({
+          name: locationLabel,
+          daira: input.daira,
+          address: input.village ?? null,
+          coordinates: sql`ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography`,
+        })
+        .returning();
+
+      const [need] = await tx
+        .insert(needs)
+        .values({
+          locationId: location.id,
+          title,
+          description: descriptionParts.join("\n"),
+          category: mapping.category,
+          urgency: "high",
+          quantityNeeded: input.quantity,
+          contactName: input.contactName,
+          contactPhone: input.contactPhone,
+          contactWhatsapp: input.contactWhatsapp ?? null,
+          mediaUrls: input.mediaUrls?.length ? input.mediaUrls : [],
+          voiceNoteData: input.voiceNoteData ?? null,
+        })
+        .returning({ id: needs.id });
+
+      return need.id;
+    });
+
+    revalidateNeedPaths();
+
+    return { ok: true, id: needId };
+  } catch (error) {
+    console.error("submitDamageReport error:", error);
+    return { ok: false, error: "تعذّر حفظ الطلب. حاول مرة أخرى." };
+  }
 }
 
 export async function createNeed(
@@ -222,6 +374,9 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
       quantity_fulfilled: number;
       contact_name: string | null;
       contact_phone: string | null;
+      contact_whatsapp: string | null;
+      media_urls: string[] | null;
+      voice_note_data: string | null;
       created_at: Date;
       updated_at: Date;
       location_id_join: number;
@@ -244,6 +399,9 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
         n.quantity_fulfilled,
         n.contact_name,
         n.contact_phone,
+        n.contact_whatsapp,
+        n.media_urls,
+        n.voice_note_data,
         n.created_at,
         n.updated_at,
         l.id AS location_id_join,
@@ -288,6 +446,9 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
       quantityFulfilled: row.quantity_fulfilled,
       contactName: row.contact_name,
       contactPhone: row.contact_phone,
+      contactWhatsapp: row.contact_whatsapp,
+      mediaUrls: row.media_urls ?? [],
+      voiceNoteData: row.voice_note_data,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       location: {
@@ -360,6 +521,9 @@ export async function getNearbyNeeds(
       quantity_fulfilled: number;
       contact_name: string | null;
       contact_phone: string | null;
+      contact_whatsapp: string | null;
+      media_urls: string[] | null;
+      voice_note_data: string | null;
       created_at: Date;
       updated_at: Date;
       location_id_join: number;
@@ -381,6 +545,9 @@ export async function getNearbyNeeds(
         n.quantity_fulfilled,
         n.contact_name,
         n.contact_phone,
+        n.contact_whatsapp,
+        n.media_urls,
+        n.voice_note_data,
         n.created_at,
         n.updated_at,
         l.id AS location_id_join,
@@ -431,6 +598,9 @@ export async function getNearbyNeeds(
       quantityFulfilled: row.quantity_fulfilled,
       contactName: row.contact_name,
       contactPhone: row.contact_phone,
+      contactWhatsapp: row.contact_whatsapp,
+      mediaUrls: row.media_urls ?? [],
+      voiceNoteData: row.voice_note_data,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       location: {

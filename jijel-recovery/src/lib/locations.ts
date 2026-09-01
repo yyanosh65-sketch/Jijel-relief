@@ -97,6 +97,28 @@ export function getCommuneArabicName(communeName: string): string {
   return communeName;
 }
 
+export function getDairaForCommune(communeName: string): string | null {
+  const normalizedCommuneName = normalizeName(communeName);
+
+  for (const daira of jijelLocations.dairas) {
+    const commune = daira.communes.find(
+      (entry) =>
+        normalizeName(entry.name) === normalizedCommuneName ||
+        normalizeName(entry.name_ar) === normalizedCommuneName,
+    );
+
+    if (commune) {
+      return daira.name;
+    }
+  }
+
+  return null;
+}
+
+export function getAllCommunes(): Commune[] {
+  return jijelLocations.dairas.flatMap((daira) => daira.communes);
+}
+
 export function getDairaCoordinates(dairaName: string): Coordinates | null {
   const communes = getCommunesByDaira(dairaName);
 

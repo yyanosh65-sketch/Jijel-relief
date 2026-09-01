@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate": "psql \"$DATABASE_URL\" -f drizzle/0001_init.sql && psql \"$DATABASE_URL\" -f drizzle/0002_intelligence.sql && psql \"$DATABASE_URL\" -f drizzle/0003_emergency_facilities.sql && psql \"$DATABASE_URL\" -f drizzle/0004_urgent_alerts_media.sql && psql \"$DATABASE_URL\" -f drizzle/0005_community_helpers.sql",
+    "db:migrate": "psql \"$DATABASE_URL\" -f drizzle/0001_init.sql && psql \"$DATABASE_URL\" -f drizzle/0002_intelligence.sql && psql \"$DATABASE_URL\" -f drizzle/0003_emergency_facilities.sql && psql \"$DATABASE_URL\" -f drizzle/0004_urgent_alerts_media.sql && psql \"$DATABASE_URL\" -f drizzle/0005_community_helpers.sql && psql \"$DATABASE_URL\" -f drizzle/0006_needs_media.sql",
     "db:seed": "tsx scripts/seed.ts",
     "db:seed:facilities": "tsx src/db/seed.ts"
   },

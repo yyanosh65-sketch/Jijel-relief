@@ -45,3 +45,7 @@ export function buildWhatsAppUrl(
 
   return `${base}?text=${encodeURIComponent(message)}`;
 }
+
+export function buildWhatsAppShareUrl(message: string): string {
+  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+}
