@@ -59,6 +59,23 @@ export const facilityTypeEnum = pgEnum("facility_type", [
   "forest_conservancy",
 ]);
 
+export const helperSkillEnum = pgEnum("helper_skill", [
+  "transport_4x4",
+  "cargo_truck",
+  "vet_livestock",
+  "first_aid",
+  "construction",
+  "hosting",
+  "general_volunteer",
+]);
+
+export const helperStatusEnum = pgEnum("helper_status", [
+  "pending",
+  "verified",
+  "rejected",
+  "inactive",
+]);
+
 const geographyPoint = customType<{ data: string; driverData: string }>({
   dataType() {
     return "geography(Point,4326)";
@@ -148,6 +165,22 @@ export const emergencyFacilities = pgTable("emergency_facilities", {
     .notNull(),
 });
 
+export const communityHelpers = pgTable("community_helpers", {
+  id: serial("id").primaryKey(),
+  fullName: text("full_name").notNull(),
+  phone: text("phone").notNull(),
+  whatsappPhone: text("whatsapp_phone"),
+  daira: text("daira").notNull(),
+  commune: text("commune").notNull(),
+  coordinates: geographyPoint("coordinates").notNull(),
+  skills: helperSkillEnum("skills").array().notNull(),
+  availabilityNotes: text("availability_notes"),
+  status: helperStatusEnum("status").notNull().default("pending"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const locationsRelations = relations(locations, ({ many }) => ({
   needs: many(needs),
 }));
@@ -178,4 +211,7 @@ export type SosEmergencyType = (typeof sosEmergencyTypeEnum.enumValues)[number];
 export type SosAlertStatus = (typeof sosAlertStatusEnum.enumValues)[number];
 export type FacilityType = (typeof facilityTypeEnum.enumValues)[number];
 export type EmergencyFacility = typeof emergencyFacilities.$inferSelect;
+export type CommunityHelper = typeof communityHelpers.$inferSelect;
+export type HelperSkill = (typeof helperSkillEnum.enumValues)[number];
+export type HelperStatus = (typeof helperStatusEnum.enumValues)[number];
 export type UrgentAlert = typeof urgentAlerts.$inferSelect;

@@ -48,6 +48,7 @@ export const RELIEF_CONTACT_BADGES = {
   field_team: "فريق ميداني",
   village_lead: "مسؤول قرية",
   official_facility: "رسمي",
+  community_helper: "متطوع",
 } as const;
 
 export type ReliefContactCategory = keyof typeof RELIEF_CONTACT_BADGES;
@@ -72,5 +73,10 @@ export const RELIEF_CONTACT_TABS: Array<{
     id: "official_facility",
     label: "المرافق الرسمية والبيطرية",
     icon: "🚨",
+  },
+  {
+    id: "community_helper",
+    label: "متطوعون وعارضو مساعدة",
+    icon: "🤝",
   },
 ];

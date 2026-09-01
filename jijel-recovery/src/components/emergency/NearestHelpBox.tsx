@@ -28,10 +28,13 @@ const BADGE_STYLES: Record<ReliefContactCategory, string> = {
   field_team: "bg-blue-100 text-blue-800",
   village_lead: "bg-violet-100 text-violet-800",
   official_facility: "bg-red-100 text-red-800",
+  community_helper: "bg-emerald-100 text-emerald-800",
 };
 
 function ContactCard({ contact }: { contact: NearestContact }) {
-  const whatsAppUrl = buildWhatsAppLink(contact.phone);
+  const whatsAppUrl = buildWhatsAppLink(
+    contact.whatsappPhone ?? contact.phone,
+  );
 
   return (
     <li className="rounded-xl border border-slate-200/80 bg-white/90 p-3 shadow-sm">
@@ -94,6 +97,7 @@ export default function NearestHelpBox({
     fieldTeams: [] as NearestContact[],
     villageLeads: [] as NearestContact[],
     officialFacilities: [] as NearestContact[],
+    communityHelpers: [] as NearestContact[],
     usedCommuneFallback: false,
   });
   const [isLoading, setIsLoading] = useState(false);
@@ -108,6 +112,7 @@ export default function NearestHelpBox({
         fieldTeams: [],
         villageLeads: [],
         officialFacilities: [],
+        communityHelpers: [],
         usedCommuneFallback: false,
       });
       return;
@@ -153,6 +158,7 @@ export default function NearestHelpBox({
       field_team: groups.fieldTeams,
       village_lead: groups.villageLeads,
       official_facility: groups.officialFacilities,
+      community_helper: groups.communityHelpers,
     }),
     [groups],
   );
@@ -162,7 +168,8 @@ export default function NearestHelpBox({
     groups.reliefHubs.length +
     groups.fieldTeams.length +
     groups.villageLeads.length +
-    groups.officialFacilities.length;
+    groups.officialFacilities.length +
+    groups.communityHelpers.length;
 
   if (!canQuery) {
     return null;

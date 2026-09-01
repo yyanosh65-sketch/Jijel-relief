@@ -146,6 +146,7 @@ async function runMigration(pool: Pool): Promise<void> {
     resolve(__dirname, "../drizzle/0002_intelligence.sql"),
     resolve(__dirname, "../drizzle/0003_emergency_facilities.sql"),
     resolve(__dirname, "../drizzle/0004_urgent_alerts_media.sql"),
+    resolve(__dirname, "../drizzle/0005_community_helpers.sql"),
   ];
 
   for (const migrationPath of migrationPaths) {

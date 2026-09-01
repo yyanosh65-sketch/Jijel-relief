@@ -1,16 +1,22 @@
 "use server";
 
-import { sql, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/db";
 import {
+  communityHelpers,
   emergencyFacilities,
   sosEmergencyTypeEnum,
   urgentAlerts,
+  type HelperSkill,
 } from "@/db/schema";
 import { haversineKm } from "@/lib/geo";
+import {
+  formatHelperSkillBadges,
+  formatHelperSkillsSubtitle,
+} from "@/lib/helpers";
 import {
   getCommuneArabicName,
   getDairaArabicName,
@@ -62,6 +68,7 @@ export type NearestContact = {
   name: string;
   subtitle: string;
   phone: string;
+  whatsappPhone?: string | null;
   distanceKm: number | null;
 };
 
@@ -70,6 +77,7 @@ export type CategorizedNearestContacts = {
   fieldTeams: NearestContact[];
   villageLeads: NearestContact[];
   officialFacilities: NearestContact[];
+  communityHelpers: NearestContact[];
   usedCommuneFallback: boolean;
 };
 
@@ -277,6 +285,90 @@ export async function getNearestEmergencyContacts(input: {
       }));
     }
 
+    let communityHelpersList: NearestContact[] = [];
+
+    if (reference) {
+      const helperRows = await db.execute<{
+        id: number;
+        full_name: string;
+        phone: string;
+        whatsapp_phone: string | null;
+        daira: string;
+        commune: string;
+        skills: HelperSkill[];
+        availability_notes: string | null;
+        distance_km: number;
+      }>(sql`
+        SELECT
+          id,
+          full_name,
+          phone,
+          whatsapp_phone,
+          daira,
+          commune,
+          skills,
+          availability_notes,
+          ST_Distance(
+            coordinates,
+            ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
+          ) / 1000 AS distance_km
+        FROM ${communityHelpers}
+        WHERE status = 'verified'
+        ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
+        LIMIT ${limit}
+      `);
+
+      communityHelpersList = helperRows.rows
+        .map((row) => ({
+          id: `helper-${row.id}`,
+          category: "community_helper" as const,
+          badge: formatHelperSkillBadges(row.skills),
+          name: row.full_name,
+          subtitle: [
+            formatHelperSkillsSubtitle(row.skills),
+            row.availability_notes,
+            `${getCommuneArabicName(row.commune)} — ${getDairaArabicName(row.daira)}`,
+          ]
+            .filter(Boolean)
+            .join(" · "),
+          phone: row.phone,
+          whatsappPhone: row.whatsapp_phone,
+          distanceKm: Number(row.distance_km.toFixed(1)),
+        }))
+        .filter((contact) => (contact.distanceKm ?? 999) <= 60);
+    } else {
+      const helperConditions = [eq(communityHelpers.status, "verified")];
+
+      if (input.commune) {
+        helperConditions.push(eq(communityHelpers.commune, input.commune));
+      } else if (input.daira) {
+        helperConditions.push(eq(communityHelpers.daira, input.daira));
+      }
+
+      const helperRows = await db
+        .select()
+        .from(communityHelpers)
+        .where(and(...helperConditions))
+        .limit(limit);
+
+      communityHelpersList = helperRows.map((row) => ({
+        id: `helper-${row.id}`,
+        category: "community_helper" as const,
+        badge: formatHelperSkillBadges(row.skills),
+        name: row.fullName,
+        subtitle: [
+          formatHelperSkillsSubtitle(row.skills),
+          row.availabilityNotes,
+          `${getCommuneArabicName(row.commune)} — ${getDairaArabicName(row.daira)}`,
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        phone: row.phone,
+        whatsappPhone: row.whatsappPhone,
+        distanceKm: null,
+      }));
+    }
+
     return {
       success: true,
       data: {
@@ -284,6 +376,7 @@ export async function getNearestEmergencyContacts(input: {
         fieldTeams,
         villageLeads,
         officialFacilities,
+        communityHelpers: sortContacts(communityHelpersList),
         usedCommuneFallback: reference?.usedCommuneFallback ?? false,
       },
     };

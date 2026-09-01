@@ -8,6 +8,7 @@ import type { MapIntelligenceData } from "@/actions/intelligence";
 import { getVillageDossier } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
 import AdvancedNeedSearch from "@/components/search/AdvancedNeedSearch";
+import RegisterHelperButton from "@/components/helpers/RegisterHelperButton";
 import NeedCard from "@/components/needs/NeedCard";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
@@ -98,8 +99,12 @@ export default function ReconstructionMapLoader({
       <div className="flex h-full min-h-0 flex-col">
         <AdvancedNeedSearch />
 
-        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
-        <div className="h-[55vh] flex-1 lg:h-full">
+        <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
+        <div className="relative h-[55vh] flex-1 lg:h-full">
+          <RegisterHelperButton
+            variant="floating"
+            className="!bottom-4 !left-4 !z-[1200] sm:hidden"
+          />
           <ReconstructionMap
             needs={filteredNeeds}
             intelligence={intelligence}
