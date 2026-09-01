@@ -1,7 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Copy, Loader2, X } from "lucide-react";
+import { createPortal } from "react-dom";
+import { Copy, Loader2 } from "lucide-react";
 
 import { registerConvoy } from "@/actions/convoys";
 import type { ConvoyCargoType, ConvoyEntryPoint, ConvoyVehicleType } from "@/db/schema";
@@ -20,7 +21,13 @@ type RegisterConvoyModalProps = {
 };
 
 const INPUT_CLASS =
-  "min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:border-sky-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20";
+  "min-h-11 w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-3 text-sm focus:bg-white focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20";
+
+const OVERLAY_CLASS =
+  "fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto";
+
+const CARD_CLASS =
+  "relative w-full max-w-lg bg-white rounded-2xl shadow-2xl border border-slate-200 p-6 z-10 my-8";
 
 type FormState = {
   departureWilaya: string;
@@ -57,6 +64,11 @@ export default function RegisterConvoyModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [guideAssignUrl, setGuideAssignUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   useEffect(() => {
     if (!open) {
@@ -80,10 +92,6 @@ export default function RegisterConvoyModal({
       setCopied(false);
     }
   }, [open]);
-
-  if (!open) {
-    return null;
-  }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -140,26 +148,26 @@ export default function RegisterConvoyModal({
     }
   }
 
-  return (
-    <div
-      dir="rtl"
-      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-md"
-      onClick={onClose}
-    >
+  if (!open || !mounted) {
+    return null;
+  }
+
+  return createPortal(
+    <div dir="rtl" className={OVERLAY_CLASS} onClick={onClose}>
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="register-convoy-title"
-        className="relative z-10 my-8 w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+        className={CARD_CLASS}
         onClick={(event) => event.stopPropagation()}
       >
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 left-4 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          className="absolute top-4 left-4 p-2 text-slate-400 hover:text-slate-600 rounded-full hover:bg-slate-100"
           aria-label="إغلاق"
         >
-          <X className="h-5 w-5" />
+          ✕
         </button>
 
         <div className="mb-6 border-b border-slate-100 pb-4 pr-10">
@@ -294,13 +302,15 @@ export default function RegisterConvoyModal({
                       driverWhatsapp: event.target.value,
                     }))
                   }
-                  className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:border-sky-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                  className={cn("mt-2", INPUT_CLASS)}
                 />
               ) : null}
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium text-slate-700">نوع المركبة</p>
+              <p className="mb-2 text-sm font-medium text-slate-700">
+                نوع المركبة
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 {CONVOY_VEHICLE_OPTIONS.map((option) => (
                   <button
@@ -326,7 +336,9 @@ export default function RegisterConvoyModal({
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium text-slate-700">نوع الحمولة</p>
+              <p className="mb-2 text-sm font-medium text-slate-700">
+                نوع الحمولة
+              </p>
               <div className="grid grid-cols-2 gap-2">
                 {CONVOY_CARGO_OPTIONS.map((option) => (
                   <button
@@ -411,7 +423,7 @@ export default function RegisterConvoyModal({
                   }))
                 }
                 placeholder="عدد المركبات، حجم الحمولة، احتياج مرافق 4x4..."
-                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-sky-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-3 py-2 text-sm focus:bg-white focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
               />
             </div>
 
@@ -436,6 +448,7 @@ export default function RegisterConvoyModal({
           </form>
         )}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
