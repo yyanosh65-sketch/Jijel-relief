@@ -12,14 +12,23 @@ export type MapCategoryId = "olive_trees" | "livestock" | "shelter" | "tools";
 
 export type MapCategory = {
   id: MapCategoryId;
-  label: string;
+  labelAr: string;
+  labelFr: string;
 };
 
 export const MAP_CATEGORIES: MapCategory[] = [
-  { id: "olive_trees", label: "Olive Trees" },
-  { id: "livestock", label: "Livestock" },
-  { id: "shelter", label: "Shelter" },
-  { id: "tools", label: "Tools" },
+  { id: "olive_trees", labelAr: "أشجار الزيتون", labelFr: "Olive Trees" },
+  {
+    id: "livestock",
+    labelAr: "المواشي وتربية النحل",
+    labelFr: "Livestock",
+  },
+  { id: "shelter", labelAr: "ترميم المنازل", labelFr: "Shelter" },
+  {
+    id: "tools",
+    labelAr: "العتاد والآلات",
+    labelFr: "Tools & Pumps",
+  },
 ];
 
 export type MarkerColor = "red" | "orange" | "green";
@@ -40,9 +49,9 @@ const CATEGORY_HINTS: Record<MapCategoryId, NeedCategory[]> = {
 
 const TITLE_KEYWORDS: Record<MapCategoryId, string[]> = {
   olive_trees: ["olive", "tree", "arbre"],
-  livestock: ["livestock", "sheep", "goat", "cattle", "bétail", "mouton"],
+  livestock: ["livestock", "sheep", "goat", "cattle", "bétail", "mouton", "bee", "نحل", "apiculture"],
   shelter: ["shelter", "housing", "home", "abri"],
-  tools: ["tool", "equipment", "outil", "matériel"],
+  tools: ["tool", "equipment", "outil", "matériel", "pump", "مضخة", "آلة"],
 };
 
 export function getUrgencyScore(urgency: NeedUrgency): number {

@@ -46,6 +46,7 @@ export default function ReconstructionMapLoader({
             needs={needs}
             selectedNeedId={selectedNeed?.id ?? null}
             onPledgeClick={openPledgeModal}
+            onPledgeSuccess={() => router.refresh()}
           />
         </div>
 
