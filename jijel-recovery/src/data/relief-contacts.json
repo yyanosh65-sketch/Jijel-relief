@@ -39,6 +39,16 @@
       "lng": 5.869,
       "phone": "0661987654",
       "services": ["food_kits", "clothing", "tools"]
+    },
+    {
+      "id": "hub-mila-southeast",
+      "name_ar": "نقطة استقبال مدخل ميلة (سيدي معروف / غبالة)",
+      "commune": "Ferjioua",
+      "daira": "Ferjioua",
+      "lat": 36.4712,
+      "lng": 6.0485,
+      "phone": "0551224488",
+      "services": ["convoy_routing", "unload_sidi_maarouf", "unload_mila"]
     }
   ],
   "fieldTeams": [

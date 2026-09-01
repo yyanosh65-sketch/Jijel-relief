@@ -2,6 +2,7 @@
 
 import { Marker, Popup } from "react-leaflet";
 
+import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import { WAYPOINT_TYPE_LABELS } from "@/lib/convoys";
 import type { ConvoyWaypoint } from "@/lib/convoy-waypoints";
 import { createWaypointMarkerIcon } from "@/lib/map-layer-icons";
@@ -35,24 +36,12 @@ function WaypointPopupContent({ waypoint }: { waypoint: ConvoyWaypoint }) {
       {waypoint.notes ? (
         <p className="mt-1 text-xs text-slate-600">{waypoint.notes}</p>
       ) : null}
-      <div className="mt-3 flex flex-col gap-1.5">
-        <a
-          href={`tel:${waypoint.phone}`}
-          className="rounded-md bg-slate-800 px-2 py-1.5 text-center text-xs font-bold text-white"
-        >
-          📞 اتصال: {waypoint.phone}
-        </a>
-        {whatsappUrl ? (
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="rounded-md bg-[#25D366] px-2 py-1.5 text-center text-xs font-bold text-white"
-          >
-            واتساب
-          </a>
-        ) : null}
-      </div>
+      <ContactActionButtons
+        phone={waypoint.phone}
+        whatsappUrl={whatsappUrl}
+        className="mt-3"
+        compact
+      />
     </div>
   );
 }

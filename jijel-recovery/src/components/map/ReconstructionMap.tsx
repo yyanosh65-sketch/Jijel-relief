@@ -344,66 +344,71 @@ export default function ReconstructionMap({
 
   return (
     <div dir="rtl" className="relative h-full w-full">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex flex-col items-center gap-2 p-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-[900] p-3 sm:p-4">
         <div
           className={cn(
             glassPanelClass,
-            "pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 p-2",
+            "pointer-events-auto mx-auto max-w-5xl overflow-hidden p-2 sm:p-3",
           )}
         >
-          {MAP_CATEGORIES.map((category) => {
-            const isActive = activeCategories.has(category.id);
+          <div className="space-y-2">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 border-b border-slate-200/70 pb-2">
+              <span className="w-full shrink-0 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:w-auto sm:text-xs">
+                نوع الاحتياج
+              </span>
+              {MAP_CATEGORIES.map((category) => {
+                const isActive = activeCategories.has(category.id);
 
-            return (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => toggleCategory(category.id)}
-                className={cn(
-                  "rounded-full px-3 py-1.5 text-xs font-medium transition",
-                  isActive
-                    ? "bg-emerald-700 text-white shadow-sm"
-                    : "bg-slate-100/90 text-slate-600 hover:bg-slate-200",
-                )}
-              >
-                {category.labelAr}
-              </button>
-            );
-          })}
-        </div>
+                return (
+                  <button
+                    key={category.id}
+                    type="button"
+                    onClick={() => toggleCategory(category.id)}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-medium transition",
+                      isActive
+                        ? "bg-emerald-700 text-white shadow-sm"
+                        : "bg-slate-100/90 text-slate-600 hover:bg-slate-200",
+                    )}
+                  >
+                    {category.labelAr}
+                  </button>
+                );
+              })}
+            </div>
 
-        <div
-          className={cn(
-            glassPanelClass,
-            "pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 p-2",
-          )}
-        >
-          {LAYER_TOGGLES.map((layer) => {
-            const isActive = layers[layer.key];
+            <div className="flex flex-wrap items-center justify-center gap-1.5">
+              <span className="w-full shrink-0 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:w-auto sm:text-xs">
+                طبقات الخريطة
+              </span>
+              {LAYER_TOGGLES.map((layer) => {
+                const isActive = layers[layer.key];
 
-            return (
-              <button
-                key={layer.key}
-                type="button"
-                onClick={() => toggleLayer(layer.key)}
-                className={cn(
-                  "rounded-full px-3 py-1.5 text-xs font-medium transition",
-                  isActive
-                    ? "bg-slate-800 text-white shadow-sm"
-                    : "bg-slate-100/90 text-slate-600 hover:bg-slate-200",
-                )}
-              >
-                {layer.labelAr}
-              </button>
-            );
-          })}
+                return (
+                  <button
+                    key={layer.key}
+                    type="button"
+                    onClick={() => toggleLayer(layer.key)}
+                    className={cn(
+                      "rounded-full px-3 py-1.5 text-xs font-medium transition",
+                      isActive
+                        ? "bg-slate-800 text-white shadow-sm"
+                        : "bg-slate-100/90 text-slate-600 hover:bg-slate-200",
+                    )}
+                  >
+                    {layer.labelAr}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </div>
 
       <div
         className={cn(
           glassPanelClass,
-          "pointer-events-none absolute bottom-4 right-4 z-[1000] p-3 text-xs",
+          "pointer-events-none absolute bottom-6 left-4 z-[850] hidden max-w-[200px] p-3 text-xs sm:block",
         )}
       >
         <p className="mb-2 font-semibold text-slate-800">دليل الألوان</p>
@@ -556,15 +561,19 @@ export default function ReconstructionMap({
       </MapContainer>
 
       {layers.needs && visibleNeeds.length === 0 ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-20 z-[1000] flex justify-center px-4">
+        <div className="pointer-events-none absolute inset-x-0 bottom-28 z-[880] flex justify-center px-4 sm:bottom-8">
           <div
             className={cn(
               glassPanelClass,
-              "flex items-center gap-2 px-4 py-2 text-sm text-slate-600",
+              "flex max-w-md items-center gap-2 px-4 py-2.5 text-sm text-slate-600",
             )}
           >
-            <MapPin className="h-4 w-4" />
-            ما كاينش احتياجات مطابقة للفلاتر المختارة.
+            <MapPin className="h-4 w-4 shrink-0" />
+            <span>
+              {needs.length === 0
+                ? "ما كاينش احتياجات مطابقة للفلاتر المختارة."
+                : "ما كاينش احتياجات في هاد التصنيف — جرّب توسيع الفلاتر."}
+            </span>
           </div>
         </div>
       ) : null}

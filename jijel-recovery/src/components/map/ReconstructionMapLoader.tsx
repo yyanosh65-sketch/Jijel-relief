@@ -103,7 +103,7 @@ export default function ReconstructionMapLoader({
         <div className="relative h-[55vh] flex-1 lg:h-full">
           <RegisterHelperButton
             variant="floating"
-            className="!bottom-4 !left-4 !z-[1200] sm:hidden"
+            className="!bottom-20 !left-4 !z-[1200] sm:!bottom-6 sm:hidden"
           />
           <ReconstructionMap
             needs={filteredNeeds}

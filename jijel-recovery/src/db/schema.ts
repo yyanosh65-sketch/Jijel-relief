@@ -95,6 +95,7 @@ export const convoyEntryPointEnum = pgEnum("convoy_entry_point", [
   "bejaia_west",
   "setif_south",
   "skikda_east",
+  "mila_south_east",
 ]);
 
 export const convoyStatusEnum = pgEnum("convoy_status", [

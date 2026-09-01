@@ -7,9 +7,13 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import type { RoadPassability } from "@/lib/intelligence";
 import {
   buildNeedSearchParams,
+  formatRadiusLabel,
+  isGpsOutsideJijel,
+  MAX_RADIUS_KM,
   parseNeedSearchParams,
   ROAD_ACCESS_OPTIONS,
   SEARCH_CATEGORY_OPTIONS,
+  SHOW_ALL_WILAYA_RADIUS,
   SORT_OPTIONS,
   URGENCY_FILTER_OPTIONS,
   type NeedSearchCategoryId,
@@ -87,11 +91,20 @@ export default function AdvancedNeedSearch() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        const userLat = position.coords.latitude;
+        const userLng = position.coords.longitude;
+        const outsideJijel = isGpsOutsideJijel(userLat, userLng);
+
         patchFilters({
-          userLat: position.coords.latitude,
-          userLng: position.coords.longitude,
+          userLat,
+          userLng,
+          radiusKm: outsideJijel ? SHOW_ALL_WILAYA_RADIUS : filters.radiusKm,
         });
-        setGpsMessage("تم تحديد موقعك — يمكنك ضبط نطاق البحث بالمسافة.");
+        setGpsMessage(
+          outsideJijel
+            ? "موقعك خارج ولاية جيجل — تم ضبط العرض على كامل الولاية."
+            : "تم تحديد موقعك — يمكنك ضبط نطاق البحث بالمسافة.",
+        );
         setIsCapturingGps(false);
       },
       () => {
@@ -100,7 +113,7 @@ export default function AdvancedNeedSearch() {
       },
       { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 },
     );
-  }, [patchFilters]);
+  }, [patchFilters, filters.radiusKm]);
 
   const hasRequestedGps = useRef(false);
 
@@ -123,10 +136,16 @@ export default function AdvancedNeedSearch() {
     !Number.isNaN(filters.userLat) &&
     !Number.isNaN(filters.userLng);
 
+  const outsideJijel =
+    hasGps && isGpsOutsideJijel(filters.userLat!, filters.userLng!);
+
   return (
     <section
       dir="rtl"
-      className={cn(glassPanelClass, "border-x-0 border-t-0 rounded-none")}
+      className={cn(
+        glassPanelClass,
+        "border-x-0 border-t-0 rounded-none shadow-md",
+      )}
       aria-label="بحث متقدم عن الاحتياجات"
     >
       <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 px-4 py-3">
@@ -282,13 +301,13 @@ export default function AdvancedNeedSearch() {
               <div className="mb-2 flex items-center justify-between text-xs text-zinc-600">
                 <span>نطاق البحث</span>
                 <span className="font-semibold text-emerald-700">
-                  {filters.radiusKm} كم
+                  {formatRadiusLabel(filters.radiusKm)}
                 </span>
               </div>
               <input
                 type="range"
-                min={1}
-                max={50}
+                min={SHOW_ALL_WILAYA_RADIUS}
+                max={MAX_RADIUS_KM}
                 step={1}
                 value={filters.radiusKm}
                 onChange={(event) =>
@@ -298,9 +317,25 @@ export default function AdvancedNeedSearch() {
                 disabled={!hasGps}
               />
               <div className="mt-1 flex justify-between text-[10px] text-zinc-400">
-                <span>1 كم</span>
-                <span>50 كم</span>
+                <span>عرض كامل الولاية</span>
+                <span>{MAX_RADIUS_KM} كم</span>
               </div>
+              {hasGps ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    patchFilters({ radiusKm: SHOW_ALL_WILAYA_RADIUS })
+                  }
+                  className={cn(
+                    "mt-2 w-full rounded-lg border px-3 py-1.5 text-xs font-medium transition",
+                    filters.radiusKm === SHOW_ALL_WILAYA_RADIUS
+                      ? "border-emerald-600 bg-emerald-50 text-emerald-800"
+                      : "border-zinc-200 bg-white text-zinc-600 hover:border-zinc-300",
+                  )}
+                >
+                  عرض كامل الولاية
+                </button>
+              ) : null}
             </div>
 
             {gpsMessage ? (
@@ -311,6 +346,7 @@ export default function AdvancedNeedSearch() {
               <p className="mt-2 text-xs text-emerald-700">
                 الموقع الحالي: {filters.userLat!.toFixed(4)},{" "}
                 {filters.userLng!.toFixed(4)}
+                {outsideJijel ? " — خارج جيجل" : ""}
               </p>
             ) : (
               <p className="mt-2 text-xs text-amber-700">

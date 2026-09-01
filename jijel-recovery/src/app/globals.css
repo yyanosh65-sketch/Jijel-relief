@@ -36,8 +36,21 @@ body {
   margin: 0.75rem;
 }
 
+.leaflet-popup {
+  z-index: 1100 !important;
+}
+
+.leaflet-pane.leaflet-marker-pane {
+  z-index: 600;
+}
+
+.leaflet-pane.leaflet-popup-pane {
+  z-index: 1100;
+}
+
 .sos-floating-button {
   animation: sos-pulse-glow 2.4s ease-in-out infinite;
+  white-space: nowrap;
 }
 
 .progress-bar-fill {

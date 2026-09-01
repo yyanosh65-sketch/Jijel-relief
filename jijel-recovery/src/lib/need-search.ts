@@ -12,6 +12,12 @@ import {
   type MapCategoryId,
 } from "@/lib/map-utils";
 import { haversineKm } from "@/lib/geo";
+import { JIJEL_CENTER } from "@/lib/map-utils";
+
+export const SHOW_ALL_WILAYA_RADIUS = 0;
+export const DEFAULT_RADIUS_KM = 50;
+export const MAX_RADIUS_KM = 50;
+export const OUTSIDE_JIJEL_THRESHOLD_KM = 100;
 
 export type NeedSearchCategoryId = MapCategoryId;
 
@@ -72,7 +78,7 @@ const DEFAULT_FILTERS: NeedSearchFilters = {
   categories: SEARCH_CATEGORY_OPTIONS.map((option) => option.id),
   urgencyGroups: URGENCY_FILTER_OPTIONS.map((option) => option.id),
   roadAccess: ROAD_ACCESS_OPTIONS.map((option) => option.id),
-  radiusKm: 50,
+  radiusKm: DEFAULT_RADIUS_KM,
   userLat: null,
   userLng: null,
   sort: "urgent",
@@ -148,7 +154,12 @@ export function parseNeedSearchParams(
       roadIds,
       DEFAULT_FILTERS.roadAccess,
     ),
-    radiusKm: parseNumberParam(searchParams.get("radius"), 50, 1, 50),
+    radiusKm: parseNumberParam(
+      searchParams.get("radius"),
+      DEFAULT_RADIUS_KM,
+      SHOW_ALL_WILAYA_RADIUS,
+      MAX_RADIUS_KM,
+    ),
     userLat: lat ? Number(lat) : null,
     userLng: lng ? Number(lng) : null,
     sort: parseListParam(searchParams.get("sort"), sortIds, ["urgent"])[0],
@@ -176,7 +187,7 @@ export function buildNeedSearchParams(
     params.set("road", filters.roadAccess.join(","));
   }
 
-  if (filters.radiusKm !== 50) {
+  if (filters.radiusKm !== DEFAULT_RADIUS_KM) {
     params.set("radius", String(filters.radiusKm));
   }
 
@@ -254,6 +265,22 @@ function getNeedDistanceKm(
   return haversineKm(userLat, userLng, need.lat, need.lng);
 }
 
+export function isGpsOutsideJijel(
+  lat: number,
+  lng: number,
+  thresholdKm: number = OUTSIDE_JIJEL_THRESHOLD_KM,
+): boolean {
+  return (
+    haversineKm(lat, lng, JIJEL_CENTER.lat, JIJEL_CENTER.lng) > thresholdKm
+  );
+}
+
+export function formatRadiusLabel(radiusKm: number): string {
+  return radiusKm === SHOW_ALL_WILAYA_RADIUS
+    ? "عرض كامل الولاية"
+    : `${radiusKm} كم`;
+}
+
 export function filterAndSortNeeds(
   needs: MapNeed[],
   filters: NeedSearchFilters,
@@ -289,7 +316,7 @@ export function filterAndSortNeeds(
       return false;
     }
 
-    if (hasGps) {
+    if (hasGps && filters.radiusKm > SHOW_ALL_WILAYA_RADIUS) {
       const distanceKm = getNeedDistanceKm(
         need,
         filters.userLat!,

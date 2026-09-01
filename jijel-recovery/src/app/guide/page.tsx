@@ -1,6 +1,7 @@
 import Link from "next/link";
 
 import AssignGuideForm from "@/components/convoys/AssignGuideForm";
+import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import {
   CONVOY_ENTRY_OPTIONS,
   WAYPOINT_TYPE_LABELS,
@@ -36,7 +37,7 @@ const DRIVING_TIPS = [
   },
   {
     title: "الشاحنات الكبيرة",
-    body: "استعمل مدخل بجاية الغربي أو سكيكدة الشرقي للشاحنات. مدخل سطيف الجنوبي يتطلب مرافق 4x4 للمقاطع الضيقة.",
+    body: "استعمل مدخل بجاية الغربي، سكيكدة الشرقي، أو مدخل ميلة (سيدي معروف / غبالة) للشاحنات. مدخل سطيف الجنوبي يتطلب مرافق 4x4 للمقاطع الضيقة.",
   },
   {
     title: "4x4 والمرافقة",
@@ -44,7 +45,11 @@ const DRIVING_TIPS = [
   },
   {
     title: "التعبئة والتفريغ",
-    body: "عبّي خزان الوقود قبل المسلك الجبلي. نقاط التفريغ الرئيسية في مستودع جيجل المركزي والطاهير.",
+    body: "عبّي خزان الوقود قبل المسلك الجبلي. نقاط التفريغ الرئيسية في مستودع جيجل المركزي والطاهير وسيدي معروف.",
+  },
+  {
+    title: "مدخل ميلة والشرق",
+    body: "القوافل القادمة من ميلة وقسنطينة تمر عبر محور RN77 / RN105 (سيدي معروف — فرجيوة — غبالة). تواصل مع رضوان بوعريوة لتحديد نقاط التفريغ.",
   },
 ];
 
@@ -60,12 +65,12 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
       className="min-h-dvh bg-gradient-to-b from-sky-50 via-white to-emerald-50"
     >
       <header className="border-b border-slate-200/80 bg-white/90 px-4 py-6 backdrop-blur-md">
-        <div className="mx-auto max-w-3xl">
+        <div className="mx-auto max-w-4xl">
           <p className="text-sm font-medium text-sky-700">دليل القادمين لجيجل</p>
-          <h1 className="mt-1 text-2xl font-bold text-slate-900">
+          <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
             مرحبا بخاوتنا اللي جاو يعاونو
           </h1>
-          <p className="mt-2 text-sm leading-relaxed text-slate-600">
+          <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
             هادو نقاط الاستقبال والمبيت والتفريغ — كل ما تحتاجو باش توصلو بأمان
             وتفرّغو المساعدات في المكان الصح.
           </p>
@@ -86,12 +91,12 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
         </div>
       </header>
 
-      <div className="mx-auto max-w-3xl space-y-6 px-4 py-8">
+      <div className="mx-auto max-w-4xl space-y-6 px-4 py-8">
         {showAssignForm && convoyId ? (
           <AssignGuideForm convoyId={convoyId} />
         ) : null}
 
-        <section className={cn(glassPanelClass, "space-y-4 p-5")}>
+        <section className={cn(glassPanelClass, "space-y-4 p-5 sm:p-6")}>
           <h2 className="text-lg font-semibold text-slate-900">
             نصائح السياقة والمسالك
           </h2>
@@ -110,11 +115,11 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
           </div>
         </section>
 
-        <section className={cn(glassPanelClass, "space-y-4 p-5")}>
+        <section className={cn(glassPanelClass, "space-y-4 p-5 sm:p-6")}>
           <h2 className="text-lg font-semibold text-slate-900">
             منسقو الاستقبال عند المداخل
           </h2>
-          <div className="space-y-3">
+          <div className="grid gap-3 sm:grid-cols-2">
             {CONVOY_ENTRY_OPTIONS.map((entry) => {
               const coordinator = entranceCoordinators.find(
                 (item) => item.entry_point === entry.value,
@@ -139,27 +144,15 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
                       <p className="mt-1 text-sm text-slate-700">
                         المنسق: {coordinator.name_ar}
                       </p>
-                      <p className="text-xs text-slate-500">
+                      <p className="mt-1 text-xs leading-relaxed text-slate-500">
                         {coordinator.notes}
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <a
-                          href={`tel:${coordinator.phone}`}
-                          className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white"
-                        >
-                          📞 {coordinator.phone}
-                        </a>
-                        {whatsappUrl ? (
-                          <a
-                            href={whatsappUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white"
-                          >
-                            واتساب
-                          </a>
-                        ) : null}
-                      </div>
+                      <ContactActionButtons
+                        phone={coordinator.phone}
+                        whatsappUrl={whatsappUrl}
+                        className="mt-3"
+                        compact
+                      />
                     </>
                   ) : null}
                 </article>
@@ -173,11 +166,14 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
           const items = getWaypointsByType(type);
 
           return (
-            <section key={type} className={cn(glassPanelClass, "space-y-4 p-5")}>
+            <section
+              key={type}
+              className={cn(glassPanelClass, "space-y-4 p-5 sm:p-6")}
+            >
               <h2 className="text-lg font-semibold text-slate-900">
                 {meta.icon} {meta.labelAr}
               </h2>
-              <ul className="space-y-3">
+              <ul className="grid gap-3 sm:grid-cols-2">
                 {items.map((waypoint) => {
                   const whatsappUrl = buildWhatsAppUrl(
                     waypoint.whatsapp ?? waypoint.phone,
@@ -195,27 +191,15 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
                       <p className="mt-1 text-xs text-slate-600">
                         {waypoint.opening_hours} — {waypoint.capacity}
                       </p>
-                      <p className="mt-1 text-sm text-slate-600">
+                      <p className="mt-1 text-sm leading-relaxed text-slate-600">
                         {waypoint.notes}
                       </p>
-                      <div className="mt-3 flex flex-wrap gap-2">
-                        <a
-                          href={`tel:${waypoint.phone}`}
-                          className="rounded-lg bg-slate-800 px-3 py-1.5 text-xs font-semibold text-white"
-                        >
-                          📞 اتصال
-                        </a>
-                        {whatsappUrl ? (
-                          <a
-                            href={whatsappUrl}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="rounded-lg bg-[#25D366] px-3 py-1.5 text-xs font-semibold text-white"
-                          >
-                            واتساب
-                          </a>
-                        ) : null}
-                      </div>
+                      <ContactActionButtons
+                        phone={waypoint.phone}
+                        whatsappUrl={whatsappUrl}
+                        className="mt-3"
+                        compact
+                      />
                     </li>
                   );
                 })}

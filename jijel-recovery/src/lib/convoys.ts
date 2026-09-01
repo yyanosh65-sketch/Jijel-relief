@@ -93,6 +93,10 @@ export const CONVOY_ENTRY_OPTIONS: Array<{
   { value: "bejaia_west", labelAr: "مدخل بجاية الغربي" },
   { value: "setif_south", labelAr: "مدخل سطيف الجنوبي" },
   { value: "skikda_east", labelAr: "مدخل سكيكدة الشرقي" },
+  {
+    value: "mila_south_east",
+    labelAr: "مدخل ميلة الجنوبي-الشرقي (سيدي معروف / غبالة)",
+  },
 ];
 
 export type WaypointType =

@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, MessageCircle, Phone } from "lucide-react";
+import { Loader2 } from "lucide-react";
 
 import {
   getNearestEmergencyContacts,
   type NearestContact,
 } from "@/actions/emergency";
 import { buildNearestContactsFallback } from "@/lib/nearest-help";
+import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import { buildWhatsAppLink } from "@/lib/phone";
 import {
   RELIEF_CONTACT_TABS,
@@ -61,26 +62,12 @@ function ContactCard({ contact }: { contact: NearestContact }) {
         </div>
       </div>
 
-      <div className="mt-3 flex gap-2">
-        <a
-          href={`tel:${contact.phone}`}
-          className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-red-600 px-2 py-2 text-xs font-semibold text-white hover:bg-red-700"
-        >
-          <Phone className="h-3.5 w-3.5" />
-          اتصال
-        </a>
-        {whatsAppUrl ? (
-          <a
-            href={whatsAppUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#25D366] px-2 py-2 text-xs font-semibold text-white hover:bg-[#20bd5a]"
-          >
-            <MessageCircle className="h-3.5 w-3.5" />
-            واتساب
-          </a>
-        ) : null}
-      </div>
+      <ContactActionButtons
+        phone={contact.phone}
+        whatsappUrl={whatsAppUrl}
+        className="mt-3"
+        compact
+      />
     </li>
   );
 }
