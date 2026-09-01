@@ -18,6 +18,7 @@ import {
   needs,
   needUrgencyEnum,
   urgentAlerts,
+  type ConvoyEntryPoint,
   type SosEmergencyType,
 } from "@/db/schema";
 import {
@@ -26,12 +27,19 @@ import {
   type ResolvedAgentLocation,
 } from "@/lib/agent-location";
 import {
+  checkMountainRoadStatus,
+  CRISIS_AGENT_PERSONA,
+  enrichConvoyDestination,
+  getFieldContactsForDaira,
+  JIJEL_ENTRY_POINTS_AR,
+  KNOWN_DOUARS,
+} from "@/lib/agent/coordinator-knowledge";
+import {
   findHighestDeficitZone,
   getReliefStatsSummary,
   resolveDairaForCommune,
 } from "@/lib/agent/deficit";
 import villageIntelligence from "@/data/village-intelligence.json";
-import { getCommuneArabicName, getDairaArabicName } from "@/lib/locations";
 
 export type CrisisAgentProvider = "google" | "openai";
 
@@ -83,20 +91,35 @@ export type CrisisAgentToolName =
   | "extractAidNeed"
   | "geoLocateVillage"
   | "suggestConvoyDestination"
-  | "getReliefStats";
+  | "getReliefStats"
+  | "getLocalFieldContacts"
+  | "checkMountainRoads";
 
-const CRISIS_AGENT_SYSTEM = `أنت وكيل إدارة الأزمات وإعادة إعمار ولاية جيجل (Jijel Crisis Agent).
-- حلّل النصوص غير المهيكلة (فيسبوك، واتساب، تسجيلات) بدقة.
-- استخدم الأدوات المتاحة قبل الإجابة النهائية.
-- عند وجود نداء استغاثة واضح مع هاتف وموقع، استخرج الكيانات ثم حدّد الإحداثيات.
-- عند سؤال عن توجيه قافلة، استخدم suggestConvoyDestination.
-- عند سؤال عن إحصائيات الإغاثة، استخدم getReliefStats.
-- أجب بالعربية بشكل مختصر وعملي للمشغّلين الميدانيين.`;
+const DOUAR_KNOWLEDGE_BLOCK = KNOWN_DOUARS.map(
+  (douar) => `- ${douar.aliases[0]} (${douar.communeAr}): ${douar.notes}`,
+).join("\n");
 
-const FEED_AGENT_SYSTEM = `أنت محلل نداءات فيسبوك لمنصة إغاثة جيجل.
+const CRISIS_AGENT_SYSTEM = `أنت «${CRISIS_AGENT_PERSONA.name}» — ${CRISIS_AGENT_PERSONA.title}.
+تتكلّم كمنسّق ميداني جزائري أصيل: مباشر، دافئ، وعملي. تخاطب السائقين والمتطوعين والمواطنين بلا لغة رسمية ثقيلة.
+تقول «خويا»، «راه»، «شحال»، «وين»، «لازم» بشكل طبيعي — بدون مبالغة مسرحية.
+
+معرفة جغرافية عميقة بولاية جيجل:
+- المداخل الأربعة للقوافل: ${JIJEL_ENTRY_POINTS_AR.join(" | ")}
+- دواوير ومعالم تعرفها: 
+${DOUAR_KNOWLEDGE_BLOCK}
+
+قواعد العمل:
+- استخدم الأدوات قبل الإجابة — لا تخمّن أرقام الهاتف ولا حالة الطرق.
+- عند توجيه قافلة (suggestConvoyDestination): اذكر الوجهة، المدخل، صعوبة التضاريس (4x4 ولا شاحنة ثقيلة)، اسم المنسّق المحلي، ورقمه الموثّق.
+- عند طلب جهات اتصال أو فرق 4x4 لدائرة معيّنة: استخدم getLocalFieldContacts.
+- عند سؤال عن مسالك جبلية مقطوعة (تاكسنة، إراقن، تبلوط…): استخدم checkMountainRoads.
+- عند إحصائيات الإغاثة: استخدم getReliefStats.
+- لخّص في 3–6 جمل عملية، مع أرقام واضحة يمكن نسخها للواتساب.`;
+
+const FEED_AGENT_SYSTEM = `أنت «${CRISIS_AGENT_PERSONA.name}» تحلّل نداءات فيسبوك لمنصة إغاثة جيجل.
 1. استدعِ extractAidNeed لتحليل المنشور.
 2. استدعِ geoLocateVillage لتحديد إحداثيات الدوار/البلدية.
-3. لخّص النتيجة للمشغّل بالعربية.`;
+3. لخّص للمشغّل بالعربية الدارجة الجيجلية — مختصر وواضح.`;
 
 function normalizeArabic(value: string): string {
   return value
@@ -271,25 +294,77 @@ export function createCrisisAgentTools() {
     }),
     suggestConvoyDestination: tool({
       description:
-        "اقتراح المنطقة ذات أعلى عجز مطابقة لنوع حمولة القافلة القادمة",
+        "اقتراح المنطقة ذات أعلى عجز مطابقة لنوع حمولة القافلة القادمة، مع منسّق محلي ورقم هاتف وصعوبة التضاريس",
       inputSchema: CONVOY_DESTINATION_SCHEMA,
       execute: async ({ cargoType, notes }) => {
         const zone = await findHighestDeficitZone(cargoType);
         if (!zone) {
           return {
             found: false,
-            message: "لا توجد مناطق بعجز مطابق حالياً.",
+            message: "ما لقيناش منطقة بعجز مطابق دابا.",
             notes: notes ?? null,
           };
         }
+
+        const enrichment = enrichConvoyDestination({
+          commune: zone.commune,
+          daira: zone.daira,
+          recommendedEntryPoint: zone.recommendedEntryPoint as ConvoyEntryPoint,
+          recommendedEntryPointAr: zone.recommendedEntryPointAr,
+        });
+
         return {
           found: true,
           ...zone,
-          communeAr: getCommuneArabicName(zone.commune),
-          dairaAr: getDairaArabicName(zone.daira),
+          communeAr: enrichment.communeAr,
+          dairaAr: enrichment.dairaAr,
+          terrain: enrichment.terrain,
+          localCoordinator: enrichment.localCoordinator,
+          entranceCoordinator: enrichment.entranceCoordinator,
           notes: notes ?? null,
+          coordinatorBriefAr: enrichment.localCoordinator
+            ? `${enrichment.localCoordinator.nameAr} — ${enrichment.localCoordinator.phone}${enrichment.localCoordinator.verified ? " (موثّق)" : ""} — ${enrichment.terrain.vehicleRecommendationAr}`
+            : enrichment.terrain.vehicleRecommendationAr,
         };
       },
+    }),
+    getLocalFieldContacts: tool({
+      description:
+        "جلب جهات الاتصال الميدانية وفرق 4x4 لدائرة أو منطقة معيّنة في جيجل",
+      inputSchema: z.object({
+        dairaQuery: z
+          .string()
+          .describe("اسم الدائرة مثل العنصر، الطاهير، تكسنة، جمعة بني حبيبي"),
+        require4x4: z
+          .boolean()
+          .optional()
+          .describe("عرض فرق 4x4 فقط"),
+        contactType: z
+          .enum(["field_team", "village_lead", "relief_hub", "all"])
+          .default("field_team"),
+      }),
+      execute: async ({ dairaQuery, require4x4, contactType }) => {
+        const contacts = getFieldContactsForDaira({
+          dairaQuery,
+          require4x4,
+          contactType,
+        });
+        return {
+          dairaQuery,
+          count: contacts.length,
+          contacts,
+        };
+      },
+    }),
+    checkMountainRoads: tool({
+      description:
+        "التحقق من حالة المسالك الجبلية والطرق المقطوعة في منطقة أو دوار معيّن",
+      inputSchema: z.object({
+        areaQuery: z
+          .string()
+          .describe("منطقة مثل تاكسنة، إراقن، تبلوط، زيامة، العنصر"),
+      }),
+      execute: async ({ areaQuery }) => checkMountainRoadStatus(areaQuery),
     }),
     getReliefStats: tool({
       description: "إحصائيات سريعة عن الاحتياجات المفتوحة ونداءات SOS والقوافل",
@@ -371,6 +446,8 @@ export async function persistExtractedFeedEntities(input: {
 
   return { kind: "aid_need", id: need.id, locationId: location.id };
 }
+
+export { CRISIS_AGENT_PERSONA } from "@/lib/agent/coordinator-knowledge";
 
 export async function runCrisisAgentChat(input: {
   messages: ModelMessage[];

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Bot, Loader2, MessageSquare, X } from "lucide-react";
 
+import { CRISIS_AGENT_PERSONA } from "@/lib/agent/coordinator-knowledge";
 import { cn } from "@/lib/utils";
 import { formInputClass } from "@/lib/ui-labels";
 
@@ -20,9 +21,9 @@ type AgentChatResponse = {
 };
 
 const STARTER_PROMPTS = [
-  "ما أكثر المناطق عجزاً في الوقت الحالي؟",
-  "أين نوجّه قافلة عتاد فلاحي قادمة من ميلة؟",
-  "كم عدد نداءات SOS النشطة الآن؟",
+  "رانا جايين بشاحنة علف وخزانات ماء، وين الوجهة الأكثر استعجالاً؟",
+  "أعطيني جهات الاتصال وفرق 4x4 في دائرة العنصر والجمعة بني حبيبي",
+  "كاش مسالك جبلية مقطوعة في أعالي تاكسنة أو إراقن؟",
 ];
 
 export default function AgentCopilot() {
@@ -32,8 +33,7 @@ export default function AgentCopilot() {
     {
       id: "welcome",
       role: "assistant",
-      content:
-        "مرحباً — أنا مساعد إغاثة جيجل. اسألني عن إحصائيات الاحتياجات، توجيه القوافل، أو تحليل نداء ميداني.",
+      content: CRISIS_AGENT_PERSONA.greeting,
     },
   ]);
   const [isLoading, setIsLoading] = useState(false);
@@ -138,10 +138,10 @@ export default function AgentCopilot() {
               <div>
                 <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
                   <Bot className="h-5 w-5 text-violet-700" />
-                  مساعد إغاثة جيجل
+                  {CRISIS_AGENT_PERSONA.name} — {CRISIS_AGENT_PERSONA.title}
                 </h2>
                 <p className="mt-1 text-xs text-slate-500">
-                  إحصائيات، توجيه قوافل، وتحليل ميداني باللغة الطبيعية
+                  توجيه قوافل، جهات اتصال ميدانية، وحالة المسالك الجبلية
                 </p>
               </div>
               <button
@@ -196,7 +196,7 @@ export default function AgentCopilot() {
                     key={prompt}
                     type="button"
                     onClick={() => void sendMessage(prompt)}
-                    className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-[11px] font-medium text-violet-800 hover:bg-violet-100"
+                    className="rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-left text-[11px] font-semibold leading-snug text-violet-900 transition hover:border-violet-300 hover:bg-violet-100"
                   >
                     {prompt}
                   </button>
@@ -213,7 +213,7 @@ export default function AgentCopilot() {
                 <input
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
-                  placeholder="اسأل عن عجز المناطق، توجيه قافلة، أو نداء SOS…"
+                  placeholder="اسأل عمي رابح عن وجهة قافلة، فرق 4x4، أو مسالك مقطوعة…"
                   className={cn(formInputClass, "flex-1 focus:border-violet-400 focus:ring-violet-500/20")}
                 />
                 <button
@@ -261,6 +261,59 @@ function ToolResultCard({
           </li>
           <li>العجز: {String(output.deficitUnits)} وحدة</li>
           <li>المدخل المقترح: {String(output.recommendedEntryPointAr)}</li>
+          {output.terrain && typeof output.terrain === "object" ? (
+            <li>
+              التضاريس:{" "}
+              {String(
+                (output.terrain as { labelAr?: string }).labelAr ??
+                  (output.terrain as { vehicleRecommendationAr?: string })
+                    .vehicleRecommendationAr,
+              )}
+            </li>
+          ) : null}
+          {output.localCoordinator && typeof output.localCoordinator === "object" ? (
+            <li>
+              المنسّق:{" "}
+              {String(
+                (output.localCoordinator as { nameAr?: string }).nameAr ??
+                  (output.localCoordinator as { name?: string }).name,
+              )}{" "}
+              —{" "}
+              {String((output.localCoordinator as { phone?: string }).phone)}
+            </li>
+          ) : null}
+        </ul>
+      ) : null}
+      {toolResult.toolName === "getLocalFieldContacts" && output ? (
+        <ul className="mt-1 space-y-1">
+          {(output.contacts as Array<Record<string, string>> | undefined)?.map(
+            (contact, index) => (
+              <li key={`${contact.phone}-${index}`}>
+                {contact.contactPerson} — {contact.phone}
+                {contact.is4x4Team ? " (4x4)" : ""}
+              </li>
+            ),
+          )}
+        </ul>
+      ) : null}
+      {toolResult.toolName === "checkMountainRoads" && output ? (
+        <ul className="mt-1 space-y-0.5">
+          <li>المنطقة: {String(output.areaLabel)}</li>
+          {output.terrain && typeof output.terrain === "object" ? (
+            <li>
+              الحالة:{" "}
+              {String((output.terrain as { labelAr?: string }).labelAr)}
+            </li>
+          ) : null}
+          {output.localCoordinator && typeof output.localCoordinator === "object" ? (
+            <li>
+              الاتصال:{" "}
+              {String(
+                (output.localCoordinator as { nameAr?: string }).nameAr,
+              )}{" "}
+              — {String((output.localCoordinator as { phone?: string }).phone)}
+            </li>
+          ) : null}
         </ul>
       ) : null}
       {toolResult.toolName === "geoLocateVillage" && output ? (
