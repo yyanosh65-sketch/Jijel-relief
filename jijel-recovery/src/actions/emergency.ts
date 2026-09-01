@@ -10,25 +10,21 @@ import {
   emergencyFacilities,
   sosEmergencyTypeEnum,
   urgentAlerts,
-  type HelperSkill,
 } from "@/db/schema";
-import { haversineKm } from "@/lib/geo";
 import {
-  formatHelperSkillBadges,
-  formatHelperSkillsSubtitle,
-} from "@/lib/helpers";
-import {
-  getCommuneArabicName,
-  getDairaArabicName,
-  resolveLocationReference,
-} from "@/lib/locations";
-import { JIJEL_CENTER } from "@/lib/map-utils";
-import {
-  RELIEF_CONTACT_BADGES,
-  reliefContacts,
-  type ReliefContactCategory,
-} from "@/lib/relief-contacts";
+  buildNearestContactsFallback,
+  buildReliefContactsFromJson,
+  mapFacilityRowToContact,
+  mapHelperRowToContact,
+  resolveNearestHelpReference,
+  sortContacts,
+  type CategorizedNearestContacts,
+  type NearestContact,
+  type NearestHelpInput,
+} from "@/lib/nearest-help";
 import type { ActionResult } from "@/lib/types";
+
+export type { NearestContact, CategorizedNearestContacts };
 
 const submitUrgentAlertSchema = z.object({
   emergencyType: z.enum(sosEmergencyTypeEnum.enumValues),
@@ -61,329 +57,193 @@ export type UrgentAlertRecord = {
   createdAt: Date;
 };
 
-export type NearestContact = {
-  id: string;
-  category: ReliefContactCategory;
-  badge: string;
-  name: string;
-  subtitle: string;
-  phone: string;
-  whatsappPhone?: string | null;
-  distanceKm: number | null;
-};
-
-export type CategorizedNearestContacts = {
-  reliefHubs: NearestContact[];
-  fieldTeams: NearestContact[];
-  villageLeads: NearestContact[];
-  officialFacilities: NearestContact[];
-  communityHelpers: NearestContact[];
-  usedCommuneFallback: boolean;
-};
-
-const FACILITY_TYPE_LABELS: Record<string, string> = {
-  civil_protection: "الحماية المدنية",
-  veterinary_clinic: "مستوصف بيطري",
-  forest_conservancy: "محافظة الغابات",
-};
-
 function revalidateEmergencyPaths(): void {
   revalidatePath("/");
   revalidatePath("/map");
 }
 
-function computeDistanceKm(
-  ref: { lat: number; lng: number },
-  lat: number,
-  lng: number,
-): number {
-  return Number(haversineKm(ref.lat, ref.lng, lat, lng).toFixed(1));
+async function fetchOfficialFacilities(
+  input: NearestHelpInput,
+  reference: NonNullable<ReturnType<typeof resolveNearestHelpReference>>,
+  limit: number,
+): Promise<NearestContact[]> {
+  const facilityRows = await db.execute<{
+    id: number;
+    name: string;
+    facility_type: string;
+    commune: string;
+    hotline_phone: string;
+    distance_km: number;
+  }>(sql`
+    SELECT
+      id,
+      name,
+      facility_type,
+      commune,
+      hotline_phone,
+      ST_Distance(
+        coordinates,
+        ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
+      ) / 1000 AS distance_km
+    FROM ${emergencyFacilities}
+    ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
+    LIMIT ${limit}
+  `);
+
+  return facilityRows.rows.map((row) => mapFacilityRowToContact(row));
 }
 
-function sortContacts(contacts: NearestContact[]): NearestContact[] {
-  return [...contacts].sort((left, right) => {
-    if (left.distanceKm === null && right.distanceKm === null) {
-      return 0;
-    }
+async function fetchOfficialFacilitiesByArea(
+  input: NearestHelpInput,
+  limit: number,
+): Promise<NearestContact[]> {
+  const commune = input.commune;
+  if (!commune) {
+    return [];
+  }
 
-    if (left.distanceKm === null) {
-      return 1;
-    }
+  const facilityRows = await db
+    .select({
+      id: emergencyFacilities.id,
+      name: emergencyFacilities.name,
+      facilityType: emergencyFacilities.facilityType,
+      commune: emergencyFacilities.commune,
+      hotlinePhone: emergencyFacilities.hotlinePhone,
+    })
+    .from(emergencyFacilities)
+    .where(eq(emergencyFacilities.commune, commune))
+    .limit(limit);
 
-    if (right.distanceKm === null) {
-      return -1;
-    }
-
-    return left.distanceKm - right.distanceKm;
-  });
+  return facilityRows.map((row) =>
+    mapFacilityRowToContact({
+      id: row.id,
+      name: row.name,
+      facilityType: row.facilityType,
+      commune: row.commune,
+      hotlinePhone: row.hotlinePhone,
+    }),
+  );
 }
 
-function matchesSelectedArea(
-  entry: { commune: string; daira: string },
-  commune?: string,
-  daira?: string,
-): boolean {
-  if (!commune && !daira) {
-    return true;
-  }
+async function fetchCommunityHelpers(
+  reference: NonNullable<ReturnType<typeof resolveNearestHelpReference>>,
+  limit: number,
+): Promise<NearestContact[]> {
+  const helperRows = await db.execute<{
+    id: number;
+    full_name: string;
+    phone: string;
+    whatsapp_phone: string | null;
+    daira: string;
+    commune: string;
+    skills: unknown;
+    availability_notes: string | null;
+    distance_km: number;
+  }>(sql`
+    SELECT
+      id,
+      full_name,
+      phone,
+      whatsapp_phone,
+      daira,
+      commune,
+      skills,
+      availability_notes,
+      ST_Distance(
+        coordinates,
+        ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
+      ) / 1000 AS distance_km
+    FROM ${communityHelpers}
+    WHERE status = 'verified'
+    ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
+    LIMIT ${limit}
+  `);
 
-  if (commune && (entry.commune === commune || entry.daira === commune)) {
-    return true;
-  }
-
-  if (daira && entry.daira === daira) {
-    return true;
-  }
-
-  return false;
+  return helperRows.rows
+    .map((row) => mapHelperRowToContact(row))
+    .filter((contact) => (contact.distanceKm ?? 999) <= 80);
 }
 
-export async function getNearestEmergencyContacts(input: {
-  lat?: number;
-  lng?: number;
-  commune?: string;
-  daira?: string;
-  limitPerCategory?: number;
-}): Promise<ActionResult<CategorizedNearestContacts>> {
+async function fetchCommunityHelpersByArea(
+  input: NearestHelpInput,
+  limit: number,
+): Promise<NearestContact[]> {
+  const helperConditions = [eq(communityHelpers.status, "verified")];
+
+  if (input.commune) {
+    helperConditions.push(eq(communityHelpers.commune, input.commune));
+  } else if (input.daira) {
+    helperConditions.push(eq(communityHelpers.daira, input.daira));
+  }
+
+  const helperRows = await db
+    .select()
+    .from(communityHelpers)
+    .where(and(...helperConditions))
+    .limit(limit);
+
+  return helperRows.map((row) =>
+    mapHelperRowToContact({
+      id: row.id,
+      fullName: row.fullName,
+      phone: row.phone,
+      whatsappPhone: row.whatsappPhone,
+      daira: row.daira,
+      commune: row.commune,
+      skills: row.skills,
+      availabilityNotes: row.availabilityNotes,
+    }),
+  );
+}
+
+export async function getNearestEmergencyContacts(
+  input: NearestHelpInput,
+): Promise<ActionResult<CategorizedNearestContacts>> {
+  const limit = input.limitPerCategory ?? 4;
+  const reference = resolveNearestHelpReference(input);
+  const jsonContacts = buildReliefContactsFromJson(input, reference, limit);
+
+  let officialFacilities: NearestContact[] = [];
+  let communityHelpersList: NearestContact[] = [];
+
   try {
-    const limit = input.limitPerCategory ?? 4;
-    const reference = resolveLocationReference({
-      lat: input.lat,
-      lng: input.lng,
-      commune: input.commune,
-      daira: input.daira,
-      jijelCenter: JIJEL_CENTER,
-      outsideThresholdKm: 100,
-    });
-
-    const distanceFor = (lat: number, lng: number): number | null =>
-      reference ? computeDistanceKm(reference, lat, lng) : null;
-
-    const areaFilter = <T extends { commune: string; daira: string }>(
-      items: T[],
-    ): T[] => {
-      if (reference) {
-        return items;
-      }
-
-      return items.filter((item) =>
-        matchesSelectedArea(item, input.commune, input.daira),
-      );
-    };
-
-    const reliefHubs = sortContacts(
-      areaFilter(reliefContacts.reliefHubs)
-        .map((hub) => ({
-          id: hub.id,
-          category: "relief_hub" as const,
-          badge: RELIEF_CONTACT_BADGES.relief_hub,
-          name: hub.name_ar,
-          subtitle: `${getCommuneArabicName(hub.commune)} — دائرة ${getDairaArabicName(hub.daira)}`,
-          phone: hub.phone,
-          distanceKm: distanceFor(hub.lat, hub.lng),
-        }))
-        .filter((contact) =>
-          reference ? (contact.distanceKm ?? 999) <= 60 : true,
-        )
-        .slice(0, limit),
-    );
-
-    const fieldTeams = sortContacts(
-      areaFilter(reliefContacts.fieldTeams)
-        .map((team) => ({
-          id: team.id,
-          category: "field_team" as const,
-          badge: RELIEF_CONTACT_BADGES.field_team,
-          name: team.name_ar,
-          subtitle: `تغطية: ${team.coverage.map((area) => getCommuneArabicName(area)).join("، ")}`,
-          phone: team.phone,
-          distanceKm: distanceFor(team.lat, team.lng),
-        }))
-        .filter((contact) =>
-          reference ? (contact.distanceKm ?? 999) <= 60 : true,
-        )
-        .slice(0, limit),
-    );
-
-    const villageLeads = sortContacts(
-      areaFilter(reliefContacts.villageLeads.filter((lead) => lead.verified))
-        .map((lead) => ({
-          id: lead.id,
-          category: "village_lead" as const,
-          badge: RELIEF_CONTACT_BADGES.village_lead,
-          name: lead.name_ar,
-          subtitle: lead.role_ar,
-          phone: lead.phone,
-          distanceKm: distanceFor(lead.lat, lead.lng),
-        }))
-        .filter((contact) =>
-          reference ? (contact.distanceKm ?? 999) <= 50 : true,
-        )
-        .slice(0, limit),
-    );
-
-    let officialFacilities: NearestContact[] = [];
-
     if (reference) {
-      const facilityRows = await db.execute<{
-        id: number;
-        name: string;
-        facility_type: string;
-        commune: string;
-        hotline_phone: string;
-        distance_km: number;
-      }>(sql`
-        SELECT
-          id,
-          name,
-          facility_type,
-          commune,
-          hotline_phone,
-          ST_Distance(
-            coordinates,
-            ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
-          ) / 1000 AS distance_km
-        FROM ${emergencyFacilities}
-        ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
-        LIMIT ${limit}
-      `);
-
-      officialFacilities = facilityRows.rows.map((row) => ({
-        id: `facility-${row.id}`,
-        category: "official_facility" as const,
-        badge: RELIEF_CONTACT_BADGES.official_facility,
-        name: row.name,
-        subtitle:
-          FACILITY_TYPE_LABELS[row.facility_type] ??
-          getCommuneArabicName(row.commune),
-        phone: row.hotline_phone,
-        distanceKm: Number(row.distance_km.toFixed(1)),
-      }));
-    } else if (input.commune) {
-      const facilityRows = await db
-        .select({
-          id: emergencyFacilities.id,
-          name: emergencyFacilities.name,
-          facilityType: emergencyFacilities.facilityType,
-          commune: emergencyFacilities.commune,
-          hotlinePhone: emergencyFacilities.hotlinePhone,
-        })
-        .from(emergencyFacilities)
-        .where(eq(emergencyFacilities.commune, input.commune))
-        .limit(limit);
-
-      officialFacilities = facilityRows.map((row) => ({
-        id: `facility-${row.id}`,
-        category: "official_facility" as const,
-        badge: RELIEF_CONTACT_BADGES.official_facility,
-        name: row.name,
-        subtitle:
-          FACILITY_TYPE_LABELS[row.facilityType] ??
-          getCommuneArabicName(row.commune),
-        phone: row.hotlinePhone,
-        distanceKm: null,
-      }));
-    }
-
-    let communityHelpersList: NearestContact[] = [];
-
-    if (reference) {
-      const helperRows = await db.execute<{
-        id: number;
-        full_name: string;
-        phone: string;
-        whatsapp_phone: string | null;
-        daira: string;
-        commune: string;
-        skills: HelperSkill[];
-        availability_notes: string | null;
-        distance_km: number;
-      }>(sql`
-        SELECT
-          id,
-          full_name,
-          phone,
-          whatsapp_phone,
-          daira,
-          commune,
-          skills,
-          availability_notes,
-          ST_Distance(
-            coordinates,
-            ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
-          ) / 1000 AS distance_km
-        FROM ${communityHelpers}
-        WHERE status = 'verified'
-        ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
-        LIMIT ${limit}
-      `);
-
-      communityHelpersList = helperRows.rows
-        .map((row) => ({
-          id: `helper-${row.id}`,
-          category: "community_helper" as const,
-          badge: formatHelperSkillBadges(row.skills),
-          name: row.full_name,
-          subtitle: [
-            formatHelperSkillsSubtitle(row.skills),
-            row.availability_notes,
-            `${getCommuneArabicName(row.commune)} — ${getDairaArabicName(row.daira)}`,
-          ]
-            .filter(Boolean)
-            .join(" · "),
-          phone: row.phone,
-          whatsappPhone: row.whatsapp_phone,
-          distanceKm: Number(row.distance_km.toFixed(1)),
-        }))
-        .filter((contact) => (contact.distanceKm ?? 999) <= 60);
+      officialFacilities = await fetchOfficialFacilities(input, reference, limit);
+      communityHelpersList = await fetchCommunityHelpers(reference, limit);
     } else {
-      const helperConditions = [eq(communityHelpers.status, "verified")];
-
-      if (input.commune) {
-        helperConditions.push(eq(communityHelpers.commune, input.commune));
-      } else if (input.daira) {
-        helperConditions.push(eq(communityHelpers.daira, input.daira));
-      }
-
-      const helperRows = await db
-        .select()
-        .from(communityHelpers)
-        .where(and(...helperConditions))
-        .limit(limit);
-
-      communityHelpersList = helperRows.map((row) => ({
-        id: `helper-${row.id}`,
-        category: "community_helper" as const,
-        badge: formatHelperSkillBadges(row.skills),
-        name: row.fullName,
-        subtitle: [
-          formatHelperSkillsSubtitle(row.skills),
-          row.availabilityNotes,
-          `${getCommuneArabicName(row.commune)} — ${getDairaArabicName(row.daira)}`,
-        ]
-          .filter(Boolean)
-          .join(" · "),
-        phone: row.phone,
-        whatsappPhone: row.whatsappPhone,
-        distanceKm: null,
-      }));
+      officialFacilities = await fetchOfficialFacilitiesByArea(input, limit);
+      communityHelpersList = await fetchCommunityHelpersByArea(input, limit);
     }
+  } catch (error) {
+    console.error("getNearestEmergencyContacts DB fallback:", error);
+  }
 
+  const totalJsonContacts =
+    jsonContacts.reliefHubs.length +
+    jsonContacts.fieldTeams.length +
+    jsonContacts.villageLeads.length;
+
+  const totalDbContacts =
+    officialFacilities.length + communityHelpersList.length;
+
+  if (totalJsonContacts === 0 && totalDbContacts === 0 && !reference) {
     return {
       success: true,
-      data: {
-        reliefHubs,
-        fieldTeams,
-        villageLeads,
-        officialFacilities,
-        communityHelpers: sortContacts(communityHelpersList),
-        usedCommuneFallback: reference?.usedCommuneFallback ?? false,
-      },
+      data: buildNearestContactsFallback(input),
     };
-  } catch (error) {
-    console.error("getNearestEmergencyContacts error:", error);
-    return { success: false, error: "تعذر تحميل جهات المساعدة القريبة." };
   }
+
+  return {
+    success: true,
+    data: {
+      reliefHubs: jsonContacts.reliefHubs,
+      fieldTeams: jsonContacts.fieldTeams,
+      villageLeads: jsonContacts.villageLeads,
+      officialFacilities,
+      communityHelpers: sortContacts(communityHelpersList),
+      usedCommuneFallback: reference?.usedCommuneFallback ?? false,
+    },
+  };
 }
 
 export async function submitUrgentAlert(

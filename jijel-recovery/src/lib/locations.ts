@@ -219,6 +219,21 @@ export function getDairaArabicName(dairaName: string): string {
   return daira?.name_ar ?? dairaName;
 }
 
+export function formatDairaOptionLabel(daira: DairaSummary): string {
+  return `دائرة ${daira.name_ar}`;
+}
+
+export function formatCommuneOptionLabel(
+  commune: Commune,
+  dairaNameAr: string,
+): string {
+  if (commune.name_ar === dairaNameAr) {
+    return `${commune.name_ar} (مركز الدائرة)`;
+  }
+
+  return commune.name_ar;
+}
+
 export function formatLocationHeader(
   communeName: string | null | undefined,
   villageName: string,

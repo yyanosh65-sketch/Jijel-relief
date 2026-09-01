@@ -7,6 +7,7 @@ import {
   getNearestEmergencyContacts,
   type NearestContact,
 } from "@/actions/emergency";
+import { buildNearestContactsFallback } from "@/lib/nearest-help";
 import { buildWhatsAppLink } from "@/lib/phone";
 import {
   RELIEF_CONTACT_TABS,
@@ -40,27 +41,27 @@ function ContactCard({ contact }: { contact: NearestContact }) {
     <li className="rounded-xl border border-slate-200/80 bg-white/90 p-3 shadow-sm">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
-          <p className="truncate text-sm font-semibold text-slate-900">
-            {contact.name}
-          </p>
-          <p className="text-xs text-slate-500">{contact.subtitle}</p>
+          <p className="text-sm font-semibold text-slate-900">{contact.name}</p>
+          <p className="mt-0.5 text-xs text-slate-500">{contact.subtitle}</p>
+        </div>
+        <div className="flex shrink-0 flex-col items-end gap-1">
+          <span
+            className={cn(
+              "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+              BADGE_STYLES[contact.category],
+            )}
+          >
+            {contact.badge}
+          </span>
           {contact.distanceKm !== null ? (
-            <p className="mt-1 text-xs font-medium text-emerald-700">
+            <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold text-emerald-800">
               على بعد {contact.distanceKm} كم
-            </p>
+            </span>
           ) : null}
         </div>
-        <span
-          className={cn(
-            "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
-            BADGE_STYLES[contact.category],
-          )}
-        >
-          [{contact.badge}]
-        </span>
       </div>
 
-      <div className="mt-2 flex gap-2">
+      <div className="mt-3 flex gap-2">
         <a
           href={`tel:${contact.phone}`}
           className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-red-600 px-2 py-2 text-xs font-semibold text-white hover:bg-red-700"
@@ -73,7 +74,7 @@ function ContactCard({ contact }: { contact: NearestContact }) {
             href={whatsAppUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-emerald-600 px-2 py-2 text-xs font-semibold text-white hover:bg-emerald-700"
+            className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#25D366] px-2 py-2 text-xs font-semibold text-white hover:bg-[#20bd5a]"
           >
             <MessageCircle className="h-3.5 w-3.5" />
             واتساب
@@ -84,6 +85,15 @@ function ContactCard({ contact }: { contact: NearestContact }) {
   );
 }
 
+const EMPTY_GROUPS = {
+  reliefHubs: [] as NearestContact[],
+  fieldTeams: [] as NearestContact[],
+  villageLeads: [] as NearestContact[],
+  officialFacilities: [] as NearestContact[],
+  communityHelpers: [] as NearestContact[],
+  usedCommuneFallback: false,
+};
+
 export default function NearestHelpBox({
   lat,
   lng,
@@ -92,29 +102,26 @@ export default function NearestHelpBox({
   hasGps,
 }: NearestHelpBoxProps) {
   const [activeTab, setActiveTab] = useState<ReliefContactCategory>("relief_hub");
-  const [groups, setGroups] = useState({
-    reliefHubs: [] as NearestContact[],
-    fieldTeams: [] as NearestContact[],
-    villageLeads: [] as NearestContact[],
-    officialFacilities: [] as NearestContact[],
-    communityHelpers: [] as NearestContact[],
-    usedCommuneFallback: false,
-  });
+  const [groups, setGroups] = useState(EMPTY_GROUPS);
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [usedOfflineFallback, setUsedOfflineFallback] = useState(false);
 
   const canQuery = Boolean((lat && lng) || commune || daira);
 
+  const queryInput = useMemo(
+    () => ({
+      lat: lat ? Number(lat) : undefined,
+      lng: lng ? Number(lng) : undefined,
+      commune: commune || undefined,
+      daira: daira || undefined,
+    }),
+    [commune, daira, lat, lng],
+  );
+
   useEffect(() => {
     if (!canQuery) {
-      setGroups({
-        reliefHubs: [],
-        fieldTeams: [],
-        villageLeads: [],
-        officialFacilities: [],
-        communityHelpers: [],
-        usedCommuneFallback: false,
-      });
+      setGroups(EMPTY_GROUPS);
+      setUsedOfflineFallback(false);
       return;
     }
 
@@ -122,27 +129,23 @@ export default function NearestHelpBox({
 
     async function loadContacts() {
       setIsLoading(true);
-      setError(null);
+      setUsedOfflineFallback(false);
 
-      const result = await getNearestEmergencyContacts({
-        lat: lat ? Number(lat) : undefined,
-        lng: lng ? Number(lng) : undefined,
-        commune: commune || undefined,
-        daira: daira || undefined,
-      });
+      const result = await getNearestEmergencyContacts(queryInput);
 
       if (cancelled) {
         return;
       }
 
-      setIsLoading(false);
-
-      if (!result.success || !result.data) {
-        setError(result.error ?? "تعذر تحميل جهات المساعدة.");
+      if (result.success && result.data) {
+        setGroups(result.data);
+        setIsLoading(false);
         return;
       }
 
-      setGroups(result.data);
+      setGroups(buildNearestContactsFallback(queryInput));
+      setUsedOfflineFallback(true);
+      setIsLoading(false);
     }
 
     void loadContacts();
@@ -150,7 +153,7 @@ export default function NearestHelpBox({
     return () => {
       cancelled = true;
     };
-  }, [canQuery, commune, daira, hasGps, lat, lng]);
+  }, [canQuery, queryInput, hasGps]);
 
   const contactsByTab = useMemo(
     () => ({
@@ -194,6 +197,13 @@ export default function NearestHelpBox({
         </p>
       ) : null}
 
+      {usedOfflineFallback ? (
+        <p className="mt-2 rounded-lg bg-white/70 px-3 py-2 text-xs text-amber-900">
+          تم عرض جهات الاتصال من القائمة المحلية — بعض بيانات قاعدة البيانات
+          غير متوفرة حالياً.
+        </p>
+      ) : null}
+
       <div className="mt-3 flex gap-1 overflow-x-auto pb-1">
         {RELIEF_CONTACT_TABS.map((tab) => {
           const count = contactsByTab[tab.id].length;
@@ -225,9 +235,7 @@ export default function NearestHelpBox({
         </div>
       ) : null}
 
-      {error ? <p className="mt-3 text-xs text-red-600">{error}</p> : null}
-
-      {!isLoading && totalContacts === 0 && !error ? (
+      {!isLoading && totalContacts === 0 ? (
         <p className="mt-3 text-xs text-amber-900">
           ما لقيناش جهات مساعدة قريبة — أكمل تحديد البلدية والدائرة.
         </p>

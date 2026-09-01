@@ -8,7 +8,7 @@ import NearestHelpBox from "@/components/emergency/NearestHelpBox";
 import SosMediaCapture, {
   type SosMediaPayload,
 } from "@/components/emergency/SosMediaCapture";
-import { getCommuneCoordinates, getCommunesByDaira, getDairas } from "@/lib/locations";
+import { getCommuneCoordinates, getCommunesByDaira, getDairas, formatCommuneOptionLabel, formatDairaOptionLabel } from "@/lib/locations";
 import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +56,10 @@ export default function SosAlertButton() {
   const communes = useMemo(
     () => (form.daira ? getCommunesByDaira(form.daira) : []),
     [form.daira],
+  );
+  const selectedDairaAr = useMemo(
+    () => dairas.find((daira) => daira.name === form.daira)?.name_ar ?? "",
+    [dairas, form.daira],
   );
 
   const handleMediaChange = useCallback((payload: SosMediaPayload) => {
@@ -110,8 +114,12 @@ export default function SosAlertButton() {
       lng: coordinates ? coordinates.lng.toFixed(6) : current.lng,
     }));
 
-    if (coordinates && !hasGpsFix) {
-      setGpsMessage("تم استخدام إحداثيات البلدية كبديل.");
+    if (coordinates) {
+      setGpsMessage(
+        hasGpsFix
+          ? "تم تحديث المسافات من مركز البلدية المختارة."
+          : "تم استخدام إحداثيات البلدية كبديل.",
+      );
     }
   }
 
@@ -263,40 +271,57 @@ export default function SosAlertButton() {
                   </p>
                 ) : null}
 
-                <div className="grid grid-cols-2 gap-3">
-                  <select
-                    required
-                    value={form.daira}
-                    onChange={(event) =>
-                      setForm((current) => ({
-                        ...current,
-                        daira: event.target.value,
-                        commune: "",
-                      }))
-                    }
-                    className="min-h-11 rounded-xl border border-zinc-300 px-3 text-sm"
-                  >
-                    <option value="">الدائرة</option>
-                    {dairas.map((daira) => (
-                      <option key={daira.name} value={daira.name}>
-                        {daira.name_ar}
+                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-zinc-600">
+                      الدائرة
+                    </label>
+                    <select
+                      required
+                      value={form.daira}
+                      onChange={(event) =>
+                        setForm((current) => ({
+                          ...current,
+                          daira: event.target.value,
+                          commune: "",
+                        }))
+                      }
+                      className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm"
+                    >
+                      <option value="">
+                        اختر الدائرة (مثل: الطاهير، العوانة...)
                       </option>
-                    ))}
-                  </select>
-                  <select
-                    required
-                    value={form.commune}
-                    onChange={(event) => handleCommuneChange(event.target.value)}
-                    disabled={!form.daira}
-                    className="min-h-11 rounded-xl border border-zinc-300 px-3 text-sm disabled:bg-zinc-100"
-                  >
-                    <option value="">البلدية</option>
-                    {communes.map((commune) => (
-                      <option key={commune.name} value={commune.name}>
-                        {commune.name_ar}
-                      </option>
-                    ))}
-                  </select>
+                      {dairas.map((daira) => (
+                        <option key={daira.name} value={daira.name}>
+                          {formatDairaOptionLabel(daira)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="mb-1 block text-xs font-medium text-zinc-600">
+                      البلدية
+                    </label>
+                    <select
+                      required
+                      value={form.commune}
+                      onChange={(event) =>
+                        handleCommuneChange(event.target.value)
+                      }
+                      disabled={!form.daira}
+                      className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm disabled:bg-zinc-100"
+                    >
+                      <option value="">اختر البلدية</option>
+                      {communes.map((commune) => (
+                        <option
+                          key={`${form.daira}-${commune.name}`}
+                          value={commune.name}
+                        >
+                          {formatCommuneOptionLabel(commune, selectedDairaAr)}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
                 </div>
 
                 <NearestHelpBox
