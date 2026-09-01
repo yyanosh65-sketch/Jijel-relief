@@ -4,29 +4,43 @@ import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 
+import type { MapIntelligenceData } from "@/actions/intelligence";
+import { getVillageDossier } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
 import NeedCard from "@/components/needs/NeedCard";
+import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
+import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
+import { getDossierById, getNearbyFacilities } from "@/lib/intelligence";
 
 const ReconstructionMap = dynamic(() => import("./ReconstructionMap"), {
   ssr: false,
   loading: () => (
     <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-sm text-zinc-600">
-      Loading reconstruction map...
+      جاري تحميل الخريطة...
     </div>
   ),
 });
 
 type ReconstructionMapLoaderProps = {
   needs: MapNeed[];
+  intelligence: MapIntelligenceData;
 };
 
 export default function ReconstructionMapLoader({
   needs,
+  intelligence,
 }: ReconstructionMapLoaderProps) {
   const router = useRouter();
   const [selectedNeed, setSelectedNeed] = useState<MapNeed | null>(null);
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
+  const [selectedDossier, setSelectedDossier] = useState<VillageDossier | null>(
+    null,
+  );
+  const [dossierFacilities, setDossierFacilities] = useState<
+    EmergencyFacility[]
+  >([]);
+  const [isDossierOpen, setIsDossierOpen] = useState(false);
 
   function openPledgeModal(need: MapNeed) {
     setSelectedNeed(need);
@@ -38,15 +52,42 @@ export default function ReconstructionMapLoader({
     setSelectedNeed(null);
   }
 
+  async function openVillageDossier(dossierId: string) {
+    const localDossier = getDossierById(dossierId);
+
+    if (localDossier) {
+      setSelectedDossier(localDossier);
+      setDossierFacilities(getNearbyFacilities(localDossier));
+      setIsDossierOpen(true);
+      return;
+    }
+
+    const result = await getVillageDossier(dossierId);
+
+    if (result.success && result.data) {
+      setSelectedDossier(result.data.dossier);
+      setDossierFacilities(result.data.facilities);
+      setIsDossierOpen(true);
+    }
+  }
+
+  function closeDossier() {
+    setIsDossierOpen(false);
+    setSelectedDossier(null);
+    setDossierFacilities([]);
+  }
+
   return (
     <>
       <div className="flex h-full flex-col lg:flex-row">
         <div className="h-[55vh] flex-1 lg:h-full">
           <ReconstructionMap
             needs={needs}
+            intelligence={intelligence}
             selectedNeedId={selectedNeed?.id ?? null}
             onPledgeClick={openPledgeModal}
             onPledgeSuccess={() => router.refresh()}
+            onVillageClick={openVillageDossier}
           />
         </div>
 
@@ -55,7 +96,7 @@ export default function ReconstructionMapLoader({
             <h2 className="text-sm font-semibold text-zinc-900">
               الحاجيات المسجلة — Besoins vérifiés
             </h2>
-            <p className="text-xs text-zinc-500">{needs.length} need(s)</p>
+            <p className="text-xs text-zinc-500">{needs.length} احتياج</p>
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {needs.map((need) => (
@@ -75,6 +116,13 @@ export default function ReconstructionMapLoader({
         open={isPledgeModalOpen}
         onClose={closePledgeModal}
         onSuccess={() => router.refresh()}
+      />
+
+      <VillageDossierDrawer
+        dossier={selectedDossier}
+        facilities={dossierFacilities}
+        open={isDossierOpen}
+        onClose={closeDossier}
       />
     </>
   );

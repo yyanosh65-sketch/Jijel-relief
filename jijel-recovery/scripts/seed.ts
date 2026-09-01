@@ -141,9 +141,15 @@ const SEED_NEEDS: SeedNeed[] = [
 ];
 
 async function runMigration(pool: Pool): Promise<void> {
-  const migrationPath = resolve(__dirname, "../drizzle/0001_init.sql");
-  const migrationSql = readFileSync(migrationPath, "utf8");
-  await pool.query(migrationSql);
+  const migrationPaths = [
+    resolve(__dirname, "../drizzle/0001_init.sql"),
+    resolve(__dirname, "../drizzle/0002_intelligence.sql"),
+  ];
+
+  for (const migrationPath of migrationPaths) {
+    const migrationSql = readFileSync(migrationPath, "utf8");
+    await pool.query(migrationSql);
+  }
 }
 
 async function seedDatabase(): Promise<void> {

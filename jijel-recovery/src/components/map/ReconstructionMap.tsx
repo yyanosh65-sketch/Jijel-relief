@@ -11,8 +11,15 @@ import {
 } from "react-leaflet";
 
 import { createPledge } from "@/actions/pledges";
+import type { MapIntelligenceData, SosMapAlert } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
 import { formatLocationHeader } from "@/lib/locations";
+import {
+  createFacilityMarkerIcon,
+  createRoadMarkerIcon,
+  createSosMarkerIcon,
+  createVillageMarkerIcon,
+} from "@/lib/map-layer-icons";
 import {
   DEFAULT_MAP_ZOOM,
   getMarkerColor,
@@ -22,6 +29,7 @@ import {
   type MapCategoryId,
   type MarkerColor,
 } from "@/lib/map-utils";
+import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
 import { buildWhatsAppUrl } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
@@ -45,10 +53,30 @@ function createMarkerIcon(color: MarkerColor): L.DivIcon {
 
 type ReconstructionMapProps = {
   needs: MapNeed[];
+  intelligence: MapIntelligenceData;
   selectedNeedId?: number | null;
   onPledgeClick: (need: MapNeed) => void;
   onPledgeSuccess?: () => void;
+  onVillageClick: (dossierId: string) => void;
 };
+
+type MapLayerKey = "needs" | "sos" | "roads" | "facilities" | "villages";
+
+const LAYER_TOGGLES: Array<{ key: MapLayerKey; labelAr: string; labelFr: string }> =
+  [
+    { key: "needs", labelAr: "الاحتياجات", labelFr: "Needs" },
+    { key: "sos", labelAr: "تنبيهات SOS", labelFr: "SOS Alerts" },
+    { key: "roads", labelAr: "حالة الطرق", labelFr: "Road Access" },
+    { key: "facilities", labelAr: "مرافق الطوارئ", labelFr: "Facilities" },
+    { key: "villages", labelAr: "القرى والدوائر", labelFr: "Villages" },
+  ];
+
+function getSosLabel(type: SosMapAlert["emergencyType"]): string {
+  return (
+    SOS_EMERGENCY_OPTIONS.find((option) => option.value === type)?.labelAr ??
+    type
+  );
+}
 
 type PopupFormState = {
   contributorName: string;
@@ -266,19 +294,37 @@ function NeedPopupContent({
 
 export default function ReconstructionMap({
   needs,
+  intelligence,
   selectedNeedId,
   onPledgeClick,
   onPledgeSuccess,
+  onVillageClick,
 }: ReconstructionMapProps) {
   const [activeCategories, setActiveCategories] = useState<Set<MapCategoryId>>(
     () => new Set(MAP_CATEGORIES.map((category) => category.id)),
   );
+  const [layers, setLayers] = useState<Record<MapLayerKey, boolean>>({
+    needs: true,
+    sos: true,
+    roads: true,
+    facilities: true,
+    villages: true,
+  });
 
   const markerIcons = useMemo(
     () => ({
       red: createMarkerIcon("red"),
       orange: createMarkerIcon("orange"),
       green: createMarkerIcon("green"),
+      sos: createSosMarkerIcon(),
+    }),
+    [],
+  );
+
+  const villageIcons = useMemo(
+    () => ({
+      commune: createVillageMarkerIcon(false),
+      daira: createVillageMarkerIcon(true),
     }),
     [],
   );
@@ -302,9 +348,13 @@ export default function ReconstructionMap({
     });
   }
 
+  function toggleLayer(layer: MapLayerKey) {
+    setLayers((current) => ({ ...current, [layer]: !current[layer] }));
+  }
+
   return (
     <div dir="rtl" className="relative h-full w-full">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex justify-center p-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex flex-col items-center gap-2 p-4">
         <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur">
           {MAP_CATEGORIES.map((category) => {
             const isActive = activeCategories.has(category.id);
@@ -323,6 +373,29 @@ export default function ReconstructionMap({
               >
                 <span>{category.labelAr}</span>
                 <span className="opacity-80"> ({category.labelFr})</span>
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur">
+          {LAYER_TOGGLES.map((layer) => {
+            const isActive = layers[layer.key];
+
+            return (
+              <button
+                key={layer.key}
+                type="button"
+                onClick={() => toggleLayer(layer.key)}
+                className={cn(
+                  "rounded-full px-3 py-1.5 text-xs font-medium transition",
+                  isActive
+                    ? "bg-zinc-800 text-white"
+                    : "bg-zinc-100 text-zinc-500",
+                )}
+              >
+                {layer.labelAr}{" "}
+                <span className="opacity-75">({layer.labelFr})</span>
               </button>
             );
           })}
@@ -358,30 +431,123 @@ export default function ReconstructionMap({
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
 
-        {visibleNeeds.map((need) => {
-          const color = getMarkerColor(need);
-          const isSelected = selectedNeedId === need.id;
+        {layers.villages
+          ? intelligence.villagePins.map((pin) => (
+              <Marker
+                key={pin.id}
+                position={[pin.lat, pin.lng]}
+                icon={
+                  pin.type === "daira" ? villageIcons.daira : villageIcons.commune
+                }
+                eventHandlers={{
+                  click: () => onVillageClick(pin.id),
+                }}
+              >
+                <Popup>
+                  <div dir="rtl" className="text-right text-sm">
+                    <p className="font-semibold">{pin.name_ar}</p>
+                    <p className="text-xs text-zinc-500">{pin.name}</p>
+                    <button
+                      type="button"
+                      onClick={() => onVillageClick(pin.id)}
+                      className="mt-2 w-full rounded-md bg-blue-700 px-2 py-1.5 text-xs text-white"
+                    >
+                      فتح ملف القرية
+                    </button>
+                  </div>
+                </Popup>
+              </Marker>
+            ))
+          : null}
 
-          return (
-            <Marker
-              key={need.id}
-              position={[need.lat, need.lng]}
-              icon={markerIcons[color]}
-              opacity={isSelected ? 1 : 0.92}
-            >
-              <Popup>
-                <NeedPopupContent
-                  need={need}
-                  onPledgeClick={onPledgeClick}
-                  onPledgeSuccess={onPledgeSuccess}
-                />
-              </Popup>
-            </Marker>
-          );
-        })}
+        {layers.roads
+          ? intelligence.roads.map((road) => (
+              <Marker
+                key={road.id}
+                position={[road.lat, road.lng]}
+                icon={createRoadMarkerIcon(road.passability)}
+              >
+                <Popup>
+                  <div dir="rtl" className="text-right text-sm">
+                    <p className="font-semibold">{road.name_ar}</p>
+                    <p className="text-xs text-zinc-500">{road.notes}</p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))
+          : null}
+
+        {layers.facilities
+          ? intelligence.facilities.map((facility) => (
+              <Marker
+                key={facility.id}
+                position={[facility.lat, facility.lng]}
+                icon={createFacilityMarkerIcon(facility.type)}
+              >
+                <Popup>
+                  <div dir="rtl" className="text-right text-sm">
+                    <p className="font-semibold">{facility.name_ar}</p>
+                    <a
+                      href={`tel:${facility.phone}`}
+                      className="mt-1 inline-block text-xs font-bold text-red-700"
+                    >
+                      📞 {facility.phone}
+                    </a>
+                  </div>
+                </Popup>
+              </Marker>
+            ))
+          : null}
+
+        {layers.sos
+          ? intelligence.sosAlerts.map((alert) => (
+              <Marker
+                key={`sos-${alert.id}`}
+                position={[alert.lat, alert.lng]}
+                icon={markerIcons.sos}
+                zIndexOffset={1000}
+              >
+                <Popup>
+                  <div dir="rtl" className="min-w-[200px] text-right text-sm">
+                    <p className="font-bold text-red-700">
+                      🚨 {getSosLabel(alert.emergencyType)}
+                    </p>
+                    <p className="mt-1">{alert.description}</p>
+                    <p className="mt-1 text-xs text-zinc-500">
+                      {alert.commune} · {alert.daira}
+                    </p>
+                  </div>
+                </Popup>
+              </Marker>
+            ))
+          : null}
+
+        {layers.needs
+          ? visibleNeeds.map((need) => {
+              const color = getMarkerColor(need);
+              const isSelected = selectedNeedId === need.id;
+
+              return (
+                <Marker
+                  key={need.id}
+                  position={[need.lat, need.lng]}
+                  icon={markerIcons[color]}
+                  opacity={isSelected ? 1 : 0.92}
+                >
+                  <Popup>
+                    <NeedPopupContent
+                      need={need}
+                      onPledgeClick={onPledgeClick}
+                      onPledgeSuccess={onPledgeSuccess}
+                    />
+                  </Popup>
+                </Marker>
+              );
+            })
+          : null}
       </MapContainer>
 
-      {visibleNeeds.length === 0 ? (
+      {layers.needs && visibleNeeds.length === 0 ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-20 z-[1000] flex justify-center px-4">
           <div className="flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm text-zinc-600 shadow-lg">
             <MapPin className="h-4 w-4" />

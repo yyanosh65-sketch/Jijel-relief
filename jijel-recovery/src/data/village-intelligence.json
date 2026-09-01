@@ -1,0 +1,294 @@
+{
+  "dossiers": [
+    {
+      "id": "taher",
+      "type": "commune",
+      "name": "Taher",
+      "name_ar": "الطاهير",
+      "daira": "Taher",
+      "daira_ar": "الطاهير",
+      "lat": 36.7783,
+      "lng": 5.8944,
+      "population": 12400,
+      "totalFamilies": 2100,
+      "affectedFamilies": 380,
+      "damagePercent": 42,
+      "roadPassability": "rough_4x4",
+      "waterStatus": "intermittent",
+      "electricityStatus": "partial",
+      "coordinator": {
+        "name": "Karim Benali",
+        "name_ar": "كريم بن علي",
+        "phone": "0555123456",
+        "verified": true
+      }
+    },
+    {
+      "id": "el-aouana",
+      "type": "commune",
+      "name": "El Aouana",
+      "name_ar": "العوانة",
+      "daira": "El Aouana",
+      "daira_ar": "العوانة",
+      "lat": 36.8419,
+      "lng": 5.8717,
+      "population": 9800,
+      "totalFamilies": 1650,
+      "affectedFamilies": 290,
+      "damagePercent": 35,
+      "roadPassability": "open",
+      "waterStatus": "normal",
+      "electricityStatus": "normal",
+      "coordinator": {
+        "name": "Nadia Meziane",
+        "name_ar": "نادية مزيان",
+        "phone": "0661234567",
+        "verified": true
+      }
+    },
+    {
+      "id": "jijel",
+      "type": "commune",
+      "name": "Jijel",
+      "name_ar": "جيجل",
+      "daira": "Jijel",
+      "daira_ar": "جيجل",
+      "lat": 36.8211,
+      "lng": 5.7667,
+      "population": 131000,
+      "totalFamilies": 22000,
+      "affectedFamilies": 1200,
+      "damagePercent": 18,
+      "roadPassability": "open",
+      "waterStatus": "normal",
+      "electricityStatus": "normal",
+      "coordinator": {
+        "name": "Samir Hadj",
+        "name_ar": "سمير حاج",
+        "phone": "0770123456",
+        "verified": true
+      }
+    },
+    {
+      "id": "texenna",
+      "type": "commune",
+      "name": "Texenna",
+      "name_ar": "تكسنة",
+      "daira": "Texenna",
+      "daira_ar": "تكسنة",
+      "lat": 36.6556,
+      "lng": 5.7444,
+      "population": 7200,
+      "totalFamilies": 1180,
+      "affectedFamilies": 410,
+      "damagePercent": 58,
+      "roadPassability": "closed",
+      "waterStatus": "cut_off",
+      "electricityStatus": "cut_off",
+      "coordinator": {
+        "name": "Yacine Boudiaf",
+        "name_ar": "ياسين بودياف",
+        "phone": "0771987654",
+        "verified": true
+      }
+    },
+    {
+      "id": "ziama",
+      "type": "commune",
+      "name": "Ziama Mansouriah",
+      "name_ar": "زيامة منصورية",
+      "daira": "Ziama Mansouriah",
+      "daira_ar": "زيامة منصورية",
+      "lat": 36.5333,
+      "lng": 5.7333,
+      "population": 5400,
+      "totalFamilies": 890,
+      "affectedFamilies": 320,
+      "damagePercent": 51,
+      "roadPassability": "rough_4x4",
+      "waterStatus": "intermittent",
+      "electricityStatus": "partial",
+      "coordinator": {
+        "name": "Fatima Zerrouki",
+        "name_ar": "فاطمة زروقي",
+        "phone": "0677112233",
+        "verified": true
+      }
+    },
+    {
+      "id": "chekfa",
+      "type": "commune",
+      "name": "Chekfa",
+      "name_ar": "الشقفة",
+      "daira": "Chekfa",
+      "daira_ar": "الشقفة",
+      "lat": 36.7647,
+      "lng": 5.96,
+      "population": 8600,
+      "totalFamilies": 1420,
+      "affectedFamilies": 210,
+      "damagePercent": 28,
+      "roadPassability": "open",
+      "waterStatus": "intermittent",
+      "electricityStatus": "partial",
+      "coordinator": {
+        "name": "Omar Khelifi",
+        "name_ar": "عمر خليفي",
+        "phone": "0555987654",
+        "verified": false
+      }
+    },
+    {
+      "id": "daira-taher",
+      "type": "daira",
+      "name": "Taher",
+      "name_ar": "الطاهير",
+      "daira": "Taher",
+      "daira_ar": "الطاهير",
+      "lat": 36.785,
+      "lng": 5.9,
+      "population": 48200,
+      "totalFamilies": 8100,
+      "affectedFamilies": 1450,
+      "damagePercent": 39,
+      "roadPassability": "rough_4x4",
+      "waterStatus": "intermittent",
+      "electricityStatus": "partial",
+      "coordinator": {
+        "name": "Karim Benali",
+        "name_ar": "كريم بن علي",
+        "phone": "0555123456",
+        "verified": true
+      }
+    },
+    {
+      "id": "daira-texenna",
+      "type": "daira",
+      "name": "Texenna",
+      "name_ar": "تكسنة",
+      "daira": "Texenna",
+      "daira_ar": "تكسنة",
+      "lat": 36.636,
+      "lng": 5.764,
+      "population": 22100,
+      "totalFamilies": 3650,
+      "affectedFamilies": 980,
+      "damagePercent": 52,
+      "roadPassability": "closed",
+      "waterStatus": "cut_off",
+      "electricityStatus": "partial",
+      "coordinator": {
+        "name": "Yacine Boudiaf",
+        "name_ar": "ياسين بودياف",
+        "phone": "0771987654",
+        "verified": true
+      }
+    }
+  ],
+  "facilities": [
+    {
+      "id": "vet-taher",
+      "type": "veterinary",
+      "name": "Veterinary Clinic Taher",
+      "name_ar": "مستوصف بيطري الطاهير",
+      "phone": "034718001",
+      "lat": 36.779,
+      "lng": 5.896,
+      "commune": "Taher",
+      "daira": "Taher"
+    },
+    {
+      "id": "vet-jijel",
+      "type": "veterinary",
+      "name": "Jijel Veterinary Center",
+      "name_ar": "مركز البيطرة بجيجل",
+      "phone": "034701122",
+      "lat": 36.82,
+      "lng": 5.77,
+      "commune": "Jijel",
+      "daira": "Jijel"
+    },
+    {
+      "id": "vet-ziama",
+      "type": "veterinary",
+      "name": "Ziama Mobile Vet Unit",
+      "name_ar": "وحدة بيطرة متنقلة زيامة",
+      "phone": "0677001122",
+      "lat": 36.535,
+      "lng": 5.736,
+      "commune": "Ziama Mansouriah",
+      "daira": "Ziama Mansouriah"
+    },
+    {
+      "id": "pc-jijel",
+      "type": "civil_protection",
+      "name": "Civil Protection Jijel",
+      "name_ar": "الحماية المدنية جيجل",
+      "phone": "14",
+      "lat": 36.818,
+      "lng": 5.768,
+      "commune": "Jijel",
+      "daira": "Jijel"
+    },
+    {
+      "id": "pc-taher",
+      "type": "civil_protection",
+      "name": "Civil Protection Taher",
+      "name_ar": "الحماية المدنية الطاهير",
+      "phone": "034718014",
+      "lat": 36.777,
+      "lng": 5.892,
+      "commune": "Taher",
+      "daira": "Taher"
+    },
+    {
+      "id": "pc-texenna",
+      "type": "civil_protection",
+      "name": "Civil Protection Texenna",
+      "name_ar": "الحماية المدنية تكسنة",
+      "phone": "034718033",
+      "lat": 36.654,
+      "lng": 5.746,
+      "commune": "Texenna",
+      "daira": "Texenna"
+    }
+  ],
+  "roads": [
+    {
+      "id": "road-taher-texenna",
+      "name": "RN44 Taher–Texenna",
+      "name_ar": "الطريق الوطني تكسنة–الطاهير",
+      "passability": "closed",
+      "lat": 36.71,
+      "lng": 5.82,
+      "notes": "انهيار جزئي عند المنعر"
+    },
+    {
+      "id": "road-ziama-pass",
+      "name": "Ziama Mountain Pass",
+      "name_ar": "ممر زيامة الجبلي",
+      "passability": "rough_4x4",
+      "lat": 36.55,
+      "lng": 5.75,
+      "notes": "مسلك وعر، 4x4 فقط"
+    },
+    {
+      "id": "road-el-aouana",
+      "name": "El Aouana Main Road",
+      "name_ar": "الطريق الرئيسي العوانة",
+      "passability": "open",
+      "lat": 36.84,
+      "lng": 5.87,
+      "notes": "مفتوح لكل المركبات"
+    },
+    {
+      "id": "road-chekfa-settara",
+      "name": "Chekfa–Settara Link",
+      "name_ar": "وصلة الشقفة–سطارة",
+      "passability": "rough_4x4",
+      "lat": 36.8,
+      "lng": 5.95,
+      "notes": "أضرار جسر خفيفة"
+    }
+  ]
+}
