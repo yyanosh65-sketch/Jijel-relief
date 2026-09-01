@@ -1,3 +1,5 @@
+import { Suspense } from "react";
+
 import { getMapIntelligence } from "@/actions/intelligence";
 import { getMapNeeds } from "@/actions/needs";
 import ReconstructionMapLoader from "@/components/map/ReconstructionMapLoader";
@@ -44,17 +46,25 @@ export default async function MapPage() {
         </p>
       </header>
       <div className="flex-1">
-        <ReconstructionMapLoader
-          needs={needsResult.data ?? []}
-          intelligence={
-            intelligenceResult.data ?? {
-              villagePins: [],
-              facilities: [],
-              roads: [],
-              sosAlerts: [],
-            }
+        <Suspense
+          fallback={
+            <div className="flex h-full items-center justify-center bg-zinc-50 text-sm text-zinc-600">
+              جاري تحميل البحث والخريطة...
+            </div>
           }
-        />
+        >
+          <ReconstructionMapLoader
+            needs={needsResult.data ?? []}
+            intelligence={
+              intelligenceResult.data ?? {
+                villagePins: [],
+                facilities: [],
+                roads: [],
+                sosAlerts: [],
+              }
+            }
+          />
+        </Suspense>
       </div>
     </main>
   );

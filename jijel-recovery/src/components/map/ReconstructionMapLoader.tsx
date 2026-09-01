@@ -1,17 +1,22 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useMemo, useState } from "react";
 
 import type { MapIntelligenceData } from "@/actions/intelligence";
 import { getVillageDossier } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
+import AdvancedNeedSearch from "@/components/search/AdvancedNeedSearch";
 import NeedCard from "@/components/needs/NeedCard";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
 import { getDossierById, getNearbyFacilities } from "@/lib/intelligence";
+import {
+  filterAndSortNeeds,
+  parseNeedSearchParams,
+} from "@/lib/need-search";
 
 const ReconstructionMap = dynamic(() => import("./ReconstructionMap"), {
   ssr: false,
@@ -32,6 +37,15 @@ export default function ReconstructionMapLoader({
   intelligence,
 }: ReconstructionMapLoaderProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const filters = useMemo(
+    () => parseNeedSearchParams(searchParams),
+    [searchParams],
+  );
+  const filteredNeeds = useMemo(
+    () => filterAndSortNeeds(needs, filters, intelligence),
+    [filters, intelligence, needs],
+  );
   const [selectedNeed, setSelectedNeed] = useState<MapNeed | null>(null);
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
   const [selectedDossier, setSelectedDossier] = useState<VillageDossier | null>(
@@ -79,10 +93,13 @@ export default function ReconstructionMapLoader({
 
   return (
     <>
-      <div className="flex h-full flex-col lg:flex-row">
+      <div className="flex h-full min-h-0 flex-col">
+        <AdvancedNeedSearch />
+
+        <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
         <div className="h-[55vh] flex-1 lg:h-full">
           <ReconstructionMap
-            needs={needs}
+            needs={filteredNeeds}
             intelligence={intelligence}
             selectedNeedId={selectedNeed?.id ?? null}
             onPledgeClick={openPledgeModal}
@@ -96,10 +113,17 @@ export default function ReconstructionMapLoader({
             <h2 className="text-sm font-semibold text-zinc-900">
               الحاجيات المسجلة — Besoins vérifiés
             </h2>
-            <p className="text-xs text-zinc-500">{needs.length} احتياج</p>
+            <p className="text-xs text-zinc-500">
+              {filteredNeeds.length} من {needs.length} احتياج
+            </p>
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
-            {needs.map((need) => (
+            {filteredNeeds.length === 0 ? (
+              <p className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-6 text-center text-sm text-zinc-500">
+                لا توجد نتائج مطابقة — جرّب توسيع نطاق البحث أو تعديل الفلاتر.
+              </p>
+            ) : null}
+            {filteredNeeds.map((need) => (
               <NeedCard
                 key={need.id}
                 need={need}
@@ -109,6 +133,7 @@ export default function ReconstructionMapLoader({
             ))}
           </div>
         </aside>
+        </div>
       </div>
 
       <PledgeModal
