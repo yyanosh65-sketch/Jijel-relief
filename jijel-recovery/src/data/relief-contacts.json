@@ -1,0 +1,158 @@
+{
+  "reliefHubs": [
+    {
+      "id": "hub-jijel-central",
+      "name_ar": "مستودع الإغاثة المركزي — ولاية جيجل",
+      "commune": "Jijel",
+      "daira": "Jijel",
+      "lat": 36.8185,
+      "lng": 5.762,
+      "phone": "034471200",
+      "services": ["food_kits", "blankets", "water", "medicine"]
+    },
+    {
+      "id": "hub-taher",
+      "name_ar": "نقطة تجميع الإغاثة — الطاهير",
+      "commune": "Taher",
+      "daira": "Taher",
+      "lat": 36.7765,
+      "lng": 5.891,
+      "phone": "034718050",
+      "services": ["food_kits", "animal_feed", "tents"]
+    },
+    {
+      "id": "hub-texenna",
+      "name_ar": "مستودع ميداني تكسنة",
+      "commune": "Texenna",
+      "daira": "Texenna",
+      "lat": 36.654,
+      "lng": 5.745,
+      "phone": "0772456789",
+      "services": ["water", "generators", "4x4_dispatch"]
+    },
+    {
+      "id": "hub-el-aouana",
+      "name_ar": "مركز تجميع العوانة",
+      "commune": "El Aouana",
+      "daira": "El Aouana",
+      "lat": 36.839,
+      "lng": 5.869,
+      "phone": "0661987654",
+      "services": ["food_kits", "clothing", "tools"]
+    }
+  ],
+  "fieldTeams": [
+    {
+      "id": "team-4x4-jijel-ziama",
+      "name_ar": "فرقة 4x4 جيجل — زيامة",
+      "commune": "Jijel",
+      "daira": "Jijel",
+      "lat": 36.815,
+      "lng": 5.77,
+      "phone": "0555789012",
+      "vehicle": "4x4",
+      "coverage": ["Ziama Mansouriah", "Texenna", "Jijel"]
+    },
+    {
+      "id": "team-taher-rapid",
+      "name_ar": "فريق الإغاثة السريعة — الطاهير",
+      "commune": "Taher",
+      "daira": "Taher",
+      "lat": 36.779,
+      "lng": 5.895,
+      "phone": "0771345678",
+      "vehicle": "4x4_ambulance",
+      "coverage": ["Taher", "Chekfa", "Settara"]
+    },
+    {
+      "id": "team-el-aouana-logistics",
+      "name_ar": "وحدة لوجستيك العوانة",
+      "commune": "El Aouana",
+      "daira": "El Aouana",
+      "lat": 36.842,
+      "lng": 5.872,
+      "phone": "0662233445",
+      "vehicle": "truck_4x4",
+      "coverage": ["El Aouana", "Selma Ben Ali", "Kaous"]
+    },
+    {
+      "id": "team-ziama-mountain",
+      "name_ar": "سيارة إغاثة المسلك الجبلي — زيامة",
+      "commune": "Ziama Mansouriah",
+      "daira": "Ziama Mansouriah",
+      "lat": 36.536,
+      "lng": 5.735,
+      "phone": "0677118899",
+      "vehicle": "4x4",
+      "coverage": ["Ziama Mansouriah", "Bordj T'har"]
+    }
+  ],
+  "villageLeads": [
+    {
+      "id": "lead-taher",
+      "name_ar": "كريم بن علي",
+      "role_ar": "منسق لجنة الطاهير",
+      "commune": "Taher",
+      "daira": "Taher",
+      "lat": 36.7783,
+      "lng": 5.8944,
+      "phone": "0555123456",
+      "verified": true
+    },
+    {
+      "id": "lead-jijel",
+      "name_ar": "سمير حاج",
+      "role_ar": "منسق بلدية جيجل",
+      "commune": "Jijel",
+      "daira": "Jijel",
+      "lat": 36.8211,
+      "lng": 5.7667,
+      "phone": "0770123456",
+      "verified": true
+    },
+    {
+      "id": "lead-texenna",
+      "name_ar": "ياسين بودياف",
+      "role_ar": "مسؤول لجنة تكسنة",
+      "commune": "Texenna",
+      "daira": "Texenna",
+      "lat": 36.6556,
+      "lng": 5.7444,
+      "phone": "0771987654",
+      "verified": true
+    },
+    {
+      "id": "lead-el-aouana",
+      "name_ar": "نادية مزيان",
+      "role_ar": "منسقة لجنة العوانة",
+      "commune": "El Aouana",
+      "daira": "El Aouana",
+      "lat": 36.8419,
+      "lng": 5.8717,
+      "phone": "0661234567",
+      "verified": true
+    },
+    {
+      "id": "lead-ziama",
+      "name_ar": "فاطمة زروقي",
+      "role_ar": "مسؤولة قرية زيامة منصورية",
+      "commune": "Ziama Mansouriah",
+      "daira": "Ziama Mansouriah",
+      "lat": 36.5333,
+      "lng": 5.7333,
+      "phone": "0677112233",
+      "verified": true
+    },
+    {
+      "id": "lead-chekfa",
+      "name_ar": "عمر خليفي",
+      "role_ar": "منسق لجنة الشقفة",
+      "commune": "Chekfa",
+      "daira": "Chekfa",
+      "lat": 36.7647,
+      "lng": 5.96,
+      "phone": "0555987654",
+      "verified": true
+    }
+  ]
+}

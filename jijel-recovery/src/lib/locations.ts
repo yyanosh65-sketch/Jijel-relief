@@ -1,4 +1,5 @@
 import jijelLocationsData from "@/data/jijel-locations.json";
+import { haversineKm } from "@/lib/geo";
 
 export type Commune = {
   name: string;
@@ -94,6 +95,94 @@ export function getCommuneArabicName(communeName: string): string {
   }
 
   return communeName;
+}
+
+export function getDairaCoordinates(dairaName: string): Coordinates | null {
+  const communes = getCommunesByDaira(dairaName);
+
+  if (communes.length === 0) {
+    return null;
+  }
+
+  const lat =
+    communes.reduce((sum, commune) => sum + commune.lat, 0) / communes.length;
+  const lng =
+    communes.reduce((sum, commune) => sum + commune.lng, 0) / communes.length;
+
+  return { lat, lng };
+}
+
+export function resolveLocationReference(input: {
+  lat?: number;
+  lng?: number;
+  commune?: string;
+  daira?: string;
+  jijelCenter?: Coordinates;
+  outsideThresholdKm?: number;
+}): {
+  lat: number;
+  lng: number;
+  usedCommuneFallback: boolean;
+} | null {
+  const jijelCenter = input.jijelCenter ?? { lat: 36.8205, lng: 5.7667 };
+  const outsideThresholdKm = input.outsideThresholdKm ?? 100;
+
+  const hasGps =
+    typeof input.lat === "number" &&
+    typeof input.lng === "number" &&
+    !Number.isNaN(input.lat) &&
+    !Number.isNaN(input.lng);
+
+  if (hasGps) {
+    const distanceFromJijel = haversineKm(
+      input.lat!,
+      input.lng!,
+      jijelCenter.lat,
+      jijelCenter.lng,
+    );
+
+    if (distanceFromJijel <= outsideThresholdKm) {
+      return {
+        lat: input.lat!,
+        lng: input.lng!,
+        usedCommuneFallback: false,
+      };
+    }
+  }
+
+  if (input.commune) {
+    const communeCoords = getCommuneCoordinates(input.commune);
+
+    if (communeCoords) {
+      return {
+        lat: communeCoords.lat,
+        lng: communeCoords.lng,
+        usedCommuneFallback: true,
+      };
+    }
+  }
+
+  if (input.daira) {
+    const dairaCoords = getDairaCoordinates(input.daira);
+
+    if (dairaCoords) {
+      return {
+        lat: dairaCoords.lat,
+        lng: dairaCoords.lng,
+        usedCommuneFallback: true,
+      };
+    }
+  }
+
+  if (hasGps) {
+    return {
+      lat: input.lat!,
+      lng: input.lng!,
+      usedCommuneFallback: false,
+    };
+  }
+
+  return null;
 }
 
 export function getDairaArabicName(dairaName: string): string {

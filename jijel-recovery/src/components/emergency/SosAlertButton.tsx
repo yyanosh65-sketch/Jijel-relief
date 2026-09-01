@@ -303,6 +303,7 @@ export default function SosAlertButton() {
                   lat={form.lat}
                   lng={form.lng}
                   commune={form.commune}
+                  daira={form.daira}
                   hasGps={hasGpsFix}
                 />
 
