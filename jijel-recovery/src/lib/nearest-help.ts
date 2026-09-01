@@ -12,8 +12,11 @@ import {
   formatHelperSkillsSubtitle,
 } from "@/lib/helpers";
 import {
+  communeMatchesReliefContact,
+  formatReliefContactSubtitle,
   RELIEF_CONTACT_BADGES,
-  reliefContacts,
+  verifiedReliefContacts,
+  type JsonReliefContactCategory,
   type ReliefContactCategory,
 } from "@/lib/relief-contacts";
 
@@ -108,7 +111,7 @@ function matchesSelectedArea(
     return true;
   }
 
-  if (commune && entry.commune === commune) {
+  if (commune && communeMatchesReliefContact(entry.commune, commune)) {
     return true;
   }
 
@@ -119,29 +122,29 @@ function matchesSelectedArea(
   return false;
 }
 
-export function resolveNearestHelpReference(input: NearestHelpInput): {
-  lat: number;
-  lng: number;
-  usedCommuneFallback: boolean;
-} | null {
-  return resolveLocationReference({
-    lat: input.lat,
-    lng: input.lng,
-    commune: input.commune,
-    daira: input.daira,
-    jijelCenter: JIJEL_CENTER,
-    outsideThresholdKm: 100,
-  });
+function mapVerifiedContactToNearest(
+  contact: (typeof verifiedReliefContacts)[number],
+  distanceKm: number | null,
+): NearestContact {
+  return {
+    id: contact.id,
+    category: contact.category,
+    badge: RELIEF_CONTACT_BADGES[contact.category],
+    name: contact.name,
+    subtitle: formatReliefContactSubtitle(contact),
+    phone: contact.phone,
+    whatsappPhone: contact.whatsapp,
+    distanceKm,
+  };
 }
 
-export function buildReliefContactsFromJson(
+function buildCategoryContacts(
+  category: JsonReliefContactCategory,
   input: NearestHelpInput,
   reference: ReturnType<typeof resolveNearestHelpReference>,
   limit: number,
-): Pick<
-  CategorizedNearestContacts,
-  "reliefHubs" | "fieldTeams" | "villageLeads"
-> {
+  maxDistanceKm: number,
+): NearestContact[] {
   const distanceFor = (lat: number, lng: number): number | null =>
     reference ? computeDistanceKm(reference, lat, lng) : null;
 
@@ -157,58 +160,67 @@ export function buildReliefContactsFromJson(
     );
   };
 
-  const reliefHubs = sortContacts(
-    areaFilter(reliefContacts.reliefHubs)
-      .map((hub) => ({
-        id: hub.id,
-        category: "relief_hub" as const,
-        badge: RELIEF_CONTACT_BADGES.relief_hub,
-        name: hub.name_ar,
-        subtitle: `${getCommuneArabicName(hub.commune)} — دائرة ${getDairaArabicName(hub.daira)}`,
-        phone: hub.phone,
-        distanceKm: distanceFor(hub.lat, hub.lng),
-      }))
+  return sortContacts(
+    areaFilter(verifiedReliefContacts.filter((item) => item.category === category))
+      .map((contact) =>
+        mapVerifiedContactToNearest(
+          contact,
+          distanceFor(contact.lat, contact.lng),
+        ),
+      )
       .filter((contact) =>
-        reference ? (contact.distanceKm ?? 999) <= 80 : true,
+        reference ? (contact.distanceKm ?? 999) <= maxDistanceKm : true,
       )
       .slice(0, limit),
   );
+}
 
-  const fieldTeams = sortContacts(
-    areaFilter(reliefContacts.fieldTeams)
-      .map((team) => ({
-        id: team.id,
-        category: "field_team" as const,
-        badge: RELIEF_CONTACT_BADGES.field_team,
-        name: team.name_ar,
-        subtitle: `تغطية: ${team.coverage.map((area) => getCommuneArabicName(area)).join("، ")}`,
-        phone: team.phone,
-        distanceKm: distanceFor(team.lat, team.lng),
-      }))
-      .filter((contact) =>
-        reference ? (contact.distanceKm ?? 999) <= 80 : true,
-      )
-      .slice(0, limit),
-  );
+export function buildReliefContactsFromJson(
+  input: NearestHelpInput,
+  reference: ReturnType<typeof resolveNearestHelpReference>,
+  limit: number,
+): Pick<
+  CategorizedNearestContacts,
+  "reliefHubs" | "fieldTeams" | "villageLeads"
+> {
+  return {
+    reliefHubs: buildCategoryContacts(
+      "relief_hub",
+      input,
+      reference,
+      limit,
+      80,
+    ),
+    fieldTeams: buildCategoryContacts(
+      "field_team",
+      input,
+      reference,
+      limit,
+      80,
+    ),
+    villageLeads: buildCategoryContacts(
+      "village_lead",
+      input,
+      reference,
+      limit,
+      60,
+    ),
+  };
+}
 
-  const villageLeads = sortContacts(
-    areaFilter(reliefContacts.villageLeads.filter((lead) => lead.verified))
-      .map((lead) => ({
-        id: lead.id,
-        category: "village_lead" as const,
-        badge: RELIEF_CONTACT_BADGES.village_lead,
-        name: lead.name_ar,
-        subtitle: lead.role_ar,
-        phone: lead.phone,
-        distanceKm: distanceFor(lead.lat, lead.lng),
-      }))
-      .filter((contact) =>
-        reference ? (contact.distanceKm ?? 999) <= 60 : true,
-      )
-      .slice(0, limit),
-  );
-
-  return { reliefHubs, fieldTeams, villageLeads };
+export function resolveNearestHelpReference(input: NearestHelpInput): {
+  lat: number;
+  lng: number;
+  usedCommuneFallback: boolean;
+} | null {
+  return resolveLocationReference({
+    lat: input.lat,
+    lng: input.lng,
+    commune: input.commune,
+    daira: input.daira,
+    jijelCenter: JIJEL_CENTER,
+    outsideThresholdKm: 100,
+  });
 }
 
 export function mapFacilityRowToContact(row: {

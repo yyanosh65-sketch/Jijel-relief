@@ -1,318 +1,145 @@
-{
-  "reliefHubs": [
-    {
-      "id": "hub-jijel-central",
-      "name_ar": "مستودع الإغاثة المركزي — ولاية جيجل",
-      "commune": "Jijel",
-      "daira": "Jijel",
-      "lat": 36.8185,
-      "lng": 5.762,
-      "phone": "034471200",
-      "services": ["food_kits", "blankets", "water", "medicine"]
-    },
-    {
-      "id": "hub-taher",
-      "name_ar": "نقطة تجميع الإغاثة — الطاهير",
-      "commune": "Taher",
-      "daira": "Taher",
-      "lat": 36.7765,
-      "lng": 5.891,
-      "phone": "034718050",
-      "services": ["food_kits", "animal_feed", "tents"]
-    },
-    {
-      "id": "hub-texenna",
-      "name_ar": "مستودع ميداني تكسنة",
-      "commune": "Texenna",
-      "daira": "Texenna",
-      "lat": 36.654,
-      "lng": 5.745,
-      "phone": "0772456789",
-      "services": ["water", "generators", "4x4_dispatch"]
-    },
-    {
-      "id": "hub-el-aouana",
-      "name_ar": "مركز تجميع العوانة",
-      "commune": "El Aouana",
-      "daira": "El Aouana",
-      "lat": 36.839,
-      "lng": 5.869,
-      "phone": "0661987654",
-      "services": ["food_kits", "clothing", "tools"]
-    },
-    {
-      "id": "hub-mila-southeast",
-      "name_ar": "نقطة استقبال مدخل ميلة (سيدي معروف / غبالة)",
-      "commune": "Ferjioua",
-      "daira": "Ferjioua",
-      "lat": 36.4712,
-      "lng": 6.0485,
-      "phone": "0551224488",
-      "services": ["convoy_routing", "unload_sidi_maarouf", "unload_mila"]
-    },
-    {
-      "id": "hub-chekfa",
-      "name_ar": "مستودع تضامني الشقفة",
-      "commune": "Chekfa",
-      "daira": "Chekfa",
-      "lat": 36.7647,
-      "lng": 5.96,
-      "phone": "034719030",
-      "services": ["food_kits", "roofing", "blankets"]
-    },
-    {
-      "id": "hub-ziama",
-      "name_ar": "نقطة إغاثة جبلية — زيامة منصورية",
-      "commune": "Ziama Mansouriah",
-      "daira": "Ziama Mansouriah",
-      "lat": 36.5333,
-      "lng": 5.7333,
-      "phone": "0677118899",
-      "services": ["water", "4x4_dispatch", "animal_feed"]
-    },
-    {
-      "id": "hub-el-ancer",
-      "name_ar": "مركز تجميع العنصر",
-      "commune": "El Ancer",
-      "daira": "El Ancer",
-      "lat": 36.6731,
-      "lng": 5.8508,
-      "phone": "034719880",
-      "services": ["food_kits", "medicine", "tools"]
-    },
-    {
-      "id": "hub-djimla",
-      "name_ar": "مستودع ميداني جيملة",
-      "commune": "Djimla",
-      "daira": "Djimla",
-      "lat": 36.9208,
-      "lng": 5.7583,
-      "phone": "034472110",
-      "services": ["blankets", "water", "clothing"]
-    }
-  ],
-  "fieldTeams": [
-    {
-      "id": "team-4x4-jijel-ziama",
-      "name_ar": "فرقة 4x4 جيجل — زيامة",
-      "commune": "Jijel",
-      "daira": "Jijel",
-      "lat": 36.815,
-      "lng": 5.77,
-      "phone": "0555789012",
-      "vehicle": "4x4",
-      "coverage": ["Ziama Mansouriah", "Texenna", "Jijel"]
-    },
-    {
-      "id": "team-taher-rapid",
-      "name_ar": "فريق الإغاثة السريعة — الطاهير",
-      "commune": "Taher",
-      "daira": "Taher",
-      "lat": 36.779,
-      "lng": 5.895,
-      "phone": "0771345678",
-      "vehicle": "4x4_ambulance",
-      "coverage": ["Taher", "Chekfa", "Settara"]
-    },
-    {
-      "id": "team-el-aouana-logistics",
-      "name_ar": "وحدة لوجستيك العوانة",
-      "commune": "El Aouana",
-      "daira": "El Aouana",
-      "lat": 36.842,
-      "lng": 5.872,
-      "phone": "0662233445",
-      "vehicle": "truck_4x4",
-      "coverage": ["El Aouana", "Selma Benziada", "Kaous"]
-    },
-    {
-      "id": "team-ziama-mountain",
-      "name_ar": "سيارة إغاثة المسلك الجبلي — زيامة",
-      "commune": "Ziama Mansouriah",
-      "daira": "Ziama Mansouriah",
-      "lat": 36.536,
-      "lng": 5.735,
-      "phone": "0677118899",
-      "vehicle": "4x4",
-      "coverage": ["Ziama Mansouriah", "Bordj T'har"]
-    },
-    {
-      "id": "team-vet-mobile-jijel",
-      "name_ar": "وحدة بيطرية متنقلة — مركز جيجل",
-      "commune": "Jijel",
-      "daira": "Jijel",
-      "lat": 36.8185,
-      "lng": 5.762,
-      "phone": "034482030",
-      "vehicle": "vet_truck",
-      "coverage": ["Jijel", "Taher", "Chekfa"]
-    },
-    {
-      "id": "team-vet-taher",
-      "name_ar": "سيارة بيطرية متنقلة — الطاهير",
-      "commune": "Taher",
-      "daira": "Taher",
-      "lat": 36.7741,
-      "lng": 5.8921,
-      "phone": "034482031",
-      "vehicle": "vet_truck",
-      "coverage": ["Taher", "Settara", "Ouled Rabah"]
-    },
-    {
-      "id": "team-vet-ziama",
-      "name_ar": "وحدة بيطرية جبلية — زيامة منصورية",
-      "commune": "Ziama Mansouriah",
-      "daira": "Ziama Mansouriah",
-      "lat": 36.536,
-      "lng": 5.735,
-      "phone": "0550123456",
-      "vehicle": "4x4_vet",
-      "coverage": ["Ziama Mansouriah", "Bordj T'har", "Texenna"]
-    },
-    {
-      "id": "team-vet-el-ancer",
-      "name_ar": "فرقة بيطرية ميدانية — العنصر",
-      "commune": "El Ancer",
-      "daira": "El Ancer",
-      "lat": 36.6731,
-      "lng": 5.8508,
-      "phone": "0663344556",
-      "vehicle": "vet_pickup",
-      "coverage": ["El Ancer", "Bouraoui Belhadef", "Djemaa Beni Habibi"]
-    },
-    {
-      "id": "team-4x4-chekfa",
-      "name_ar": "فرقة 4x4 الشقفة — تكسنة",
-      "commune": "Chekfa",
-      "daira": "Chekfa",
-      "lat": 36.7647,
-      "lng": 5.96,
-      "phone": "0772456780",
-      "vehicle": "4x4",
-      "coverage": ["Chekfa", "Texenna", "Kaous"]
-    }
-  ],
-  "villageLeads": [
-    {
-      "id": "lead-taher",
-      "name_ar": "كريم بن علي",
-      "role_ar": "منسق لجنة الطاهير",
-      "commune": "Taher",
-      "daira": "Taher",
-      "lat": 36.7783,
-      "lng": 5.8944,
-      "phone": "0555123456",
-      "verified": true
-    },
-    {
-      "id": "lead-jijel",
-      "name_ar": "سمير حاج",
-      "role_ar": "منسق بلدية جيجل",
-      "commune": "Jijel",
-      "daira": "Jijel",
-      "lat": 36.8211,
-      "lng": 5.7667,
-      "phone": "0770123456",
-      "verified": true
-    },
-    {
-      "id": "lead-texenna",
-      "name_ar": "ياسين بودياف",
-      "role_ar": "مسؤول لجنة تكسنة",
-      "commune": "Texenna",
-      "daira": "Texenna",
-      "lat": 36.6556,
-      "lng": 5.7444,
-      "phone": "0771987654",
-      "verified": true
-    },
-    {
-      "id": "lead-el-aouana",
-      "name_ar": "نادية مزيان",
-      "role_ar": "منسقة لجنة العوانة",
-      "commune": "El Aouana",
-      "daira": "El Aouana",
-      "lat": 36.8419,
-      "lng": 5.8717,
-      "phone": "0661234567",
-      "verified": true
-    },
-    {
-      "id": "lead-ziama",
-      "name_ar": "فاطمة زروقي",
-      "role_ar": "مسؤولة قرية زيامة منصورية",
-      "commune": "Ziama Mansouriah",
-      "daira": "Ziama Mansouriah",
-      "lat": 36.5333,
-      "lng": 5.7333,
-      "phone": "0677112233",
-      "verified": true
-    },
-    {
-      "id": "lead-chekfa",
-      "name_ar": "عمر خليفي",
-      "role_ar": "منسق لجنة الشقفة",
-      "commune": "Chekfa",
-      "daira": "Chekfa",
-      "lat": 36.7647,
-      "lng": 5.96,
-      "phone": "0555987654",
-      "verified": true
-    },
-    {
-      "id": "lead-el-ancer",
-      "name_ar": "محمد بوزيان",
-      "role_ar": "منسق لجنة العنصر",
-      "commune": "El Ancer",
-      "daira": "El Ancer",
-      "lat": 36.6731,
-      "lng": 5.8508,
-      "phone": "0556112233",
-      "verified": true
-    },
-    {
-      "id": "lead-djimla",
-      "name_ar": "أمينة قاسمي",
-      "role_ar": "منسقة لجنة جيملة",
-      "commune": "Djimla",
-      "daira": "Djimla",
-      "lat": 36.9208,
-      "lng": 5.7583,
-      "phone": "0667788990",
-      "verified": true
-    },
-    {
-      "id": "lead-settara",
-      "name_ar": "حسين بن عودة",
-      "role_ar": "مسؤول دشرة السطارة",
-      "commune": "Settara",
-      "daira": "Taher",
-      "lat": 36.748,
-      "lng": 5.912,
-      "phone": "0770334455",
-      "verified": true
-    },
-    {
-      "id": "lead-bouraoui",
-      "name_ar": "رشيد حملاوي",
-      "role_ar": "منسق بوراوي بلهادف",
-      "commune": "Bouraoui Belhadef",
-      "daira": "El Ancer",
-      "lat": 36.6514,
-      "lng": 5.8822,
-      "phone": "0559445566",
-      "verified": true
-    },
-    {
-      "id": "lead-kaous",
-      "name_ar": "ليلى مرزوق",
-      "role_ar": "منسقة لجنة قاوس",
-      "commune": "Kaous",
-      "daira": "El Aouana",
-      "lat": 36.858,
-      "lng": 5.895,
-      "phone": "0668877665",
-      "verified": true
-    }
-  ]
-}
+[
+  {
+    "category": "relief_hub",
+    "name": "المستودع الولائي الموحد - حي الرابطة",
+    "daira": "Jijel",
+    "commune": "جيجل",
+    "location_details": "القاعة البيضاوية بالرابطة، مخصصة للمؤن والعتاد",
+    "lat": 36.8145,
+    "lng": 5.7721,
+    "contact_person": "فريد بوكراع (تنسيق المجتمع المدني)",
+    "phone": "0550987654",
+    "whatsapp": "213550987654",
+    "status": "مفتوح 24/24 لاستقبال شاحنات الإغاثة"
+  },
+  {
+    "category": "relief_hub",
+    "name": "نقطة تجميع وتوجيه الشاحنات - الطاهير",
+    "daira": "Taher",
+    "commune": "الطاهير",
+    "location_details": "بجانب السوق المغطى القديم",
+    "lat": 36.7725,
+    "lng": 5.8978,
+    "contact_person": "كريم بوالشعور (جمعية كافل اليتيم)",
+    "phone": "0661445566",
+    "whatsapp": "213661445566",
+    "status": "تنسيق القوافل والشاحنات الكبيرة"
+  },
+  {
+    "category": "relief_hub",
+    "name": "نقطة تفريغ وتوزيع العتاد الفلاحي - الميلية",
+    "daira": "El Milia",
+    "commune": "الميلية",
+    "location_details": "المنطقة الحرفية طريق بوتياس",
+    "lat": 36.7521,
+    "lng": 6.2712,
+    "contact_person": "هشام بوعناني",
+    "phone": "0770334455",
+    "whatsapp": "213770334455",
+    "status": "مستودع لأنابيب السقي، خزانات الماء والأعلاف"
+  },
+  {
+    "category": "field_team",
+    "name": "فوج الإنقاذ وإخلاء الماشية - أعالي تاكسنة وجيملة",
+    "daira": "Texenna",
+    "commune": "تاكسنة",
+    "location_details": "تغطية مداشر كعوان، الحامة، والحدادة",
+    "lat": 36.6631,
+    "lng": 5.791,
+    "contact_person": "بلال قيطوني (فريق مركبات 4x4)",
+    "phone": "0661223344",
+    "whatsapp": "213661223344",
+    "status": "سيارات رباعية الدفع لفتح المسالك وإيصال المساعدات"
+  },
+  {
+    "category": "field_team",
+    "name": "فرقة التدخل واللوجستيك الجبلي (أعالي العوانة)",
+    "daira": "El Aouana",
+    "commune": "العوانة",
+    "location_details": "تغطية مداشر سلمى بن زيادة والتيميدار",
+    "lat": 36.7728,
+    "lng": 5.5481,
+    "contact_person": "ياسين لعمامرة (فريق سيارات 4x4)",
+    "phone": "0770889900",
+    "whatsapp": "213770889900",
+    "status": "جاهز لنقل المؤن للمداشر الوعرة"
+  },
+  {
+    "category": "field_team",
+    "name": "خلية الإسعاف البيطري المتنقل - دائرة الطاهير",
+    "daira": "Taher",
+    "commune": "الأمير عبد القادر",
+    "location_details": "مقر المفتشية البيطرية - تغطية مداشر وجانة والشحنة",
+    "lat": 36.782,
+    "lng": 5.864,
+    "contact_person": "د. سمير بلمعطي (طبيب بيطري)",
+    "phone": "0556112299",
+    "whatsapp": "213556112299",
+    "status": "علاج حروق الأبقار والأغنام وتوفير الأدوية مجاناً"
+  },
+  {
+    "category": "village_lead",
+    "name": "لجنة دشرة تيزي نيزنت - زيامة منصورية",
+    "daira": "Ziama Mansouriah",
+    "commune": "زيامة منصورية",
+    "location_details": "أعالي الكهوف العجيبة، دوار تيزي",
+    "lat": 36.671,
+    "lng": 5.483,
+    "contact_person": "العم رابح (ممثل سكان الدشرة)",
+    "phone": "0778556677",
+    "whatsapp": "213778556677",
+    "status": "حصر تضرر بساتين الزيتون وشبكات مياه الشرب"
+  },
+  {
+    "category": "village_lead",
+    "name": "لجنة قرية آيت علي - تاكسنة",
+    "daira": "Texenna",
+    "commune": "تاكسنة",
+    "location_details": "مقر لجنة المسجد، آيت علي",
+    "lat": 36.6617,
+    "lng": 5.7878,
+    "contact_person": "عمي مسعود (أمين اللجنة)",
+    "phone": "0555334411",
+    "whatsapp": "213555334411",
+    "status": "تحديد العائلات المتضررة وتوزيع العتاد"
+  },
+  {
+    "category": "village_lead",
+    "name": "خلية تنسيق دشرة إراقن سويسي",
+    "daira": "Ziama Mansouriah",
+    "commune": "إراقن سويسي",
+    "location_details": "أعالي السد، مدرسة الشهداء",
+    "lat": 36.5744,
+    "lng": 5.4522,
+    "contact_person": "سليمان مجدوب",
+    "phone": "0660998877",
+    "whatsapp": "213660998877",
+    "status": "توزيع صهاريج الماء ومضخات السقي"
+  },
+  {
+    "category": "village_lead",
+    "name": "لجنة مداشر بني خطاب والشحنة",
+    "daira": "Taher",
+    "commune": "الشحنة",
+    "location_details": "وسط البلدية، دوار بني خطاب",
+    "lat": 36.7028,
+    "lng": 5.9556,
+    "contact_person": "عبد الرزاق بولوداني",
+    "phone": "0771239845",
+    "whatsapp": "213771239845",
+    "status": "حصر خسائر أشجار الزيتون والمنازل"
+  },
+  {
+    "category": "village_lead",
+    "name": "لجنة قرية تمزرين - سيدي معروف",
+    "daira": "Sidi Maarouf",
+    "commune": "سيدي معروف",
+    "location_details": "قرية تمزرين قرب منعرجات غبالة",
+    "lat": 36.6201,
+    "lng": 6.1823,
+    "contact_person": "عمار بولخراص",
+    "phone": "0664998811",
+    "whatsapp": "213664998811",
+    "status": "تحديد العائلات المحتاجة لإعادة تسقيف المنازل"
+  }
+]

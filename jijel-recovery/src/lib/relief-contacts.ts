@@ -1,47 +1,111 @@
 import reliefContactsData from "@/data/relief-contacts.json";
+import { getCommuneArabicName, getDairaArabicName } from "@/lib/locations";
 
-export type ReliefHub = {
+export type JsonReliefContactCategory =
+  | "relief_hub"
+  | "field_team"
+  | "village_lead";
+
+export type VerifiedReliefContact = {
   id: string;
-  name_ar: string;
-  commune: string;
+  category: JsonReliefContactCategory;
+  name: string;
   daira: string;
+  commune: string;
+  location_details: string;
   lat: number;
   lng: number;
+  contact_person: string;
   phone: string;
-  services: string[];
+  whatsapp: string;
+  status: string;
 };
 
-export type FieldTeam = {
-  id: string;
-  name_ar: string;
-  commune: string;
-  daira: string;
-  lat: number;
-  lng: number;
-  phone: string;
-  vehicle: string;
-  coverage: string[];
-};
+type RawVerifiedReliefContact = Omit<VerifiedReliefContact, "id">;
 
-export type VillageLead = {
-  id: string;
-  name_ar: string;
-  role_ar: string;
-  commune: string;
-  daira: string;
-  lat: number;
-  lng: number;
-  phone: string;
-  verified: boolean;
-};
+function slugify(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[^\w\u0600-\u06FF]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
 
-export type ReliefContactsDataset = {
-  reliefHubs: ReliefHub[];
-  fieldTeams: FieldTeam[];
-  villageLeads: VillageLead[];
-};
+function withStableIds(
+  contacts: RawVerifiedReliefContact[],
+): VerifiedReliefContact[] {
+  const seen = new Map<string, number>();
 
-export const reliefContacts = reliefContactsData as ReliefContactsDataset;
+  return contacts.map((contact) => {
+    const base = `${contact.category}-${slugify(contact.name) || "contact"}`;
+    const count = seen.get(base) ?? 0;
+    seen.set(base, count + 1);
+
+    return {
+      ...contact,
+      id: count === 0 ? base : `${base}-${count + 1}`,
+    };
+  });
+}
+
+export const verifiedReliefContacts = withStableIds(
+  reliefContactsData as RawVerifiedReliefContact[],
+);
+
+export const reliefContactsByCategory = {
+  reliefHubs: verifiedReliefContacts.filter(
+    (contact) => contact.category === "relief_hub",
+  ),
+  fieldTeams: verifiedReliefContacts.filter(
+    (contact) => contact.category === "field_team",
+  ),
+  villageLeads: verifiedReliefContacts.filter(
+    (contact) => contact.category === "village_lead",
+  ),
+} as const;
+
+/** @deprecated Use verifiedReliefContacts */
+export const reliefContacts = reliefContactsByCategory;
+
+export function formatReliefContactSubtitle(
+  contact: VerifiedReliefContact,
+): string {
+  const communeLabel =
+    getCommuneArabicName(contact.commune) === contact.commune
+      ? contact.commune
+      : `${contact.commune} · ${getCommuneArabicName(contact.commune)}`;
+
+  return [
+    contact.contact_person,
+    `${communeLabel} — دائرة ${getDairaArabicName(contact.daira)}`,
+    contact.status,
+    contact.location_details,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+export function communeMatchesReliefContact(
+  entryCommune: string,
+  selectedCommune?: string,
+): boolean {
+  if (!selectedCommune) {
+    return false;
+  }
+
+  if (entryCommune === selectedCommune) {
+    return true;
+  }
+
+  const selectedArabic = getCommuneArabicName(selectedCommune);
+  const entryArabic = getCommuneArabicName(entryCommune);
+
+  return (
+    entryCommune === selectedArabic ||
+    entryArabic === selectedCommune ||
+    entryArabic === selectedArabic
+  );
+}
 
 export const RELIEF_CONTACT_BADGES = {
   relief_hub: "مستودع",
