@@ -13,6 +13,7 @@ import {
   CONVOY_VEHICLE_OPTIONS,
 } from "@/lib/convoys";
 import { formatAlgerianPhoneHint } from "@/lib/phone";
+import { formInputClass, formTextareaClass, selectFieldClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 type RegisterConvoyModalProps = {
@@ -20,8 +21,7 @@ type RegisterConvoyModalProps = {
   onClose: () => void;
 };
 
-const INPUT_CLASS =
-  "min-h-11 w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-3 text-sm focus:bg-white focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20";
+const INPUT_CLASS = formInputClass;
 
 const OVERLAY_CLASS =
   "fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-md overflow-y-auto";
@@ -233,7 +233,7 @@ export default function RegisterConvoyModal({
                     departureWilaya: event.target.value,
                   }))
                 }
-                className={INPUT_CLASS}
+                className={selectFieldClass}
               >
                 <option value="">اختر الولاية</option>
                 {ALGERIAN_WILAYAS.map((wilaya) => (
@@ -423,7 +423,7 @@ export default function RegisterConvoyModal({
                   }))
                 }
                 placeholder="عدد المركبات، حجم الحمولة، احتياج مرافق 4x4..."
-                className="w-full bg-slate-50 border border-slate-200 text-slate-900 rounded-xl px-3 py-2 text-sm focus:bg-white focus:border-sky-400 focus:outline-none focus:ring-2 focus:ring-sky-500/20"
+                className={formTextareaClass}
               />
             </div>
 

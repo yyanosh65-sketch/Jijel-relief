@@ -19,7 +19,15 @@ import {
   getDairas,
 } from "@/lib/locations";
 import { buildWhatsAppShareUrl } from "@/lib/phone";
-import { glassPanelClass } from "@/lib/ui-labels";
+import {
+  categoryButtonSelectedClass,
+  categoryButtonUnselectedClass,
+  formInputClass,
+  formTextareaClass,
+  glassPanelClass,
+  primaryNextButtonClass,
+  selectFieldClass,
+} from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 const INTAKE_CATEGORIES = [
@@ -324,7 +332,7 @@ export default function ReportDamageForm() {
                 setDaira(event.target.value);
                 setCommune("");
               }}
-              className="min-h-11 rounded-xl border border-slate-300 px-3 text-sm"
+              className={selectFieldClass}
             >
               <option value="">الدائرة</option>
               {dairas.map((entry) => (
@@ -339,7 +347,7 @@ export default function ReportDamageForm() {
               value={commune}
               disabled={!daira}
               onChange={(event) => handleCommuneChange(event.target.value)}
-              className="min-h-11 rounded-xl border border-slate-300 px-3 text-sm disabled:opacity-50"
+              className={cn(selectFieldClass, "disabled:opacity-50")}
             >
               <option value="">البلدية</option>
               {communes.map((entry) => (
@@ -354,14 +362,14 @@ export default function ReportDamageForm() {
             value={village}
             onChange={(event) => setVillage(event.target.value)}
             placeholder="الدشرة / الحي (مثال: بومرساس، تاقريت...)"
-            className="min-h-11 w-full rounded-xl border border-slate-300 px-3 text-sm"
+            className={formInputClass}
           />
 
           <button
             type="button"
             disabled={!canGoStep2}
             onClick={() => setStep(2)}
-            className="w-full rounded-xl bg-emerald-700 py-3 text-sm font-semibold text-white disabled:opacity-50"
+            className={cn(primaryNextButtonClass, "w-full")}
           >
             التالي
           </button>
@@ -389,10 +397,10 @@ export default function ReportDamageForm() {
                   setUnit(category.unit);
                 }}
                 className={cn(
-                  "rounded-xl border px-2 py-3 text-sm font-semibold transition",
+                  "px-2 text-sm transition-all",
                   intakeCategory === category.value
-                    ? "border-emerald-600 bg-emerald-50 text-emerald-800"
-                    : "border-slate-200 hover:border-emerald-300",
+                    ? categoryButtonSelectedClass
+                    : categoryButtonUnselectedClass,
                 )}
               >
                 {category.label}
@@ -408,13 +416,13 @@ export default function ReportDamageForm() {
               value={quantity}
               onChange={(event) => setQuantity(event.target.value)}
               placeholder="الكمية"
-              className="min-h-11 rounded-xl border border-slate-300 px-3 text-sm"
+              className={formInputClass}
             />
             <input
               value={unit}
               onChange={(event) => setUnit(event.target.value)}
               placeholder="الوحدة"
-              className="min-h-11 rounded-xl border border-slate-300 px-3 text-sm"
+              className={formInputClass}
             />
           </div>
 
@@ -423,14 +431,14 @@ export default function ReportDamageForm() {
             onChange={(event) => setDescription(event.target.value)}
             placeholder="تفاصيل إضافية (اختياري) — اشرح حالتك باختصار..."
             rows={3}
-            className="w-full rounded-xl border border-slate-300 px-3 py-2 text-sm"
+            className={formTextareaClass}
           />
 
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700"
+              className="rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800"
             >
               رجوع
             </button>
@@ -438,7 +446,7 @@ export default function ReportDamageForm() {
               type="button"
               disabled={!canGoStep3}
               onClick={() => setStep(3)}
-              className="flex-1 rounded-xl bg-emerald-700 py-3 text-sm font-semibold text-white disabled:opacity-50"
+              className={cn(primaryNextButtonClass, "flex-1")}
             >
               التالي
             </button>
@@ -501,7 +509,7 @@ export default function ReportDamageForm() {
             value={contactName}
             onChange={(event) => setContactName(event.target.value)}
             placeholder="الاسم الكامل"
-            className="min-h-11 w-full rounded-xl border border-slate-300 px-3 text-sm"
+            className={formInputClass}
           />
 
           <input
@@ -511,7 +519,7 @@ export default function ReportDamageForm() {
             value={contactPhone}
             onChange={(event) => setContactPhone(event.target.value)}
             placeholder="05XX XX XX XX"
-            className="min-h-11 w-full rounded-xl border border-slate-300 px-3 text-left text-sm"
+            className={cn(formInputClass, "text-left")}
           />
 
           <input
@@ -520,7 +528,7 @@ export default function ReportDamageForm() {
             value={contactWhatsapp}
             onChange={(event) => setContactWhatsapp(event.target.value)}
             placeholder="رقم الواتساب (نفس الهاتف أو آخر)"
-            className="min-h-11 w-full rounded-xl border border-slate-300 px-3 text-left text-sm"
+            className={cn(formInputClass, "text-left")}
           />
 
           {error ? <p className="text-sm text-red-600">{error}</p> : null}

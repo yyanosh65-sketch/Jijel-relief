@@ -3,6 +3,7 @@
 import { useState } from "react";
 
 import RegisterConvoyModal from "@/components/convoys/RegisterConvoyModal";
+import { navQuickActionAmberClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 type RegisterConvoyButtonProps = {
@@ -23,8 +24,8 @@ export default function RegisterConvoyButton({
         onClick={() => setIsOpen(true)}
         className={cn(
           variant === "navbar"
-            ? "rounded-full border border-sky-200 bg-white/90 px-4 py-2 text-xs font-semibold text-sky-900 shadow-sm backdrop-blur-md transition hover:scale-[1.02] hover:bg-sky-50"
-            : "fixed bottom-24 left-5 z-[2950] flex max-w-[min(90vw,300px)] items-center gap-2 rounded-full border border-sky-200/80 bg-white/95 px-4 py-3 text-sm font-bold text-sky-900 shadow-lg backdrop-blur-md transition hover:scale-105 hover:bg-sky-50",
+            ? navQuickActionAmberClass
+            : "fixed bottom-24 left-5 z-[2950] flex max-w-[min(90vw,300px)] items-center gap-2 rounded-full border border-amber-200/80 bg-amber-50 px-4 py-3 text-sm font-bold text-amber-900 shadow-lg backdrop-blur-md transition hover:scale-105 hover:bg-amber-100",
           className,
         )}
       >

@@ -10,7 +10,7 @@ import {
   formatAlgerianPhoneHint,
   isValidAlgerianPhone,
 } from "@/lib/phone";
-import { NeedProgressBar, glassPanelClass } from "@/lib/ui-labels";
+import { NeedProgressBar, formInputClass, glassPanelClass, selectFieldClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 export const PLEDGE_TYPES = [
@@ -240,7 +240,7 @@ export default function PledgeModal({
                     contributorName: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm outline-none focus:border-emerald-600"
+                className={formInputClass}
               />
             </div>
 
@@ -264,7 +264,7 @@ export default function PledgeModal({
                     contributorContact: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm outline-none focus:border-emerald-600"
+                className={formInputClass}
               />
             </div>
 
@@ -286,7 +286,7 @@ export default function PledgeModal({
                       quantity: event.target.value,
                     }))
                   }
-                  className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm outline-none focus:border-emerald-600"
+                  className={formInputClass}
                 />
               </div>
 
@@ -303,7 +303,7 @@ export default function PledgeModal({
                       pledgeType: event.target.value as PledgeType,
                     }))
                   }
-                  className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm outline-none focus:border-emerald-600"
+                  className={selectFieldClass}
                 >
                   {PLEDGE_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>

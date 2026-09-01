@@ -8,7 +8,7 @@ import type { HelperSkill } from "@/db/schema";
 import { HELPER_SKILL_OPTIONS } from "@/lib/helpers";
 import { getCommunesByDaira, getDairas } from "@/lib/locations";
 import { formatAlgerianPhoneHint } from "@/lib/phone";
-import { glassPanelClass } from "@/lib/ui-labels";
+import { formInputClass, glassPanelClass, selectFieldClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 type RegisterHelperModalProps = {
@@ -163,7 +163,7 @@ export default function RegisterHelperModal({
                     fullName: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm"
+                className={formInputClass}
               />
             </div>
 
@@ -182,7 +182,7 @@ export default function RegisterHelperModal({
                     phone: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm"
+                className={formInputClass}
               />
               <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
                 <input
@@ -208,7 +208,7 @@ export default function RegisterHelperModal({
                       whatsappPhone: event.target.value,
                     }))
                   }
-                  className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm"
+                  className={cn("mt-2", formInputClass)}
                 />
               ) : null}
             </div>
@@ -226,7 +226,7 @@ export default function RegisterHelperModal({
                       commune: "",
                     }))
                   }
-                  className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm"
+                  className={selectFieldClass}
                 >
                   <option value="">اختر الدائرة</option>
                   {dairas.map((daira) => (
@@ -248,7 +248,7 @@ export default function RegisterHelperModal({
                       commune: event.target.value,
                     }))
                   }
-                  className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm disabled:bg-slate-100"
+                  className={cn(selectFieldClass, "disabled:bg-slate-100")}
                 >
                   <option value="">اختر البلدية</option>
                   {communes.map((commune) => (

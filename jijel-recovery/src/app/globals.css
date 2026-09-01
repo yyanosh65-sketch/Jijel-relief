@@ -25,6 +25,25 @@ body {
   font-family: var(--font-sans);
 }
 
+select,
+select.form-select-field {
+  color: #0f172a;
+  background-color: #ffffff;
+  font-weight: 600;
+}
+
+select option {
+  color: #0f172a;
+  background-color: #ffffff;
+  font-weight: 600;
+  padding: 8px;
+}
+
+input:not([type="checkbox"]):not([type="radio"]),
+textarea {
+  color: #0f172a;
+}
+
 .leaflet-container {
   font-family: inherit;
 }

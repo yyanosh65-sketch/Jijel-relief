@@ -10,6 +10,11 @@ import SosMediaCapture, {
 } from "@/components/emergency/SosMediaCapture";
 import { getCommuneCoordinates, getCommunesByDaira, getDairas, formatCommuneOptionLabel, formatDairaOptionLabel } from "@/lib/locations";
 import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
+import {
+  formInputClass,
+  formTextareaClass,
+  selectFieldClass,
+} from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 type SosFormState = {
@@ -288,7 +293,7 @@ export default function SosAlertButton() {
                           commune: "",
                         }))
                       }
-                      className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm"
+                      className={selectFieldClass}
                     >
                       <option value="">
                         اختر الدائرة (مثل: الطاهير، العوانة...)
@@ -311,7 +316,7 @@ export default function SosAlertButton() {
                         handleCommuneChange(event.target.value)
                       }
                       disabled={!form.daira}
-                      className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm disabled:bg-zinc-100"
+                      className={cn(selectFieldClass, "disabled:bg-slate-100")}
                     >
                       <option value="">اختر البلدية</option>
                       {communes.map((commune) => (
@@ -344,7 +349,7 @@ export default function SosAlertButton() {
                       village: event.target.value,
                     }))
                   }
-                  className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm"
+                  className={formInputClass}
                 />
 
                 <textarea
@@ -358,7 +363,7 @@ export default function SosAlertButton() {
                       description: event.target.value,
                     }))
                   }
-                  className="w-full rounded-xl border border-zinc-300 px-3 py-2 text-sm"
+                  className={formTextareaClass}
                 />
 
                 <SosMediaCapture onChange={handleMediaChange} />
@@ -374,7 +379,7 @@ export default function SosAlertButton() {
                       reporterName: event.target.value,
                     }))
                   }
-                  className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm"
+                  className={formInputClass}
                 />
 
                 <input
@@ -387,7 +392,7 @@ export default function SosAlertButton() {
                       reporterPhone: event.target.value,
                     }))
                   }
-                  className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm"
+                  className={formInputClass}
                 />
 
                 {error ? <p className="text-sm text-red-600">{error}</p> : null}
