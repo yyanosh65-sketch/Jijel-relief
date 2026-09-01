@@ -4,16 +4,17 @@ import { useMemo, useState } from "react";
 import L from "leaflet";
 import { Loader2, MapPin } from "lucide-react";
 import {
-  MapContainer,
   Marker,
   Popup,
-  TileLayer,
 } from "react-leaflet";
 
 import { createPledge } from "@/actions/pledges";
 import type { MapIntelligenceData, SosMapAlert } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
+import LeafletMap from "@/components/map/LeafletMap";
+import MapClickReportModal from "@/components/map/MapClickReportModal";
 import MapPopupShell from "@/components/map/MapPopupShell";
+import MarkServedControls from "@/components/needs/MarkServedControls";
 import { translateNeedTitle } from "@/lib/need-display";
 import { formatLocationHeader } from "@/lib/locations";
 import {
@@ -24,14 +25,14 @@ import {
 } from "@/lib/map-layer-icons";
 import {
   MAP_POINT_TYPE_LABELS,
+  formatAddressHierarchy,
   resolveCommuneMapDetails,
+  resolveLocationMapDetails,
   roadPassabilityToAccessibility,
   getRoadPassabilityLabel,
 } from "@/lib/map-location-display";
 import {
-  DEFAULT_MAP_ZOOM,
   getMarkerColor,
-  JIJEL_CENTER,
   MAP_CATEGORIES,
   matchesMapCategories,
   type MapCategoryId,
@@ -135,7 +136,7 @@ function NeedPopupContent({
     need.location.daira,
   );
 
-  const mapDetails = resolveCommuneMapDetails(
+  const mapDetails = resolveLocationMapDetails(
     need.location.address ?? need.location.name,
     need.location.daira ?? "",
     need.location.name,
@@ -280,6 +281,14 @@ function NeedPopupContent({
           تم تلبية هذا الاحتياج بالكامل.
         </p>
       )}
+
+      <MarkServedControls
+        needId={need.id}
+        quantityNeeded={need.quantityNeeded}
+        quantityFulfilled={need.quantityFulfilled}
+        onSuccess={onPledgeSuccess}
+        compact
+      />
     </MapPopupShell>
   );
 }
@@ -303,6 +312,11 @@ export default function ReconstructionMap({
     villages: true,
     waypoints: true,
   });
+  const [pinDropMode, setPinDropMode] = useState(false);
+  const [clickPin, setClickPin] = useState<{ lat: number; lng: number } | null>(
+    null,
+  );
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
 
   const markerIcons = useMemo(
     () => ({
@@ -323,9 +337,31 @@ export default function ReconstructionMap({
   );
 
   const visibleNeeds = useMemo(
-    () => needs.filter((need) => matchesMapCategories(need, activeCategories)),
+    () =>
+      needs.filter(
+        (need) =>
+          need.status !== "closed" &&
+          matchesMapCategories(need, activeCategories),
+      ),
     [needs, activeCategories],
   );
+
+  const tempPinIcon = useMemo(
+    () =>
+      L.divIcon({
+        className: "",
+        html: `<span style="display:block;width:22px;height:22px;border-radius:9999px;background:#059669;border:3px solid #fff;box-shadow:0 2px 10px rgba(0,0,0,0.4)"></span>`,
+        iconSize: [22, 22],
+        iconAnchor: [11, 11],
+      }),
+    [],
+  );
+
+  function handleMapPinClick(lat: number, lng: number) {
+    setClickPin({ lat, lng });
+    setIsReportModalOpen(true);
+    setPinDropMode(false);
+  }
 
   function toggleCategory(categoryId: MapCategoryId) {
     setActiveCategories((current) => {
@@ -431,19 +467,35 @@ export default function ReconstructionMap({
         </ul>
       </div>
 
-      <MapContainer
-        center={[JIJEL_CENTER.lat, JIJEL_CENTER.lng]}
-        zoom={DEFAULT_MAP_ZOOM}
-        className="h-full w-full"
-        scrollWheelZoom
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
+      <div className="pointer-events-none absolute bottom-24 right-4 z-[860] sm:bottom-8">
+        <button
+          type="button"
+          onClick={() => setPinDropMode((current) => !current)}
+          className={cn(
+            "pointer-events-auto max-w-[220px] rounded-2xl border px-3 py-2.5 text-right text-xs font-bold shadow-lg transition",
+            pinDropMode
+              ? "border-emerald-600 bg-emerald-700 text-white"
+              : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50",
+          )}
+        >
+          📍 انقر على الخريطة لتسجيل ضرر في هذا الموقع
+        </button>
+      </div>
 
+      <LeafletMap
+        pinDropMode={pinDropMode}
+        onMapClick={handleMapPinClick}
+      >
         {layers.villages
-          ? intelligence.villagePins.map((pin) => (
+          ? intelligence.villagePins.map((pin) => {
+              const isDouarPin = pin.id.startsWith("village-");
+              const mapDetails = resolveLocationMapDetails(
+                pin.name,
+                pin.daira,
+                isDouarPin ? pin.name_ar : undefined,
+              );
+
+              return (
               <Marker
                 key={pin.id}
                 position={[pin.lat, pin.lng]}
@@ -462,15 +514,8 @@ export default function ReconstructionMap({
                         : MAP_POINT_TYPE_LABELS.village
                     }
                     title={pin.name_ar}
-                    addressHierarchy={resolveCommuneMapDetails(
-                      pin.name,
-                      pin.daira,
-                      pin.name_ar,
-                    ).addressHierarchy}
-                    exactAddressAr={
-                      resolveCommuneMapDetails(pin.name, pin.daira, pin.name_ar)
-                        .exactAddressAr
-                    }
+                    addressHierarchy={mapDetails.addressHierarchy}
+                    exactAddressAr={mapDetails.exactAddressAr}
                     roadAccessibility={
                       roadPassabilityToAccessibility(pin.roadPassability)
                     }
@@ -492,7 +537,8 @@ export default function ReconstructionMap({
                   </MapPopupShell>
                 </Popup>
               </Marker>
-            ))
+            );
+            })
           : null}
 
         {layers.roads
@@ -565,7 +611,7 @@ export default function ReconstructionMap({
                   <MapPopupShell
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.sos}
                     title={`🚨 ${getSosLabel(alert.emergencyType)}`}
-                    addressHierarchy={resolveCommuneMapDetails(
+                    addressHierarchy={resolveLocationMapDetails(
                       alert.commune,
                       alert.daira,
                       alert.village ?? undefined,
@@ -587,6 +633,10 @@ export default function ReconstructionMap({
           waypoints={intelligence.waypoints}
           visible={layers.waypoints}
         />
+
+        {clickPin ? (
+          <Marker position={[clickPin.lat, clickPin.lng]} icon={tempPinIcon} />
+        ) : null}
 
         {layers.needs
           ? visibleNeeds.map((need) => {
@@ -611,7 +661,15 @@ export default function ReconstructionMap({
               );
             })
           : null}
-      </MapContainer>
+      </LeafletMap>
+
+      <MapClickReportModal
+        open={isReportModalOpen}
+        lat={clickPin?.lat ?? 0}
+        lng={clickPin?.lng ?? 0}
+        onClose={() => setIsReportModalOpen(false)}
+        onSuccess={onPledgeSuccess}
+      />
 
       {layers.needs && visibleNeeds.length === 0 ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-28 z-[880] flex justify-center px-4 sm:bottom-8">

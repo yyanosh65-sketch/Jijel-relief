@@ -1,4 +1,5 @@
 import {
+  findVillageByName,
   getCommuneArabicName,
   getCommuneLocationMeta,
   getDairaArabicName,
@@ -38,16 +39,80 @@ export function buildGoogleMapsDirectionsUrl(lat: number, lng: number): string {
 export function formatAddressHierarchy(input: {
   dairaAr: string;
   communeAr: string;
-  douarOrLandmark?: string;
+  douarOrVillage?: string;
 }): string {
-  return [
+  const segments = [
     "ولاية جيجل",
     `دائرة ${input.dairaAr}`,
     `بلدية ${input.communeAr}`,
-    input.douarOrLandmark,
-  ]
-    .filter(Boolean)
-    .join(" > ");
+  ];
+
+  if (input.douarOrVillage?.trim()) {
+    segments.push(`دشرة/قرية ${input.douarOrVillage.trim()}`);
+  }
+
+  return segments.join(" > ");
+}
+
+function buildMapDetailsFromVillage(
+  village: NonNullable<ReturnType<typeof findVillageByName>>,
+) {
+  return {
+    communeAr: village.commune_ar,
+    dairaAr: village.daira_ar,
+    exactAddressAr: village.exact_address_ar,
+    landmark: village.landmark,
+    roadAccessibility: village.road_accessibility,
+    lat: village.lat,
+    lng: village.lng,
+    addressHierarchy: formatAddressHierarchy({
+      dairaAr: village.daira_ar,
+      communeAr: village.commune_ar,
+      douarOrVillage: village.name_ar,
+    }),
+    roadLabel: ROAD_ACCESSIBILITY_LABELS[village.road_accessibility],
+  };
+}
+
+export function resolveLocationMapDetails(
+  communeOrDouar: string,
+  daira: string,
+  douarOrVillage?: string,
+) {
+  if (douarOrVillage?.trim()) {
+    const villageByDouar = findVillageByName(douarOrVillage);
+    if (villageByDouar) {
+      return buildMapDetailsFromVillage(villageByDouar);
+    }
+
+    const meta = getCommuneLocationMeta(communeOrDouar, daira);
+    if (meta) {
+      const communeAr = getCommuneArabicName(meta.name);
+      const dairaAr = getDairaArabicName(meta.daira);
+      return {
+        communeAr,
+        dairaAr,
+        exactAddressAr: meta.exact_address_ar,
+        landmark: meta.landmark,
+        roadAccessibility: meta.road_accessibility,
+        lat: meta.lat,
+        lng: meta.lng,
+        addressHierarchy: formatAddressHierarchy({
+          dairaAr,
+          communeAr,
+          douarOrVillage: douarOrVillage.trim(),
+        }),
+        roadLabel: ROAD_ACCESSIBILITY_LABELS[meta.road_accessibility],
+      };
+    }
+  }
+
+  const communeAsDouar = findVillageByName(communeOrDouar);
+  if (communeAsDouar) {
+    return buildMapDetailsFromVillage(communeAsDouar);
+  }
+
+  return resolveCommuneMapDetails(communeOrDouar, daira, douarOrVillage);
 }
 
 export function resolveCommuneMapDetails(
@@ -58,6 +123,7 @@ export function resolveCommuneMapDetails(
   const meta = getCommuneLocationMeta(commune, daira);
   const communeAr = getCommuneArabicName(commune);
   const dairaAr = getDairaArabicName(daira);
+  const douarLabel = fallbackDouar?.trim() || undefined;
 
   return {
     communeAr,
@@ -70,7 +136,7 @@ export function resolveCommuneMapDetails(
     addressHierarchy: formatAddressHierarchy({
       dairaAr,
       communeAr,
-      douarOrLandmark: meta?.landmark ?? fallbackDouar,
+      douarOrVillage: douarLabel,
     }),
     roadLabel:
       ROAD_ACCESSIBILITY_LABELS[

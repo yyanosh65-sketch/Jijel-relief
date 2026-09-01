@@ -3,6 +3,7 @@
 import { CircleMarker, MapContainer, TileLayer } from "react-leaflet";
 
 import type { FeedFlowCategory } from "@/lib/feed-flow-classifier";
+import { MAP_TILE_LAYER } from "@/lib/map-utils";
 
 import "leaflet/dist/leaflet.css";
 
@@ -45,7 +46,11 @@ export default function FeedPinPreview({
         zoomControl={false}
         attributionControl={false}
       >
-        <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+        <TileLayer
+          attribution={MAP_TILE_LAYER.attribution}
+          url={MAP_TILE_LAYER.url}
+          subdomains={MAP_TILE_LAYER.subdomains}
+        />
         <CircleMarker
           center={[lat, lng]}
           radius={8}

@@ -62,21 +62,21 @@ export default function MapPopupShell({
         <h3 className="text-sm font-bold leading-snug text-slate-900">{title}</h3>
       </div>
 
-      <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-xs leading-relaxed text-slate-900">
-        <p>
-          <span className="font-bold text-slate-800">📍 العنوان الدقيق:</span>{" "}
-          {addressHierarchy}
+      <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-xs leading-relaxed">
+        <p className="font-bold text-slate-900">
+          <span className="font-bold text-slate-900">📍 العنوان الدقيق:</span>{" "}
+          <span className="font-semibold text-slate-800">{addressHierarchy}</span>
         </p>
         {exactAddressAr ? (
-          <p className="text-slate-800">{exactAddressAr}</p>
+          <p className="font-semibold text-slate-800">{exactAddressAr}</p>
         ) : null}
         {resolvedRoadLabel ? (
-          <p>
-            <span className="font-bold text-slate-800">🛣️ حالة المسلك:</span>{" "}
+          <p className="font-semibold text-slate-700">
+            <span className="font-bold text-slate-900">🛣️ حالة المسلك:</span>{" "}
             {resolvedRoadLabel}
           </p>
         ) : null}
-        <p className="font-mono text-[10px] text-slate-600" dir="ltr">
+        <p className="font-mono text-[10px] font-semibold text-slate-700" dir="ltr">
           {lat.toFixed(4)}, {lng.toFixed(4)}
         </p>
       </div>
@@ -87,9 +87,9 @@ export default function MapPopupShell({
         href={mapsUrl}
         target="_blank"
         rel="noopener noreferrer"
-        className="flex min-h-10 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-3 text-xs font-bold text-slate-900 shadow-sm transition hover:bg-slate-50"
+        className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
       >
-        <Navigation className="h-4 w-4 shrink-0 text-blue-700" />
+        <Navigation className="h-4 w-4 shrink-0" />
         🗺️ فتح في Google Maps للملاحة
       </a>
 

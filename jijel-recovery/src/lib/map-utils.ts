@@ -8,6 +8,13 @@ export const JIJEL_CENTER = {
 
 export const DEFAULT_MAP_ZOOM = 11;
 
+export const MAP_TILE_LAYER = {
+  url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+  attribution:
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
+  subdomains: "abcd",
+} as const;
+
 export type MapCategoryId = "olive_trees" | "livestock" | "shelter" | "tools";
 
 export type MapCategory = {
@@ -96,14 +103,24 @@ export function getMapCategory(need: Pick<NeedWithRelations, "title" | "category
 }
 
 export function getMarkerColor(
-  need: Pick<NeedWithRelations, "urgency" | "status" | "pledges">,
+  need: Pick<
+    NeedWithRelations,
+    "urgency" | "status" | "pledges" | "quantityNeeded" | "quantityFulfilled"
+  >,
 ): MarkerColor {
+  if (
+    need.status === "fulfilled" ||
+    need.quantityFulfilled >= need.quantityNeeded
+  ) {
+    return "green";
+  }
+
   const hasActivePledges = need.pledges.some(
     (pledge) => pledge.status !== "cancelled",
   );
 
   if (need.status === "partial" || hasActivePledges) {
-    return "green";
+    return "orange";
   }
 
   const urgencyScore = getUrgencyScore(need.urgency);

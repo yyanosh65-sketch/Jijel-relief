@@ -11,11 +11,13 @@ import {
 import { buildWhatsAppLink } from "@/lib/phone";
 import { NeedProgressBar } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
+import MarkServedControls from "@/components/needs/MarkServedControls";
 
 type NeedCardProps = {
   need: MapNeed;
   onPledge: (need: MapNeed) => void;
   onOpenDossier?: (need: MapNeed) => void;
+  onRefresh?: () => void;
   isSelected?: boolean;
 };
 
@@ -23,6 +25,7 @@ export default function NeedCard({
   need,
   onPledge,
   onOpenDossier,
+  onRefresh,
   isSelected,
 }: NeedCardProps) {
   const remaining = need.quantityNeeded - need.quantityFulfilled;
@@ -140,6 +143,13 @@ export default function NeedCard({
             📂 ملف الدشرة والضرر
           </button>
         ) : null}
+
+        <MarkServedControls
+          needId={need.id}
+          quantityNeeded={need.quantityNeeded}
+          quantityFulfilled={need.quantityFulfilled}
+          onSuccess={onRefresh}
+        />
       </div>
     </article>
   );

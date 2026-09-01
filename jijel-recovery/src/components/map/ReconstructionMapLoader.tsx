@@ -151,6 +151,7 @@ export default function ReconstructionMapLoader({
           isSelected={selectedNeed?.id === need.id}
           onPledge={openPledgeModal}
           onOpenDossier={openDossierFromNeed}
+          onRefresh={() => router.refresh()}
         />
       ))}
     </div>
@@ -173,7 +174,7 @@ export default function ReconstructionMapLoader({
                 className="!bottom-36 !left-4 !z-[1200] sm:!bottom-20 sm:hidden"
               />
               <ReconstructionMap
-                needs={filteredNeeds}
+                needs={needs}
                 intelligence={intelligence}
                 selectedNeedId={selectedNeed?.id ?? null}
                 onPledgeClick={openPledgeModal}
@@ -198,7 +199,7 @@ export default function ReconstructionMapLoader({
                 className="!bottom-20 !left-4 !z-[1200] sm:!bottom-6 sm:hidden"
               />
               <ReconstructionMap
-                needs={filteredNeeds}
+                needs={needs}
                 intelligence={intelligence}
                 selectedNeedId={selectedNeed?.id ?? null}
                 onPledgeClick={openPledgeModal}

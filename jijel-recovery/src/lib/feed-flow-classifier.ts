@@ -11,6 +11,8 @@ import {
   type FeedParseConfidence,
 } from "@/lib/feed-parser";
 import {
+  findVillageByName,
+  getAllVillages,
   getCommuneArabicName,
   getCommuneLocationMeta,
   getDairaArabicName,
@@ -299,6 +301,26 @@ export function resolveFeedLocation(rawText: string): ResolvedFeedLocation {
     }
   }
 
+  for (const village of getAllVillages()) {
+    for (const alias of [village.name_ar, village.name]) {
+      if (normalizedText.includes(normalizeArabic(alias))) {
+        const meta = getCommuneLocationMeta(village.commune, village.daira);
+        return {
+          commune: village.commune,
+          communeAr: village.commune_ar,
+          daira: village.daira,
+          dairaAr: village.daira_ar,
+          village: village.name_ar,
+          lat: village.lat ?? meta?.lat ?? 36.8211,
+          lng: village.lng ?? meta?.lng ?? 5.7667,
+          matchedLabel: village.name_ar,
+          source: "douar_alias",
+          confidence: "high",
+        };
+      }
+    }
+  }
+
   const index = buildJijelLocationIndex();
   let best: {
     entry: (typeof index)[number];
@@ -346,6 +368,23 @@ export function resolveFeedLocation(rawText: string): ResolvedFeedLocation {
   const communeGuess =
     text.match(/(?:بلدية|دائرة|قرية|دوار|دشرة)\s+([^\n،,.]{2,40})/i)?.[1] ??
     "جيجل";
+
+  const villageGuess = findVillageByName(communeGuess);
+  if (villageGuess) {
+    return {
+      commune: villageGuess.commune,
+      communeAr: villageGuess.commune_ar,
+      daira: villageGuess.daira,
+      dairaAr: villageGuess.daira_ar,
+      village: villageGuess.name_ar,
+      lat: villageGuess.lat,
+      lng: villageGuess.lng,
+      matchedLabel: villageGuess.name_ar,
+      source: "douar_alias",
+      confidence: "medium",
+    };
+  }
+
   const daira = getDairaForCommune(communeGuess) ?? "Jijel";
   const meta = getCommuneLocationMeta(communeGuess, daira);
 

@@ -637,3 +637,94 @@ export async function getNearbyNeeds(
     };
   }
 }
+
+const updateNeedFulfillmentSchema = z.object({
+  needId: z.coerce.number().int().positive(),
+  quantityToAdd: z.coerce.number().int().positive().optional(),
+  markComplete: z.boolean().optional(),
+  servedBy: z.string().trim().optional(),
+});
+
+export type UpdateNeedFulfillmentInput = z.infer<
+  typeof updateNeedFulfillmentSchema
+>;
+
+function resolveNeedStatusFromQuantities(
+  quantityNeeded: number,
+  quantityFulfilled: number,
+): NeedStatus {
+  if (quantityFulfilled >= quantityNeeded) {
+    return "fulfilled";
+  }
+  if (quantityFulfilled > 0) {
+    return "partial";
+  }
+  return "open";
+}
+
+export async function updateNeedFulfillment(
+  data: UpdateNeedFulfillmentInput,
+): Promise<ActionResult<{ id: number; status: NeedStatus; quantityFulfilled: number }>> {
+  try {
+    const parsed = updateNeedFulfillmentSchema.safeParse(data);
+
+    if (!parsed.success) {
+      return {
+        success: false,
+        error: parsed.error.issues[0]?.message ?? "بيانات غير صالحة",
+      };
+    }
+
+    const input = parsed.data;
+
+    const need = await db.query.needs.findFirst({
+      where: eq(needs.id, input.needId),
+    });
+
+    if (!need) {
+      return { success: false, error: "الاحتياج غير موجود." };
+    }
+
+    if (need.status === "closed") {
+      return { success: false, error: "هذا الاحتياج مغلق." };
+    }
+
+    const nextQuantityFulfilled = input.markComplete
+      ? need.quantityNeeded
+      : Math.min(
+          need.quantityNeeded,
+          need.quantityFulfilled + (input.quantityToAdd ?? 0),
+        );
+
+    if (!input.markComplete && !input.quantityToAdd) {
+      return { success: false, error: "حدد كمية أو اختر إكمال التغطية." };
+    }
+
+    const [updated] = await db
+      .update(needs)
+      .set({
+        quantityFulfilled: nextQuantityFulfilled,
+        status: resolveNeedStatusFromQuantities(
+          need.quantityNeeded,
+          nextQuantityFulfilled,
+        ),
+        updatedAt: new Date(),
+      })
+      .where(eq(needs.id, input.needId))
+      .returning({
+        id: needs.id,
+        status: needs.status,
+        quantityFulfilled: needs.quantityFulfilled,
+      });
+
+    revalidateNeedPaths();
+
+    return { success: true, data: updated };
+  } catch (error) {
+    console.error("updateNeedFulfillment error:", error);
+    return {
+      success: false,
+      error: "تعذر تحديث حالة التوزيع.",
+    };
+  }
+}

@@ -8,6 +8,7 @@ import {
   type ClassifiedFeedPost,
   type FeedFlowBadge,
 } from "@/lib/feed-flow-classifier";
+import { formatAddressHierarchy } from "@/lib/map-location-display";
 import MonitoredSourcesList from "@/components/admin/MonitoredSourcesList";
 import { cn } from "@/lib/utils";
 
@@ -339,11 +340,23 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
                   lat={activePin.lat}
                   lng={activePin.lng}
                   flowCategory={activeFlowCategory as ClassifiedFeedPost["flowCategory"]}
-                  label={`${instantPreview.location.communeAr}${instantPreview.location.village ? ` — ${instantPreview.location.village}` : ""}`}
+                  label={
+                    instantPreview.location.village
+                      ? `${instantPreview.location.village} — بلدية ${instantPreview.location.communeAr}`
+                      : instantPreview.location.communeAr
+                  }
                 />
               ) : null}
 
               <dl className="grid gap-1.5 text-xs">
+                <PreviewRow
+                  label="التسلسل الإداري"
+                  value={formatAddressHierarchy({
+                    dairaAr: instantPreview.location.dairaAr,
+                    communeAr: instantPreview.location.communeAr,
+                    douarOrVillage: instantPreview.location.village ?? undefined,
+                  })}
+                />
                 <PreviewRow
                   label="البلدية"
                   value={`${instantPreview.location.communeAr} (${instantPreview.location.commune})`}
@@ -353,8 +366,8 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
                   value={instantPreview.location.dairaAr}
                 />
                 <PreviewRow
-                  label="المعلم"
-                  value={instantPreview.location.matchedLabel}
+                  label="الدشرة/القرية"
+                  value={instantPreview.location.village ?? "—"}
                 />
                 <PreviewRow
                   label="الهاتف"

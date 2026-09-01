@@ -1,5 +1,5 @@
 import jijelLocationsData from "@/data/jijel-locations.json";
-import type { JijelLocations } from "@/lib/locations";
+import { findVillageByName, type JijelLocations } from "@/lib/locations";
 
 const jijelLocations = jijelLocationsData as JijelLocations;
 
@@ -10,6 +10,8 @@ export type ResolvedAgentLocation = {
   daira_ar: string;
   lat: number;
   lng: number;
+  village?: string;
+  village_ar?: string;
 };
 
 const DEFAULT_LOCATION: ResolvedAgentLocation = {
@@ -47,6 +49,20 @@ export function resolveAgentLocation(communeQuery: string): ResolvedAgentLocatio
   const normalizedQuery = normalizeSearchText(communeQuery);
   if (!normalizedQuery) {
     return DEFAULT_LOCATION;
+  }
+
+  const village = findVillageByName(communeQuery);
+  if (village) {
+    return {
+      commune: village.commune,
+      commune_ar: village.commune_ar,
+      daira: village.daira,
+      daira_ar: village.daira_ar,
+      lat: village.lat,
+      lng: village.lng,
+      village: village.name,
+      village_ar: village.name_ar,
+    };
   }
 
   const index = buildJijelLocationIndex();

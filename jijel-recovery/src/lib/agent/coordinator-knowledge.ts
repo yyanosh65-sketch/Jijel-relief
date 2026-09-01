@@ -37,6 +37,22 @@ export const KNOWN_DOUARS: Array<{
     notes: "دوار جبلي فوق العنصر — مسلك وعر، لازم 4x4",
   },
   {
+    aliases: ["تابلوط", "tablout village"],
+    commune: "Djemaa Beni Habibi",
+    communeAr: "جمعة بني حبيبي",
+    daira: "El Ancer",
+    dairaAr: "العنصر",
+    notes: "دشرة تابلوط — تحت بلدية جمعة بني حبيبي، مسلك جبلي",
+  },
+  {
+    aliases: ["مشاط", "mechatt", "mechet"],
+    commune: "El Milia",
+    communeAr: "الميلية",
+    daira: "El Milia",
+    dairaAr: "الميلية",
+    notes: "دشرة مشاط — تحت بلدية الميلية",
+  },
+  {
     aliases: ["كاوان", "kaouane", "كعوان"],
     commune: "Texenna",
     communeAr: "تاكسنة",
@@ -384,7 +400,7 @@ export function checkMountainRoadStatus(areaQuery: string): {
   });
 
   return {
-    areaLabel: douar?.communeAr ?? dossier?.name_ar ?? areaQuery,
+    areaLabel: douar?.aliases[0] ?? dossier?.name_ar ?? areaQuery,
     passability,
     terrain: formatTerrainDifficulty(passability),
     matchedRoads: matchedRoads.map((road) => ({

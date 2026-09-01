@@ -41,6 +41,21 @@ export type JijelLocations = {
     code: number;
   };
   dairas: Daira[];
+  villages?: Village[];
+};
+
+export type Village = {
+  name: string;
+  name_ar: string;
+  commune: string;
+  commune_ar: string;
+  daira: string;
+  daira_ar: string;
+  lat: number;
+  lng: number;
+  exact_address_ar: string;
+  landmark: string;
+  road_accessibility: RoadAccessibility;
 };
 
 export const jijelLocations = jijelLocationsData as JijelLocations;
@@ -226,6 +241,80 @@ export function getAllCommunes(): Commune[] {
   return jijelLocations.dairas.flatMap((daira) => daira.communes);
 }
 
+export function getAllVillages(): Village[] {
+  return jijelLocations.villages ?? [];
+}
+
+export function findVillageByName(name: string): Village | null {
+  const normalized = normalizeName(name);
+  if (!normalized) return null;
+
+  return (
+    getAllVillages().find(
+      (village) =>
+        normalizeName(village.name) === normalized ||
+        normalizeName(village.name_ar) === normalized,
+    ) ?? null
+  );
+}
+
+export function isKnownDouarName(name: string): boolean {
+  return findVillageByName(name) !== null;
+}
+
+export function getVillagesByCommune(communeName: string): Village[] {
+  const normalized = normalizeName(communeName);
+  return getAllVillages().filter(
+    (village) =>
+      normalizeName(village.commune) === normalized ||
+      normalizeName(village.commune_ar) === normalized,
+  );
+}
+
+export function resolveNearestLocation(
+  lat: number,
+  lng: number,
+): CommuneLocationMeta & { distanceKm: number } {
+  let best: (CommuneLocationMeta & { distanceKm: number }) | null = null;
+
+  for (const daira of jijelLocations.dairas) {
+    for (const commune of daira.communes) {
+      const distanceKm = haversineKm(lat, lng, commune.lat, commune.lng);
+      const meta = getCommuneLocationMeta(commune.name, daira.name);
+      if (!meta) continue;
+      if (!best || distanceKm < best.distanceKm) {
+        best = { ...meta, distanceKm };
+      }
+    }
+  }
+
+  for (const village of getAllVillages()) {
+    const distanceKm = haversineKm(lat, lng, village.lat, village.lng);
+    const meta: CommuneLocationMeta = {
+      name: village.commune,
+      name_ar: village.commune_ar,
+      daira: village.daira,
+      daira_ar: village.daira_ar,
+      lat: village.lat,
+      lng: village.lng,
+      exact_address_ar: village.exact_address_ar,
+      landmark: village.landmark,
+      road_accessibility: village.road_accessibility,
+    };
+    if (!best || distanceKm < best.distanceKm) {
+      best = { ...meta, distanceKm };
+    }
+  }
+
+  const fallback = getCommuneLocationMeta("Jijel", "Jijel")!;
+  return (
+    best ?? {
+      ...fallback,
+      distanceKm: haversineKm(lat, lng, fallback.lat, fallback.lng),
+    }
+  );
+}
+
 export function getDairaCoordinates(dairaName: string): Coordinates | null {
   const communes = getCommunesByDaira(dairaName);
 
@@ -346,11 +435,41 @@ export function formatLocationHeader(
   villageName: string,
   dairaName?: string | null,
 ): string {
-  const communeAr = communeName ? getCommuneArabicName(communeName) : null;
-  const dairaAr = dairaName ? getDairaArabicName(dairaName) : null;
-  const parts = [communeAr, villageName, dairaAr ? `دائرة ${dairaAr}` : null].filter(
-    Boolean,
-  );
+  const villageRecord = findVillageByName(villageName);
+  const communeRecord = communeName
+    ? getCommuneLocationMeta(communeName, dairaName ?? undefined)
+    : null;
+  const communeAsDouar = communeName ? findVillageByName(communeName) : null;
 
-  return parts.join(" · ");
+  if (villageRecord) {
+    return [
+      "ولاية جيجل",
+      `دائرة ${villageRecord.daira_ar}`,
+      `بلدية ${villageRecord.commune_ar}`,
+      `دشرة/قرية ${villageRecord.name_ar}`,
+    ].join(" > ");
+  }
+
+  if (communeAsDouar) {
+    return [
+      "ولاية جيجل",
+      `دائرة ${communeAsDouar.daira_ar}`,
+      `بلدية ${communeAsDouar.commune_ar}`,
+      `دشرة/قرية ${communeAsDouar.name_ar}`,
+    ].join(" > ");
+  }
+
+  const communeAr = communeRecord?.name_ar ?? (communeName ? getCommuneArabicName(communeName) : null);
+  const dairaAr = dairaName
+    ? getDairaArabicName(dairaName)
+    : communeRecord?.daira_ar ?? null;
+
+  const segments = [
+    "ولاية جيجل",
+    dairaAr ? `دائرة ${dairaAr}` : null,
+    communeAr ? `بلدية ${communeAr}` : null,
+    villageName && villageName !== communeAr ? `دشرة/قرية ${villageName}` : null,
+  ].filter(Boolean);
+
+  return segments.join(" > ");
 }

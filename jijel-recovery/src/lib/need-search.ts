@@ -78,7 +78,7 @@ const DEFAULT_FILTERS: NeedSearchFilters = {
   categories: SEARCH_CATEGORY_OPTIONS.map((option) => option.id),
   urgencyGroups: URGENCY_FILTER_OPTIONS.map((option) => option.id),
   roadAccess: ROAD_ACCESS_OPTIONS.map((option) => option.id),
-  radiusKm: DEFAULT_RADIUS_KM,
+  radiusKm: SHOW_ALL_WILAYA_RADIUS,
   userLat: null,
   userLng: null,
   sort: "urgent",

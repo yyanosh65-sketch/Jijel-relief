@@ -1,4 +1,5 @@
 import intelligenceData from "@/data/village-intelligence.json";
+import { getAllVillages } from "@/lib/locations";
 
 export type RoadPassability = "open" | "rough_4x4" | "closed";
 export type InfrastructureStatus = "normal" | "intermittent" | "partial" | "cut_off";
@@ -162,5 +163,44 @@ function haversineKm(
 }
 
 export function buildVillagePins(): VillageDossier[] {
-  return villageIntelligence.dossiers;
+  const dossierIds = new Set(villageIntelligence.dossiers.map((d) => d.id));
+  const fromLocations: VillageDossier[] = getAllVillages()
+    .filter(
+      (village) =>
+        !dossierIds.has(
+          `${village.commune}-${village.name_ar}`.toLowerCase().replace(/\s+/g, "-"),
+        ),
+    )
+    .map((village) => ({
+      id: `village-${village.commune}-${village.name_ar}`
+        .toLowerCase()
+        .replace(/[^\w\u0600-\u06FF-]+/g, "-"),
+      type: "commune" as const,
+      name: village.commune,
+      name_ar: village.name_ar,
+      daira: village.daira,
+      daira_ar: village.daira_ar,
+      lat: village.lat,
+      lng: village.lng,
+      population: 0,
+      totalFamilies: 0,
+      affectedFamilies: 0,
+      damagePercent: 0,
+      roadPassability:
+        village.road_accessibility === "paved_heavy_truck"
+          ? ("open" as const)
+          : village.road_accessibility === "light_vehicles"
+            ? ("rough_4x4" as const)
+            : ("rough_4x4" as const),
+      waterStatus: "intermittent" as const,
+      electricityStatus: "intermittent" as const,
+      coordinator: {
+        name: village.commune,
+        name_ar: `لجنة ${village.name_ar}`,
+        phone: "",
+        verified: false,
+      },
+    }));
+
+  return [...villageIntelligence.dossiers, ...fromLocations];
 }
