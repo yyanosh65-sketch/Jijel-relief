@@ -6,7 +6,7 @@ Community platform for mapping reconstruction needs and coordinating pledges acr
 
 - Interactive map with color-coded need markers (`/map`)
 - Bilingual damage intake form in Darija and French (`/report`)
-- Server actions backed by PostgreSQL + PostGIS
+- Server actions backed by PostgreSQL + Drizzle ORM
 
 ## Local development
 
@@ -16,12 +16,12 @@ Community platform for mapping reconstruction needs and coordinating pledges acr
 npm install
 ```
 
-### 2. Start PostgreSQL (with PostGIS)
+### 2. Start PostgreSQL
 
 On Ubuntu/Debian:
 
 ```bash
-sudo apt-get install postgresql postgresql-contrib postgresql-16-postgis-3
+sudo apt-get install postgresql postgresql-contrib
 sudo pg_ctlcluster 16 main start
 ```
 
@@ -30,7 +30,6 @@ Create the local database:
 ```bash
 sudo -u postgres psql -c "CREATE USER jijel WITH PASSWORD 'jijel_dev' CREATEDB;"
 sudo -u postgres psql -c "CREATE DATABASE jijel_recovery OWNER jijel;"
-sudo -u postgres psql -d jijel_recovery -c "CREATE EXTENSION IF NOT EXISTS postgis;"
 ```
 
 ### 3. Configure environment

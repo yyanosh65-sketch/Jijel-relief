@@ -18,6 +18,7 @@ import {
   type Pledge,
 } from "@/db/schema";
 import { getDairaForCommune } from "@/lib/locations";
+import { haversineKmSql } from "@/lib/geo";
 import { normalizeAlgerianPhone } from "@/lib/phone";
 import type { ActionResult } from "@/lib/types";
 
@@ -88,7 +89,8 @@ export type NeedWithRelations = Need & {
     name: string;
     daira: string;
     address: string | null;
-    coordinates: string;
+    lat: string;
+    lng: string;
     createdAt: Date;
   };
   pledges: Pledge[];
@@ -203,7 +205,8 @@ export async function submitDamageReport(
           name: locationLabel,
           daira: input.daira,
           address: input.village ?? null,
-          coordinates: sql`ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography`,
+          lat: String(input.lat),
+          lng: String(input.lng),
         })
         .returning();
 
@@ -259,7 +262,8 @@ export async function createNeed(
           name: input.locationName,
           daira: input.daira,
           address: input.address ?? null,
-          coordinates: sql`ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography`,
+          lat: String(input.lat),
+          lng: String(input.lng),
         })
         .returning();
 
@@ -383,6 +387,8 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
       location_name: string;
       location_daira: string;
       location_address: string | null;
+      location_lat: string;
+      location_lng: string;
       location_created_at: Date;
       lat: number;
       lng: number;
@@ -408,9 +414,11 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
         l.name AS location_name,
         l.daira AS location_daira,
         l.address AS location_address,
+        l.lat AS location_lat,
+        l.lng AS location_lng,
         l.created_at AS location_created_at,
-        ST_Y(l.coordinates::geometry) AS lat,
-        ST_X(l.coordinates::geometry) AS lng
+        l.lat::float8 AS lat,
+        l.lng::float8 AS lng
       FROM ${needs} n
       INNER JOIN ${locations} l ON n.location_id = l.id
       WHERE n.status IN ('open', 'partial')
@@ -456,7 +464,8 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
         name: row.location_name,
         daira: row.location_daira,
         address: row.location_address,
-        coordinates: `${row.lat},${row.lng}`,
+        lat: row.location_lat,
+        lng: row.location_lng,
         createdAt: row.location_created_at,
       },
       pledges: pledgesByNeedId.get(row.id) ?? [],
@@ -507,7 +516,13 @@ export async function getNearbyNeeds(
 
     const { lat: validLat, lng: validLng, radiusKm: validRadiusKm } =
       parsed.data;
-    const radiusMeters = validRadiusKm * 1000;
+
+    const distanceKmExpr = haversineKmSql(
+      validLat,
+      validLng,
+      sql`l.lat`,
+      sql`l.lng`,
+    );
 
     const rows = await db.execute<{
       id: number;
@@ -530,8 +545,10 @@ export async function getNearbyNeeds(
       location_name: string;
       location_daira: string;
       location_address: string | null;
+      location_lat: string;
+      location_lng: string;
       location_created_at: Date;
-      distance_meters: number;
+      distance_km: number;
     }>(sql`
       SELECT
         n.id,
@@ -554,19 +571,14 @@ export async function getNearbyNeeds(
         l.name AS location_name,
         l.daira AS location_daira,
         l.address AS location_address,
+        l.lat AS location_lat,
+        l.lng AS location_lng,
         l.created_at AS location_created_at,
-        ST_Distance(
-          l.coordinates,
-          ST_SetSRID(ST_MakePoint(${validLng}, ${validLat}), 4326)::geography
-        ) AS distance_meters
+        ${distanceKmExpr} AS distance_km
       FROM ${needs} n
       INNER JOIN ${locations} l ON n.location_id = l.id
-      WHERE ST_DWithin(
-        l.coordinates,
-        ST_SetSRID(ST_MakePoint(${validLng}, ${validLat}), 4326)::geography,
-        ${radiusMeters}
-      )
-      ORDER BY distance_meters ASC, n.created_at DESC
+      WHERE ${distanceKmExpr} <= ${validRadiusKm}
+      ORDER BY distance_km ASC, n.created_at DESC
     `);
 
     const needIds = rows.rows.map((row) => row.id);
@@ -608,11 +620,12 @@ export async function getNearbyNeeds(
         name: row.location_name,
         daira: row.location_daira,
         address: row.location_address,
-        coordinates: "",
+        lat: row.location_lat,
+        lng: row.location_lng,
         createdAt: row.location_created_at,
       },
       pledges: pledgesByNeedId.get(row.id) ?? [],
-      distanceKm: Number(row.distance_meters) / 1000,
+      distanceKm: Number(row.distance_km),
     }));
 
     return { success: true, data };

@@ -1,6 +1,5 @@
 "use server";
 
-import { sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
@@ -90,7 +89,8 @@ export async function registerCommunityHelper(
         whatsappPhone,
         daira: input.daira,
         commune: input.commune,
-        coordinates: sql`ST_SetSRID(ST_MakePoint(${communeCoords.lng}, ${communeCoords.lat}), 4326)::geography`,
+        lat: String(communeCoords.lat),
+        lng: String(communeCoords.lng),
         skills: input.skills as HelperSkill[],
         availabilityNotes: input.availabilityNotes ?? null,
         status: "pending",

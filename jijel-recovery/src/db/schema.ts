@@ -1,13 +1,13 @@
 import { relations } from "drizzle-orm";
 import {
   integer,
+  numeric,
   pgEnum,
   pgTable,
   serial,
   text,
   timestamp,
 } from "drizzle-orm/pg-core";
-import { customType } from "drizzle-orm/pg-core";
 
 export const needCategoryEnum = pgEnum("need_category", [
   "food",
@@ -105,18 +105,13 @@ export const convoyStatusEnum = pgEnum("convoy_status", [
   "cancelled",
 ]);
 
-const geographyPoint = customType<{ data: string; driverData: string }>({
-  dataType() {
-    return "geography(Point,4326)";
-  },
-});
-
 export const locations = pgTable("locations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
   daira: text("daira").notNull(),
   address: text("address"),
-  coordinates: geographyPoint("coordinates").notNull(),
+  lat: numeric("lat", { precision: 10, scale: 6 }).notNull(),
+  lng: numeric("lng", { precision: 10, scale: 6 }).notNull(),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -171,7 +166,8 @@ export const urgentAlerts = pgTable("urgent_alerts", {
   daira: text("daira").notNull(),
   commune: text("commune").notNull(),
   village: text("village"),
-  coordinates: geographyPoint("coordinates").notNull(),
+  lat: numeric("lat", { precision: 10, scale: 6 }).notNull(),
+  lng: numeric("lng", { precision: 10, scale: 6 }).notNull(),
   status: sosAlertStatusEnum("status").notNull().default("active"),
   mediaUrls: text("media_urls").array().notNull().default([]),
   voiceNoteData: text("voice_note_data"),
@@ -188,7 +184,8 @@ export const emergencyFacilities = pgTable("emergency_facilities", {
   name: text("name").notNull(),
   facilityType: facilityTypeEnum("facility_type").notNull(),
   commune: text("commune").notNull(),
-  coordinates: geographyPoint("coordinates").notNull(),
+  lat: numeric("lat", { precision: 10, scale: 6 }).notNull(),
+  lng: numeric("lng", { precision: 10, scale: 6 }).notNull(),
   hotlinePhone: text("hotline_phone").notNull(),
   secondaryPhone: text("secondary_phone"),
   availableServices: text("available_services").array().notNull(),
@@ -204,7 +201,8 @@ export const communityHelpers = pgTable("community_helpers", {
   whatsappPhone: text("whatsapp_phone"),
   daira: text("daira").notNull(),
   commune: text("commune").notNull(),
-  coordinates: geographyPoint("coordinates").notNull(),
+  lat: numeric("lat", { precision: 10, scale: 6 }).notNull(),
+  lng: numeric("lng", { precision: 10, scale: 6 }).notNull(),
   skills: helperSkillEnum("skills").array().notNull(),
   availabilityNotes: text("availability_notes"),
   status: helperStatusEnum("status").notNull().default("pending"),

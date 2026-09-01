@@ -92,8 +92,8 @@ export async function getActiveSosAlerts(): Promise<ActionResult<SosMapAlert[]>>
         commune,
         village,
         created_at,
-        ST_Y(coordinates::geometry) AS lat,
-        ST_X(coordinates::geometry) AS lng
+        lat::float8 AS lat,
+        lng::float8 AS lng
       FROM ${urgentAlerts}
       WHERE status = 'active'
       ORDER BY created_at DESC

@@ -1,6 +1,5 @@
 import "dotenv/config";
 
-import { sql } from "drizzle-orm";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { Pool } from "pg";
@@ -149,6 +148,8 @@ async function runMigration(pool: Pool): Promise<void> {
     resolve(__dirname, "../drizzle/0005_community_helpers.sql"),
     resolve(__dirname, "../drizzle/0006_needs_media.sql"),
     resolve(__dirname, "../drizzle/0007_convoys.sql"),
+    resolve(__dirname, "../drizzle/0008_incoming_convoys.sql"),
+    resolve(__dirname, "../drizzle/0009_numeric_coordinates.sql"),
   ];
 
   for (const migrationPath of migrationPaths) {
@@ -183,7 +184,8 @@ async function seedDatabase(): Promise<void> {
           name: seed.location.name,
           daira: seed.location.daira,
           address: seed.location.address,
-          coordinates: sql`ST_SetSRID(ST_MakePoint(${seed.location.lng}, ${seed.location.lat}), 4326)::geography`,
+          lat: String(seed.location.lat),
+          lng: String(seed.location.lng),
         })
         .returning();
 

@@ -22,6 +22,7 @@ import {
   type NearestContact,
   type NearestHelpInput,
 } from "@/lib/nearest-help";
+import { haversineKmSql } from "@/lib/geo";
 import type { ActionResult } from "@/lib/types";
 
 export type { NearestContact, CategorizedNearestContacts };
@@ -67,6 +68,13 @@ async function fetchOfficialFacilities(
   reference: NonNullable<ReturnType<typeof resolveNearestHelpReference>>,
   limit: number,
 ): Promise<NearestContact[]> {
+  const distanceKmExpr = haversineKmSql(
+    reference.lat,
+    reference.lng,
+    sql`lat`,
+    sql`lng`,
+  );
+
   const facilityRows = await db.execute<{
     id: number;
     name: string;
@@ -81,12 +89,9 @@ async function fetchOfficialFacilities(
       facility_type,
       commune,
       hotline_phone,
-      ST_Distance(
-        coordinates,
-        ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
-      ) / 1000 AS distance_km
+      ${distanceKmExpr} AS distance_km
     FROM ${emergencyFacilities}
-    ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
+    ORDER BY distance_km ASC
     LIMIT ${limit}
   `);
 
@@ -129,6 +134,13 @@ async function fetchCommunityHelpers(
   reference: NonNullable<ReturnType<typeof resolveNearestHelpReference>>,
   limit: number,
 ): Promise<NearestContact[]> {
+  const distanceKmExpr = haversineKmSql(
+    reference.lat,
+    reference.lng,
+    sql`lat`,
+    sql`lng`,
+  );
+
   const helperRows = await db.execute<{
     id: number;
     full_name: string;
@@ -149,13 +161,10 @@ async function fetchCommunityHelpers(
       commune,
       skills,
       availability_notes,
-      ST_Distance(
-        coordinates,
-        ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
-      ) / 1000 AS distance_km
+      ${distanceKmExpr} AS distance_km
     FROM ${communityHelpers}
     WHERE status = 'verified'
-    ORDER BY coordinates <-> ST_SetSRID(ST_MakePoint(${reference.lng}, ${reference.lat}), 4326)::geography
+    ORDER BY distance_km ASC
     LIMIT ${limit}
   `);
 
@@ -272,7 +281,8 @@ export async function submitUrgentAlert(
         daira: input.daira,
         commune: input.commune,
         village: input.village ?? null,
-        coordinates: sql`ST_SetSRID(ST_MakePoint(${input.lng}, ${input.lat}), 4326)::geography`,
+        lat: String(input.lat),
+        lng: String(input.lng),
         mediaUrls: input.mediaUrls ?? [],
         voiceNoteData: input.voiceNoteData ?? null,
       })
@@ -280,54 +290,21 @@ export async function submitUrgentAlert(
 
     revalidateEmergencyPaths();
 
-    const rows = await db.execute<{
-      id: number;
-      emergency_type: UrgentAlertRecord["emergencyType"];
-      description: string;
-      reporter_name: string;
-      daira: string;
-      commune: string;
-      village: string | null;
-      media_urls: string[];
-      voice_note_data: string | null;
-      created_at: Date;
-      lat: number;
-      lng: number;
-    }>(sql`
-      SELECT
-        id,
-        emergency_type,
-        description,
-        reporter_name,
-        daira,
-        commune,
-        village,
-        media_urls,
-        voice_note_data,
-        created_at,
-        ST_Y(coordinates::geometry) AS lat,
-        ST_X(coordinates::geometry) AS lng
-      FROM ${urgentAlerts}
-      WHERE id = ${alert.id}
-    `);
-
-    const row = rows.rows[0];
-
     return {
       success: true,
       data: {
-        id: row.id,
-        emergencyType: row.emergency_type,
-        description: row.description,
-        reporterName: row.reporter_name,
-        daira: row.daira,
-        commune: row.commune,
-        village: row.village,
-        lat: Number(row.lat),
-        lng: Number(row.lng),
-        mediaUrls: row.media_urls ?? [],
-        voiceNoteData: row.voice_note_data,
-        createdAt: row.created_at,
+        id: alert.id,
+        emergencyType: alert.emergencyType,
+        description: alert.description,
+        reporterName: alert.reporterName,
+        daira: alert.daira,
+        commune: alert.commune,
+        village: alert.village,
+        lat: Number(alert.lat),
+        lng: Number(alert.lng),
+        mediaUrls: alert.mediaUrls ?? [],
+        voiceNoteData: alert.voiceNoteData,
+        createdAt: alert.createdAt,
       },
     };
   } catch (error) {
