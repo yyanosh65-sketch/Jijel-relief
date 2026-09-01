@@ -69,6 +69,11 @@ export type NearbyNeed = NeedWithRelations & {
   distanceKm: number;
 };
 
+export type MapNeed = NeedWithRelations & {
+  lat: number;
+  lng: number;
+};
+
 function formDataToObject(formData: FormData): Record<string, FormDataEntryValue> {
   return Object.fromEntries(formData.entries());
 }
@@ -199,6 +204,111 @@ export async function getNeeds(
     return {
       success: false,
       error: "Failed to fetch needs.",
+    };
+  }
+}
+
+export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
+  try {
+    const rows = await db.execute<{
+      id: number;
+      location_id: number;
+      title: string;
+      description: string;
+      category: NeedCategory;
+      urgency: NeedUrgency;
+      status: NeedStatus;
+      quantity_needed: number;
+      quantity_fulfilled: number;
+      contact_name: string | null;
+      contact_phone: string | null;
+      created_at: Date;
+      updated_at: Date;
+      location_id_join: number;
+      location_name: string;
+      location_daira: string;
+      location_address: string | null;
+      location_created_at: Date;
+      lat: number;
+      lng: number;
+    }>(sql`
+      SELECT
+        n.id,
+        n.location_id,
+        n.title,
+        n.description,
+        n.category,
+        n.urgency,
+        n.status,
+        n.quantity_needed,
+        n.quantity_fulfilled,
+        n.contact_name,
+        n.contact_phone,
+        n.created_at,
+        n.updated_at,
+        l.id AS location_id_join,
+        l.name AS location_name,
+        l.daira AS location_daira,
+        l.address AS location_address,
+        l.created_at AS location_created_at,
+        ST_Y(l.coordinates::geometry) AS lat,
+        ST_X(l.coordinates::geometry) AS lng
+      FROM ${needs} n
+      INNER JOIN ${locations} l ON n.location_id = l.id
+      WHERE n.status IN ('open', 'partial')
+      ORDER BY n.created_at DESC
+    `);
+
+    const needIds = rows.rows.map((row) => row.id);
+    const pledgeRows =
+      needIds.length > 0
+        ? await db.query.pledges.findMany({
+            where: (pledgesTable, { inArray }) =>
+              inArray(pledgesTable.needId, needIds),
+          })
+        : [];
+
+    const pledgesByNeedId = new Map<number, Pledge[]>();
+
+    for (const pledge of pledgeRows) {
+      const existing = pledgesByNeedId.get(pledge.needId) ?? [];
+      existing.push(pledge);
+      pledgesByNeedId.set(pledge.needId, existing);
+    }
+
+    const data: MapNeed[] = rows.rows.map((row) => ({
+      id: row.id,
+      locationId: row.location_id,
+      title: row.title,
+      description: row.description,
+      category: row.category,
+      urgency: row.urgency,
+      status: row.status,
+      quantityNeeded: row.quantity_needed,
+      quantityFulfilled: row.quantity_fulfilled,
+      contactName: row.contact_name,
+      contactPhone: row.contact_phone,
+      createdAt: row.created_at,
+      updatedAt: row.updated_at,
+      location: {
+        id: row.location_id_join,
+        name: row.location_name,
+        daira: row.location_daira,
+        address: row.location_address,
+        coordinates: `${row.lat},${row.lng}`,
+        createdAt: row.location_created_at,
+      },
+      pledges: pledgesByNeedId.get(row.id) ?? [],
+      lat: Number(row.lat),
+      lng: Number(row.lng),
+    }));
+
+    return { success: true, data };
+  } catch (error) {
+    console.error("getMapNeeds error:", error);
+    return {
+      success: false,
+      error: "Failed to fetch map needs.",
     };
   }
 }
