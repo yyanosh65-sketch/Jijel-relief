@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import {
   Droplets,
   HeartPulse,
@@ -17,7 +17,12 @@ import {
 
 import { createNeed } from "@/actions/needs";
 import type { NeedCategory } from "@/db/schema";
-import { JIJEL_DAIRAS, QUANTITY_UNITS } from "@/lib/jijel-locations";
+import { QUANTITY_UNITS } from "@/lib/jijel-locations";
+import {
+  getCommuneCoordinates,
+  getCommunesByDaira,
+  getDairas,
+} from "@/lib/locations";
 import { formatAlgerianPhoneHint, isValidAlgerianPhone } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
@@ -148,9 +153,47 @@ export default function ReportDamageForm() {
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [isCapturingGps, setIsCapturingGps] = useState(false);
   const [gpsMessage, setGpsMessage] = useState<string | null>(null);
+  const [coordinatesSource, setCoordinatesSource] = useState<
+    "commune" | "gps" | null
+  >(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState(false);
+
+  const dairas = useMemo(() => getDairas(), []);
+  const communes = useMemo(
+    () => (location.daira ? getCommunesByDaira(location.daira) : []),
+    [location.daira],
+  );
+
+  function handleDairaChange(daira: string) {
+    setLocation({
+      daira,
+      commune: "",
+      village: "",
+      lat: "",
+      lng: "",
+    });
+    setCoordinatesSource(null);
+    setGpsMessage(null);
+  }
+
+  function handleCommuneChange(communeName: string) {
+    const coordinates = getCommuneCoordinates(communeName);
+
+    setLocation((current) => ({
+      ...current,
+      commune: communeName,
+      lat: coordinates ? coordinates.lat.toFixed(6) : "",
+      lng: coordinates ? coordinates.lng.toFixed(6) : "",
+    }));
+    setCoordinatesSource(coordinates ? "commune" : null);
+    setGpsMessage(
+      coordinates
+        ? "تم تحديد إحداثيات البلدية — Coordonnées de la commune appliquées."
+        : null,
+    );
+  }
 
   function validateStep1(): boolean {
     const nextErrors: Record<string, string> = {};
@@ -160,7 +203,7 @@ export default function ReportDamageForm() {
     }
 
     if (!location.commune.trim()) {
-      nextErrors.commune = "خاصك تكتب البلدية — Veuillez saisir la commune.";
+      nextErrors.commune = "خاصك تختار البلدية — Veuillez sélectionner la commune.";
     }
 
     if (!location.village.trim()) {
@@ -169,7 +212,7 @@ export default function ReportDamageForm() {
 
     if (!location.lat || !location.lng) {
       nextErrors.gps =
-        "خاصك تحدد الموقع بال GPS — Activez la localisation GPS.";
+        "خاصك تختار بلدية أو تفعّل GPS — Sélectionnez une commune ou activez le GPS.";
     }
 
     setErrors(nextErrors);
@@ -268,8 +311,9 @@ export default function ReportDamageForm() {
           lat: position.coords.latitude.toFixed(6),
           lng: position.coords.longitude.toFixed(6),
         }));
+        setCoordinatesSource("gps");
         setGpsMessage(
-          "تم تحديد الموقع — Position enregistrée.",
+          "تم تحديد موقعك الحالي — Position GPS enregistrée.",
         );
         setIsCapturingGps(false);
       },
@@ -336,6 +380,7 @@ export default function ReportDamageForm() {
     setContact(INITIAL_CONTACT);
     setErrors({});
     setGpsMessage(null);
+    setCoordinatesSource(null);
     setSubmitError(null);
     setIsSuccess(false);
   }
@@ -411,18 +456,13 @@ export default function ReportDamageForm() {
             <select
               id="daira"
               value={location.daira}
-              onChange={(event) =>
-                setLocation((current) => ({
-                  ...current,
-                  daira: event.target.value,
-                }))
-              }
+              onChange={(event) => handleDairaChange(event.target.value)}
               className="min-h-12 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-emerald-600"
             >
               <option value="">اختار / Choisir...</option>
-              {JIJEL_DAIRAS.map((daira) => (
-                <option key={daira} value={daira}>
-                  {daira}
+              {dairas.map((daira) => (
+                <option key={daira.name} value={daira.name}>
+                  {daira.name_ar} — {daira.name}
                 </option>
               ))}
             </select>
@@ -433,19 +473,24 @@ export default function ReportDamageForm() {
             <label htmlFor="commune" className="mb-2 block text-sm">
               <BilingualLabel dz="البلدية" fr="Commune" />
             </label>
-            <input
+            <select
               id="commune"
-              type="text"
               value={location.commune}
-              onChange={(event) =>
-                setLocation((current) => ({
-                  ...current,
-                  commune: event.target.value,
-                }))
-              }
-              placeholder="مثال: El Aouana"
-              className="min-h-12 w-full rounded-xl border border-zinc-300 px-3 text-sm outline-none focus:border-emerald-600"
-            />
+              onChange={(event) => handleCommuneChange(event.target.value)}
+              disabled={!location.daira}
+              className="min-h-12 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-emerald-600 disabled:cursor-not-allowed disabled:bg-zinc-100"
+            >
+              <option value="">
+                {location.daira
+                  ? "اختار البلدية / Choisir la commune..."
+                  : "اختار الدائرة أولاً / Choisir la daïra d'abord"}
+              </option>
+              {communes.map((commune) => (
+                <option key={commune.name} value={commune.name}>
+                  {commune.name_ar} — {commune.name}
+                </option>
+              ))}
+            </select>
             <FieldError message={errors.commune} />
           </div>
 
@@ -483,11 +528,14 @@ export default function ReportDamageForm() {
               )}
               {isCapturingGps
                 ? "جاري تحديد الموقع... / Localisation..."
-                : "حدد موقعي GPS / Utiliser ma position GPS"}
+                : "استعمال موقعي الحالي (GPS) / Utiliser ma position GPS"}
             </button>
             {location.lat && location.lng ? (
               <p className="text-xs text-emerald-700">
-                GPS: {location.lat}, {location.lng}
+                {coordinatesSource === "gps"
+                  ? "GPS"
+                  : "Commune"}
+                : {location.lat}, {location.lng}
               </p>
             ) : null}
             {gpsMessage ? (

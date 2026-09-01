@@ -10,7 +10,6 @@ import {
   TileLayer,
 } from "react-leaflet";
 
-import { createPledge } from "@/actions/pledges";
 import type { MapNeed } from "@/actions/needs";
 import {
   DEFAULT_MAP_ZOOM,
@@ -43,98 +42,25 @@ function createMarkerIcon(color: MarkerColor): L.DivIcon {
 
 type ReconstructionMapProps = {
   needs: MapNeed[];
-  onPledgeSuccess?: () => void;
+  selectedNeedId?: number | null;
+  onPledgeClick: (need: MapNeed) => void;
 };
-
-type PledgeFormState = {
-  contributorName: string;
-  contributorContact: string;
-  quantity: string;
-};
-
-function ProgressBar({
-  fulfilled,
-  needed,
-}: {
-  fulfilled: number;
-  needed: number;
-}) {
-  const percentage = needed > 0 ? Math.min((fulfilled / needed) * 100, 100) : 0;
-
-  return (
-    <div className="space-y-1">
-      <div className="flex justify-between text-xs text-zinc-600">
-        <span>
-          {fulfilled} / {needed} fulfilled
-        </span>
-        <span>{Math.round(percentage)}%</span>
-      </div>
-      <div className="h-2 overflow-hidden rounded-full bg-zinc-200">
-        <div
-          className="h-full rounded-full bg-emerald-600 transition-all"
-          style={{ width: `${percentage}%` }}
-        />
-      </div>
-    </div>
-  );
-}
 
 function NeedPopupContent({
   need,
-  onPledgeSuccess,
+  onPledgeClick,
 }: {
   need: MapNeed;
-  onPledgeSuccess?: () => void;
+  onPledgeClick: (need: MapNeed) => void;
 }) {
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [success, setSuccess] = useState(false);
-  const [form, setForm] = useState<PledgeFormState>({
-    contributorName: "",
-    contributorContact: "",
-    quantity: "1",
-  });
-
   const remaining = need.quantityNeeded - need.quantityFulfilled;
-
-  async function handlePledge(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setIsSubmitting(true);
-    setError(null);
-
-    const result = await createPledge({
-      needId: need.id,
-      contributorName: form.contributorName,
-      contributorContact: form.contributorContact || undefined,
-      quantity: Number(form.quantity),
-    });
-
-    setIsSubmitting(false);
-
-    if (!result.success) {
-      setError(result.error ?? "Unable to submit pledge.");
-      return;
-    }
-
-    setSuccess(true);
-    onPledgeSuccess?.();
-  }
-
-  if (success) {
-    return (
-      <div className="space-y-2 p-1">
-        <p className="text-sm font-medium text-emerald-700">
-          Thank you for your pledge!
-        </p>
-        <p className="text-xs text-zinc-600">
-          A coordinator will follow up to confirm delivery details.
-        </p>
-      </div>
-    );
-  }
+  const progress =
+    need.quantityNeeded > 0
+      ? Math.min((need.quantityFulfilled / need.quantityNeeded) * 100, 100)
+      : 0;
 
   return (
-    <div className="min-w-[240px] space-y-3 p-1">
+    <div className="min-w-[220px] space-y-3 p-1">
       <div>
         <h3 className="text-sm font-semibold text-zinc-900">{need.title}</h3>
         <p className="mt-1 text-xs text-zinc-600">
@@ -143,73 +69,37 @@ function NeedPopupContent({
         </p>
       </div>
 
-      <ProgressBar
-        fulfilled={need.quantityFulfilled}
-        needed={need.quantityNeeded}
-      />
+      <div className="space-y-1">
+        <div className="flex justify-between text-xs text-zinc-600">
+          <span>
+            {need.quantityFulfilled} / {need.quantityNeeded} fulfilled
+          </span>
+          <span>{Math.round(progress)}%</span>
+        </div>
+        <div className="h-2 overflow-hidden rounded-full bg-zinc-200">
+          <div
+            className="h-full rounded-full bg-emerald-600"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      </div>
 
-      {remaining > 0 ? (
-        <form className="space-y-2" onSubmit={handlePledge}>
-          <input
-            required
-            type="text"
-            placeholder="Your name"
-            value={form.contributorName}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                contributorName: event.target.value,
-              }))
-            }
-            className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-xs outline-none focus:border-emerald-600"
-          />
-          <input
-            type="text"
-            placeholder="Phone or email (optional)"
-            value={form.contributorContact}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                contributorContact: event.target.value,
-              }))
-            }
-            className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-xs outline-none focus:border-emerald-600"
-          />
-          <input
-            required
-            type="number"
-            min={1}
-            max={remaining}
-            value={form.quantity}
-            onChange={(event) =>
-              setForm((current) => ({
-                ...current,
-                quantity: event.target.value,
-              }))
-            }
-            className="w-full rounded-md border border-zinc-300 px-2 py-1.5 text-xs outline-none focus:border-emerald-600"
-          />
-          {error ? <p className="text-xs text-red-600">{error}</p> : null}
-          <button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full rounded-md bg-emerald-700 px-3 py-2 text-xs font-semibold text-white transition hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
-          >
-            {isSubmitting ? "Submitting..." : "Adopt / Pledge"}
-          </button>
-        </form>
-      ) : (
-        <p className="text-xs font-medium text-emerald-700">
-          This need is fully pledged.
-        </p>
-      )}
+      <button
+        type="button"
+        onClick={() => onPledgeClick(need)}
+        disabled={remaining <= 0}
+        className="w-full rounded-md bg-emerald-700 px-3 py-2 text-xs font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+      >
+        Adopt / Pledge
+      </button>
     </div>
   );
 }
 
 export default function ReconstructionMap({
   needs,
-  onPledgeSuccess,
+  selectedNeedId,
+  onPledgeClick,
 }: ReconstructionMapProps) {
   const [activeCategories, setActiveCategories] = useState<Set<MapCategoryId>>(
     () => new Set(MAP_CATEGORIES.map((category) => category.id)),
@@ -300,18 +190,17 @@ export default function ReconstructionMap({
 
         {visibleNeeds.map((need) => {
           const color = getMarkerColor(need);
+          const isSelected = selectedNeedId === need.id;
 
           return (
             <Marker
               key={need.id}
               position={[need.lat, need.lng]}
               icon={markerIcons[color]}
+              opacity={isSelected ? 1 : 0.92}
             >
               <Popup>
-                <NeedPopupContent
-                  need={need}
-                  onPledgeSuccess={onPledgeSuccess}
-                />
+                <NeedPopupContent need={need} onPledgeClick={onPledgeClick} />
               </Popup>
             </Marker>
           );
