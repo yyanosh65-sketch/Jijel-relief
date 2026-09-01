@@ -1,0 +1,243 @@
+{
+  "province": {
+    "name": "Jijel",
+    "name_ar": "جيجل",
+    "code": 18
+  },
+  "dairas": [
+    {
+      "name": "Jijel",
+      "name_ar": "جيجل",
+      "communes": [
+        {
+          "name": "Jijel",
+          "name_ar": "جيجل",
+          "lat": 36.8211,
+          "lng": 5.7667
+        }
+      ]
+    },
+    {
+      "name": "Djimla",
+      "name_ar": "جيملة",
+      "communes": [
+        {
+          "name": "Djimla",
+          "name_ar": "جيملة",
+          "lat": 36.9208,
+          "lng": 5.7583
+        },
+        {
+          "name": "Boudriaa Ben Yadjis",
+          "name_ar": "بودريعة بن ياجيس",
+          "lat": 36.8836,
+          "lng": 5.7814
+        }
+      ]
+    },
+    {
+      "name": "El Ancer",
+      "name_ar": "العنصر",
+      "communes": [
+        {
+          "name": "El Ancer",
+          "name_ar": "العنصر",
+          "lat": 36.6731,
+          "lng": 5.8508
+        },
+        {
+          "name": "Bouraoui Belhadef",
+          "name_ar": "بوراوي بلهادف",
+          "lat": 36.6514,
+          "lng": 5.8822
+        },
+        {
+          "name": "Djemaa Beni Habibi",
+          "name_ar": "جمعة بني حبيبي",
+          "lat": 36.6847,
+          "lng": 5.8194
+        },
+        {
+          "name": "Kheïri Oued Adjoul",
+          "name_ar": "خيري واد عجول",
+          "lat": 36.7028,
+          "lng": 5.8681
+        }
+      ]
+    },
+    {
+      "name": "El Aouana",
+      "name_ar": "العوانة",
+      "communes": [
+        {
+          "name": "El Aouana",
+          "name_ar": "العوانة",
+          "lat": 36.8419,
+          "lng": 5.8717
+        },
+        {
+          "name": "Selma Benziada",
+          "name_ar": "سلمى بن زياد",
+          "lat": 36.8667,
+          "lng": 5.9036
+        }
+      ]
+    },
+    {
+      "name": "El Milia",
+      "name_ar": "الميلية",
+      "communes": [
+        {
+          "name": "El Milia",
+          "name_ar": "الميلية",
+          "lat": 36.7533,
+          "lng": 6.0083
+        },
+        {
+          "name": "Ouled Yahia Khedrouche",
+          "name_ar": "أولاد يحيى خدروش",
+          "lat": 36.7681,
+          "lng": 6.0514
+        }
+      ]
+    },
+    {
+      "name": "Chekfa",
+      "name_ar": "الشقفة",
+      "communes": [
+        {
+          "name": "Chekfa",
+          "name_ar": "الشقفة",
+          "lat": 36.7647,
+          "lng": 5.96
+        },
+        {
+          "name": "El Kennar Nouchfi",
+          "name_ar": "القنار نوشفي",
+          "lat": 36.7336,
+          "lng": 5.9831
+        },
+        {
+          "name": "Bordj T'har",
+          "name_ar": "برج الطهر",
+          "lat": 36.7836,
+          "lng": 5.9336
+        },
+        {
+          "name": "Sidi Abdelaziz",
+          "name_ar": "سيدي عبد العزيز",
+          "lat": 36.7514,
+          "lng": 5.9519
+        }
+      ]
+    },
+    {
+      "name": "Settara",
+      "name_ar": "سطارة",
+      "communes": [
+        {
+          "name": "Settara",
+          "name_ar": "سطارة",
+          "lat": 36.8486,
+          "lng": 5.9519
+        },
+        {
+          "name": "Ghebala",
+          "name_ar": "غبالة",
+          "lat": 36.8336,
+          "lng": 6.0014
+        }
+      ]
+    },
+    {
+      "name": "Sidi Maarouf",
+      "name_ar": "سيدي معروف",
+      "communes": [
+        {
+          "name": "Sidi Maarouf",
+          "name_ar": "سيدي معروف",
+          "lat": 36.7083,
+          "lng": 5.9083
+        },
+        {
+          "name": "Ouled Rabah",
+          "name_ar": "أولاد رابح",
+          "lat": 36.6847,
+          "lng": 5.9519
+        }
+      ]
+    },
+    {
+      "name": "Taher",
+      "name_ar": "الطاهير",
+      "communes": [
+        {
+          "name": "Taher",
+          "name_ar": "الطاهير",
+          "lat": 36.7783,
+          "lng": 5.8944
+        },
+        {
+          "name": "Emir Abdelkader",
+          "name_ar": "الأمير عبد القادر",
+          "lat": 36.8167,
+          "lng": 5.9167
+        },
+        {
+          "name": "Ouadjana",
+          "name_ar": "وجانة",
+          "lat": 36.7519,
+          "lng": 5.8836
+        },
+        {
+          "name": "Chahna",
+          "name_ar": "الشحنة",
+          "lat": 36.8014,
+          "lng": 5.8836
+        },
+        {
+          "name": "Boucif Ouled Askeur",
+          "name_ar": "بوصيف أولاد عسكر",
+          "lat": 36.7667,
+          "lng": 5.9167
+        }
+      ]
+    },
+    {
+      "name": "Texenna",
+      "name_ar": "تكسنة",
+      "communes": [
+        {
+          "name": "Texenna",
+          "name_ar": "تكسنة",
+          "lat": 36.6556,
+          "lng": 5.7444
+        },
+        {
+          "name": "Kaous",
+          "name_ar": "قوس",
+          "lat": 36.6167,
+          "lng": 5.7833
+        }
+      ]
+    },
+    {
+      "name": "Ziama Mansouriah",
+      "name_ar": "زيامة منصورية",
+      "communes": [
+        {
+          "name": "Ziama Mansouriah",
+          "name_ar": "زيامة منصورية",
+          "lat": 36.5333,
+          "lng": 5.7333
+        },
+        {
+          "name": "Eraguene",
+          "name_ar": "إيراقن",
+          "lat": 36.5167,
+          "lng": 5.8167
+        }
+      ]
+    }
+  ]
+}
