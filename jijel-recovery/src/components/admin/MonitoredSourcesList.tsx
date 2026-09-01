@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { ExternalLink, Plus, Radio } from "lucide-react";
+import { ClipboardCopy, ExternalLink, Plus, Radio } from "lucide-react";
 
 import {
   addSourceToMonitoringQueue,
@@ -22,7 +22,9 @@ export default function MonitoredSourcesList() {
   const [newDaira, setNewDaira] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [copyToast, setCopyToast] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [isCopying, setIsCopying] = useState(false);
 
   const refreshSources = useCallback(() => {
     setSources(getAllMonitoredSources());
@@ -31,6 +33,28 @@ export default function MonitoredSourcesList() {
   useEffect(() => {
     refreshSources();
   }, [refreshSources]);
+
+  useEffect(() => {
+    if (!copyToast) return;
+    const timer = window.setTimeout(() => setCopyToast(null), 3000);
+    return () => window.clearTimeout(timer);
+  }, [copyToast]);
+
+  async function handleCopyApifyUrls() {
+    setError(null);
+    setIsCopying(true);
+
+    try {
+      const payload = sources.map((source) => ({ url: source.url }));
+      const json = JSON.stringify(payload, null, 2);
+      await navigator.clipboard.writeText(json);
+      setCopyToast(`تم نسخ ${payload.length} رابطاً بتنسيق Apify JSON`);
+    } catch {
+      setError("تعذر النسخ إلى الحافظة — تحقق من أذونات المتصفح.");
+    } finally {
+      setIsCopying(false);
+    }
+  }
 
   function handleAddSource() {
     setError(null);
@@ -140,11 +164,36 @@ export default function MonitoredSourcesList() {
         ) : null}
       </div>
 
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm font-bold text-slate-900">
+          المصادر المراقَبة ({sources.length})
+        </p>
+        <button
+          type="button"
+          disabled={isCopying || sources.length === 0}
+          onClick={handleCopyApifyUrls}
+          className="inline-flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-bold text-slate-800 shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+        >
+          <ClipboardCopy className="h-3.5 w-3.5" />
+          {isCopying ? "جاري النسخ…" : "📋 Copy all URLs for Apify (JSON)"}
+        </button>
+      </div>
+
       <ul className="space-y-2">
         {sources.map((source) => (
           <MonitoredSourceCard key={source.id} source={source} />
         ))}
       </ul>
+
+      {copyToast ? (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-6 left-1/2 z-[3600] -translate-x-1/2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-2.5 text-sm font-semibold text-emerald-900 shadow-lg"
+        >
+          ✓ {copyToast}
+        </div>
+      ) : null}
     </div>
   );
 }
