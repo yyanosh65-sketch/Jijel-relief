@@ -1,36 +1,73 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Jijel Recovery
 
-## Getting Started
+Community platform for mapping reconstruction needs and coordinating pledges across Jijel province, Algeria.
 
-First, run the development server:
+## Features
+
+- Interactive map with color-coded need markers (`/map`)
+- Bilingual damage intake form in Darija and French (`/report`)
+- Server actions backed by PostgreSQL + PostGIS
+
+## Local development
+
+### 1. Install dependencies
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### 2. Start PostgreSQL (with PostGIS)
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+On Ubuntu/Debian:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+```bash
+sudo apt-get install postgresql postgresql-contrib postgresql-16-postgis-3
+sudo pg_ctlcluster 16 main start
+```
 
-## Learn More
+Create the local database:
 
-To learn more about Next.js, take a look at the following resources:
+```bash
+sudo -u postgres psql -c "CREATE USER jijel WITH PASSWORD 'jijel_dev' CREATEDB;"
+sudo -u postgres psql -c "CREATE DATABASE jijel_recovery OWNER jijel;"
+sudo -u postgres psql -d jijel_recovery -c "CREATE EXTENSION IF NOT EXISTS postgis;"
+```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 3. Configure environment
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Copy `.env.example` to `.env.local`:
 
-## Deploy on Vercel
+```bash
+cp .env.example .env.local
+```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Default local URL:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```env
+DATABASE_URL="postgresql://jijel:jijel_dev@127.0.0.1:5432/jijel_recovery"
+```
+
+In development, if `DATABASE_URL` points to Railway's internal hostname (`postgres.railway.internal`), the app automatically falls back to the local database.
+
+### 4. Migrate and seed
+
+```bash
+npm run db:seed
+```
+
+This applies the schema and inserts 5 sample needs around Jijel.
+
+### 5. Run the dev server
+
+```bash
+npm run dev -- -p 3000 -H 127.0.0.1
+```
+
+Open:
+
+- Map: [http://127.0.0.1:3000/map](http://127.0.0.1:3000/map)
+- Report form: [http://127.0.0.1:3000/report](http://127.0.0.1:3000/report)
+
+## Production (Railway)
+
+Set `DATABASE_URL` to your Railway PostgreSQL connection string and run migrations before deploying.
