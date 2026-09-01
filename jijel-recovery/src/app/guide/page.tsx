@@ -76,7 +76,7 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
           </p>
           <div className="mt-4 flex flex-wrap gap-2">
             <Link
-              href="/map"
+              href="/"
               className="rounded-full bg-sky-700 px-4 py-2 text-xs font-semibold text-white"
             >
               عرض المحطات على الخريطة
