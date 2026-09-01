@@ -1,12 +1,26 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useCallback, useEffect, useRef, useState, useTransition } from "react";
+
 import {
-  emergencyTypeLabels,
-  parseFacebookSosPost,
-  type FeedParseResult,
-} from "@/lib/feed-parser";
+  classifyFeedPost,
+  type ClassifiedFeedPost,
+  type FeedFlowBadge,
+} from "@/lib/feed-flow-classifier";
 import { cn } from "@/lib/utils";
+
+const FeedPinPreview = dynamic(
+  () => import("@/components/admin/FeedPinPreview"),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex h-40 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-xs text-slate-500">
+        جاري تحميل الخريطة…
+      </div>
+    ),
+  },
+);
 
 type FeedImporterModalProps = {
   open: boolean;
@@ -25,6 +39,8 @@ type AgentDispatch = {
 
 type AgentStructured = {
   entityType: string | null;
+  flowCategory: string | null;
+  flowBadge: FeedFlowBadge | null;
   title: string | null;
   commune: string | null;
   communeAr: string | null;
@@ -35,21 +51,42 @@ type AgentStructured = {
   lat: number | null;
   lng: number | null;
   recordId: number | null;
-  recordKind: "aid_need" | "sos_alert" | null;
+  recordKind:
+    | "aid_need"
+    | "sos_alert"
+    | "accommodation"
+    | "incoming_convoy"
+    | null;
 };
 
 type AgentApiResponse = {
   text?: string;
   toolResults?: AgentToolResult[];
   structured?: AgentStructured;
-  saved?: { kind: "aid_need" | "sos_alert"; id: number } | null;
+  classified?: ClassifiedFeedPost;
+  flowCategory?: string;
+  flowBadge?: FeedFlowBadge;
+  pin?: { lat: number; lng: number };
+  saved?: {
+    kind: "aid_need" | "sos_alert" | "accommodation" | "incoming_convoy";
+    id: number;
+  } | null;
   dispatch?: AgentDispatch | null;
   error?: string;
 };
 
+const RECORD_KIND_LABELS: Record<string, string> = {
+  sos_alert: "نداء SOS",
+  aid_need: "احتياج إغاثة",
+  accommodation: "إيواء ومبيت",
+  incoming_convoy: "قافلة قادمة",
+};
+
 export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
   const [rawInput, setRawInput] = useState("");
-  const [localPreview, setLocalPreview] = useState<FeedParseResult | null>(null);
+  const [instantPreview, setInstantPreview] = useState<ClassifiedFeedPost | null>(
+    null,
+  );
   const [agentResponse, setAgentResponse] = useState<AgentApiResponse | null>(
     null,
   );
@@ -58,16 +95,17 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
   const [isPending, startTransition] = useTransition();
   const agentRequestId = useRef(0);
 
-  const runLocalPreview = useCallback((text: string) => {
-    if (!text.trim()) {
-      setLocalPreview(null);
+  const runInstantPreview = useCallback((text: string) => {
+    const trimmed = text.trim();
+    if (!trimmed) {
+      setInstantPreview(null);
       return;
     }
 
     try {
-      setLocalPreview(parseFacebookSosPost(text));
+      setInstantPreview(classifyFeedPost(trimmed));
     } catch {
-      setLocalPreview(null);
+      setInstantPreview(null);
     }
   }, []);
 
@@ -121,13 +159,14 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
   useEffect(() => {
     if (!open) return;
 
+    runInstantPreview(rawInput);
+
     const timer = window.setTimeout(() => {
-      runLocalPreview(rawInput);
       void runAgentAnalysis(rawInput);
-    }, 650);
+    }, 900);
 
     return () => window.clearTimeout(timer);
-  }, [rawInput, open, runAgentAnalysis, runLocalPreview]);
+  }, [rawInput, open, runAgentAnalysis, runInstantPreview]);
 
   useEffect(() => {
     if (!open) return;
@@ -140,7 +179,7 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
 
   const handleClose = () => {
     setRawInput("");
-    setLocalPreview(null);
+    setInstantPreview(null);
     setAgentResponse(null);
     setError(null);
     setIsAgentLoading(false);
@@ -157,6 +196,25 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
   const savedRecord = agentResponse?.saved ?? null;
   const dispatch = agentResponse?.dispatch ?? null;
   const toolResults = agentResponse?.toolResults ?? [];
+
+  const activeBadge =
+    agentResponse?.flowBadge ??
+    structured?.flowBadge ??
+    instantPreview?.badge ??
+    null;
+
+  const activePin = agentResponse?.pin ??
+    (instantPreview
+      ? {
+          lat: instantPreview.location.lat,
+          lng: instantPreview.location.lng,
+        }
+      : null);
+
+  const activeFlowCategory =
+    agentResponse?.flowCategory ??
+    structured?.flowCategory ??
+    instantPreview?.flowCategory;
 
   if (!open) return null;
 
@@ -181,8 +239,7 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
               ⚡ استيراد نداء من فيسبوك
             </h2>
             <p className="mt-1 text-xs text-slate-500">
-              الصق المنشور — يحلله الوكيل الذكي تلقائياً ويثبت النداء في قاعدة
-              البيانات عند التأكد.
+              الصق المنشور — يُصنّف فوراً ويُثبّت تلقائياً في قاعدة البيانات.
             </p>
           </div>
           <button
@@ -212,16 +269,73 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
                 setRawInput(e.target.value);
                 setAgentResponse(null);
                 setError(null);
-                runLocalPreview(e.target.value);
+                runInstantPreview(e.target.value);
               }}
               placeholder="الصق هنا منشور فيسبوك من مجموعة المجتمع المحلي…"
               className="w-full resize-y rounded-xl border border-slate-200 bg-slate-50 px-3 py-2.5 text-sm text-slate-900 outline-none ring-violet-500/30 focus:border-violet-400 focus:bg-white focus:ring-2"
             />
           </div>
 
+          {instantPreview && activeBadge ? (
+            <div className="space-y-3 rounded-xl border border-slate-200 bg-slate-50/80 p-3">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <p className="text-xs font-bold uppercase tracking-wide text-slate-600">
+                  معاينة فورية
+                </p>
+                <span
+                  className={cn(
+                    "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold",
+                    activeBadge.colorClass,
+                  )}
+                >
+                  {activeBadge.emoji} {activeBadge.labelAr}
+                </span>
+              </div>
+
+              {activePin && activeFlowCategory ? (
+                <FeedPinPreview
+                  lat={activePin.lat}
+                  lng={activePin.lng}
+                  flowCategory={activeFlowCategory as ClassifiedFeedPost["flowCategory"]}
+                  label={`${instantPreview.location.communeAr}${instantPreview.location.village ? ` — ${instantPreview.location.village}` : ""}`}
+                />
+              ) : null}
+
+              <dl className="grid gap-1.5 text-xs">
+                <PreviewRow
+                  label="البلدية"
+                  value={`${instantPreview.location.communeAr} (${instantPreview.location.commune})`}
+                />
+                <PreviewRow
+                  label="الدائرة"
+                  value={instantPreview.location.dairaAr}
+                />
+                <PreviewRow
+                  label="المعلم"
+                  value={instantPreview.location.matchedLabel}
+                />
+                <PreviewRow
+                  label="الهاتف"
+                  value={instantPreview.phone ?? "لم يُعثر"}
+                  warn={!instantPreview.phone}
+                />
+                <PreviewRow
+                  label="الثقة"
+                  value={
+                    instantPreview.confidence === "high"
+                      ? "عالية"
+                      : instantPreview.confidence === "medium"
+                        ? "متوسطة"
+                        : "منخفضة"
+                  }
+                />
+              </dl>
+            </div>
+          ) : null}
+
           {isAgentLoading && (
             <div className="rounded-xl border border-violet-100 bg-violet-50 px-3 py-2.5 text-sm text-violet-900">
-              🤖 الوكيل الذكي يحلل المنشور ويستخرج الموقع والهاتف…
+              🤖 الوكيل الذكي يحلل المنشور ويسجّله في قاعدة البيانات…
             </div>
           )}
 
@@ -254,16 +368,17 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
             <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
               <p className="text-sm font-semibold text-emerald-900">
                 ✓ تم تثبيت{" "}
-                {structured.recordKind === "sos_alert" ? "نداء SOS" : "احتياج"}{" "}
-                #{structured.recordId} عبر الوكيل الذكي
+                {RECORD_KIND_LABELS[structured.recordKind ?? ""] ??
+                  structured.recordKind}{" "}
+                #{structured.recordId} في قاعدة البيانات
               </p>
               <dl className="grid gap-2 text-sm">
                 <PreviewRow
-                  label="النوع"
+                  label="التصنيف"
                   value={
-                    structured.entityType === "sos_alert"
-                      ? "نداء استغاثة"
-                      : "احتياج إغاثة"
+                    structured.flowBadge
+                      ? `${structured.flowBadge.emoji} ${structured.flowBadge.labelAr}`
+                      : "—"
                   }
                 />
                 <PreviewRow label="العنوان" value={structured.title ?? "—"} />
@@ -272,45 +387,13 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
                   value={
                     structured.communeAr
                       ? `${structured.communeAr} (${structured.commune})`
-                      : structured.commune ?? "—"
+                      : (structured.commune ?? "—")
                   }
                 />
                 <PreviewRow label="الدائرة" value={structured.daira ?? "—"} />
                 <PreviewRow label="الدوار" value={structured.village ?? "—"} />
                 <PreviewRow label="الهاتف" value={structured.phone ?? "—"} />
                 <PreviewRow label="الإلحاح" value={structured.urgency ?? "—"} />
-              </dl>
-            </div>
-          ) : null}
-
-          {localPreview && !savedRecord ? (
-            <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
-              <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">
-                تحليل محلي فوري (احتياطي)
-              </p>
-              <dl className="grid gap-2 text-sm">
-                <PreviewRow
-                  label="البلدية"
-                  value={
-                    localPreview.communeAr
-                      ? `${localPreview.communeAr} (${localPreview.commune})`
-                      : localPreview.commune || "غير محددة"
-                  }
-                  warn={!localPreview.matchedCommuneText}
-                />
-                <PreviewRow
-                  label="الدائرة"
-                  value={localPreview.dairaAr || localPreview.daira || "—"}
-                />
-                <PreviewRow
-                  label="الهاتف"
-                  value={localPreview.reporterPhone ?? "لم يُعثر على رقم"}
-                  warn={!localPreview.reporterPhone}
-                />
-                <PreviewRow
-                  label="نوع الخطر"
-                  value={emergencyTypeLabels[localPreview.emergencyType]}
-                />
               </dl>
             </div>
           ) : null}
@@ -376,7 +459,7 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
             >
               {isPending || isAgentLoading
                 ? "جاري التحليل…"
-                : "🤖 إعادة التحليل بالوكيل"}
+                : "🤖 إعادة التحليل والتسجيل"}
             </button>
           </div>
         </div>

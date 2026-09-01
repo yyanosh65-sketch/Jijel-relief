@@ -13,6 +13,7 @@ import {
   convoyCargoTypeEnum,
   convoyEntryPointEnum,
   convoyVehicleTypeEnum,
+  incomingConvoys,
   locations,
   needCategoryEnum,
   needs,
@@ -41,6 +42,12 @@ import {
 } from "@/lib/agent/deficit";
 import { generateDailyOperationsReport } from "@/lib/agent/operations-report";
 import {
+  classifyFeedPost,
+  type ClassifiedFeedPost,
+  type FeedFlowCategory,
+  resolveFeedLocation,
+} from "@/lib/feed-flow-classifier";
+import {
   createAgentAbortSignal,
   deepseek,
   DEEPSEEK_CHAT_MODEL,
@@ -56,7 +63,12 @@ const EXTRACT_AID_NEED_SCHEMA = z.object({
 });
 
 const EXTRACTED_ENTITY_SCHEMA = z.object({
-  entityType: z.enum(["aid_need", "sos_alert"]),
+  entityType: z.enum([
+    "aid_need",
+    "sos_alert",
+    "accommodation",
+    "incoming_convoy",
+  ]),
   title: z.string(),
   description: z.string(),
   category: z.enum(needCategoryEnum.enumValues),
@@ -72,6 +84,18 @@ const EXTRACTED_ENTITY_SCHEMA = z.object({
     .enum(["fire_flare", "livestock_trap", "medical", "water_cutoff"])
     .optional(),
   confidence: z.enum(["high", "medium", "low"]),
+  flowCategory: z
+    .enum(["sos_medical", "accommodation", "incoming_convoy"])
+    .optional(),
+  bedCapacity: z.number().int().positive().optional(),
+  venueType: z.string().optional(),
+  departureWilaya: z.string().optional(),
+  driverName: z.string().optional(),
+  cargoType: z.enum(convoyCargoTypeEnum.enumValues).optional(),
+  vehicleType: z.enum(convoyVehicleTypeEnum.enumValues).optional(),
+  entryPoint: z.enum(convoyEntryPointEnum.enumValues).optional(),
+  etaHoursFromNow: z.number().int().positive().optional(),
+  oxygenRequired: z.boolean().optional(),
 });
 
 const GEO_LOCATE_SCHEMA = z.object({
@@ -303,30 +327,17 @@ export async function processSocialFeedFallback(rawText: string): Promise<{
   toolResults: Array<{ toolName: string; output: unknown }>;
   extracted: ExtractedAidNeed;
   geo: GeoLocatedVillage;
+  classified: ClassifiedFeedPost;
   saved: SavedFeedRecord | null;
-  structured: {
-    entityType: string | null;
-    title: string | null;
-    commune: string | null;
-    communeAr: string | null;
-    daira: string | null;
-    village: string | null;
-    phone: string | null;
-    urgency: string | null;
-    lat: number | null;
-    lng: number | null;
-    recordId: number | null;
-    recordKind: SavedFeedRecord["kind"] | null;
-  };
+  structured: FeedStructuredResult;
   fallback: true;
 }> {
-  const extracted = heuristicExtractAidNeed(rawText);
-  const geo = geoLocateVillage(
-    extracted.villageName ?? extracted.commune,
-    extracted.commune,
-  );
+  const classified = classifyFeedPost(rawText);
+  const extracted = classifiedToExtracted(classified);
+  const geo = classifiedToGeo(classified);
 
   const toolResults = [
+    { toolName: "classifyFeedPost", output: classified },
     { toolName: "extractAidNeed", output: extracted },
     { toolName: "geoLocateVillage", output: geo },
   ];
@@ -341,26 +352,60 @@ export async function processSocialFeedFallback(rawText: string): Promise<{
   }
 
   return {
-    text: `${CRISIS_AGENT_PERSONA.name}: تم تحليل المنشور محلياً (وضع احتياطي) — ${extracted.title} في ${geo.commune_ar}.`,
+    text: `${CRISIS_AGENT_PERSONA.name}: تم تحليل المنشور محلياً — ${classified.badge.emoji} ${classified.badge.labelAr} في ${geo.commune_ar}.`,
     toolResults,
     extracted,
     geo,
+    classified,
     saved,
-    structured: {
-      entityType: extracted.entityType,
-      title: extracted.title,
-      commune: geo.commune,
-      communeAr: geo.commune_ar,
-      daira: geo.daira,
-      village: extracted.villageName ?? geo.matchedLabel,
-      phone: extracted.contactPhone ?? null,
-      urgency: extracted.urgency,
-      lat: geo.lat,
-      lng: geo.lng,
-      recordId: saved?.id ?? null,
-      recordKind: saved?.kind ?? null,
-    },
+    structured: buildFeedStructuredResult({
+      extracted,
+      geo,
+      classified,
+      saved,
+    }),
     fallback: true,
+  };
+}
+
+export type FeedStructuredResult = {
+  entityType: string | null;
+  flowCategory: FeedFlowCategory | null;
+  flowBadge: ClassifiedFeedPost["badge"] | null;
+  title: string | null;
+  commune: string | null;
+  communeAr: string | null;
+  daira: string | null;
+  village: string | null;
+  phone: string | null;
+  urgency: string | null;
+  lat: number | null;
+  lng: number | null;
+  recordId: number | null;
+  recordKind: SavedFeedRecord["kind"] | null;
+};
+
+function buildFeedStructuredResult(input: {
+  extracted: ExtractedAidNeed;
+  geo: GeoLocatedVillage;
+  classified: ClassifiedFeedPost;
+  saved: SavedFeedRecord | null;
+}): FeedStructuredResult {
+  return {
+    entityType: input.extracted.entityType,
+    flowCategory: input.classified.flowCategory,
+    flowBadge: input.classified.badge,
+    title: input.extracted.title,
+    commune: input.geo.commune,
+    communeAr: input.geo.commune_ar,
+    daira: input.geo.daira,
+    village: input.extracted.villageName ?? input.geo.matchedLabel,
+    phone: input.extracted.contactPhone ?? null,
+    urgency: input.extracted.urgency,
+    lat: input.geo.lat,
+    lng: input.geo.lng,
+    recordId: input.saved?.id ?? null,
+    recordKind: input.saved?.kind ?? null,
   };
 }
 
@@ -373,56 +418,33 @@ function inferEmergencyType(keywords: string[]): SosEmergencyType {
 }
 
 export function heuristicExtractAidNeed(rawText: string): ExtractedAidNeed {
-  const phoneMatch = rawText.match(/0[567]\d{8}/);
-  const keywords: string[] = [];
-  const hazardPatterns = [
-    /حريق/,
-    /مواشي/,
-    /نحل/,
-    /ماء/,
-    /سقف/,
-    /زيتون/,
-    /إسعاف/,
-  ];
-  for (const pattern of hazardPatterns) {
-    const match = rawText.match(pattern);
-    if (match) keywords.push(match[0]);
-  }
-
-  const isSos = /استغاث|SOS|عاجل|محاصر|حريق|إسعاف/i.test(rawText);
-  const communeGuess =
-    rawText.match(/(?:بلدية|دائرة|قرية|دوار)\s+([^\n،,.]{2,40})/i)?.[1] ??
-    "جيجل";
-
-  return {
-    entityType: isSos ? "sos_alert" : "aid_need",
-    title: rawText.slice(0, 80).trim() || "احتياج ميداني",
-    description: rawText.slice(0, 1000).trim(),
-    category: /ماء|صهريج|مضخة/.test(rawText)
-      ? "water"
-      : /مواشي|نحل|أعلاف/.test(rawText)
-        ? "food"
-        : /سقف|زنك|إسمنت/.test(rawText)
-          ? "shelter"
-          : "other",
-    urgency: isSos ? "critical" : "high",
-    quantityNeeded: 1,
-    contactName: undefined,
-    contactPhone: phoneMatch?.[0],
-    commune: communeGuess,
-    villageName:
-      rawText.match(/(?:دوار|دشرة|قرية)\s+([^\n،,.]{2,40})/i)?.[1] ?? undefined,
-    damageKeywords: keywords.length > 0 ? keywords : ["حاجة عامة"],
-    requires4x4: /4x4|جبلي|وعر|مسلك/.test(rawText),
-    emergencyType: inferEmergencyType(keywords),
-    confidence: phoneMatch ? "medium" : "low",
-  };
+  return classifiedToExtracted(classifyFeedPost(rawText));
 }
 
 export function geoLocateVillage(
   villageQuery: string,
   communeHint?: string,
 ): GeoLocatedVillage {
+  const resolved = resolveFeedLocation(
+    communeHint ? `${villageQuery} ${communeHint}` : villageQuery,
+  );
+
+  if (resolved.source !== "fallback") {
+    return {
+      query: villageQuery,
+      matchedLabel: resolved.matchedLabel,
+      commune: resolved.commune,
+      commune_ar: resolved.communeAr,
+      daira: resolved.daira,
+      daira_ar: resolved.dairaAr,
+      lat: resolved.lat,
+      lng: resolved.lng,
+      confidence: resolved.confidence,
+      source:
+        resolved.source === "douar_alias" ? "dossier" : "commune_index",
+    };
+  }
+
   const normalizedQuery = normalizeArabic(villageQuery);
   const index = buildJijelLocationIndex();
 
@@ -467,11 +489,11 @@ export function geoLocateVillage(
     }
   }
 
-  const resolved = resolveAgentLocation(communeHint ?? villageQuery);
+  const agentResolved = resolveAgentLocation(communeHint ?? villageQuery);
   return {
     query: villageQuery,
     matchedLabel: communeHint ?? villageQuery,
-    ...resolved,
+    ...agentResolved,
     confidence: communeHint ? "medium" : "low",
     source: "fallback",
   };
@@ -604,7 +626,80 @@ export function createCrisisAgentTools() {
 
 export type SavedFeedRecord =
   | { kind: "aid_need"; id: number; locationId: number }
-  | { kind: "sos_alert"; id: number };
+  | { kind: "sos_alert"; id: number }
+  | { kind: "accommodation"; id: number; locationId: number }
+  | { kind: "incoming_convoy"; id: number };
+
+function classifiedToExtracted(classified: ClassifiedFeedPost): ExtractedAidNeed {
+  const entityType =
+    classified.flowCategory === "sos_medical"
+      ? "sos_alert"
+      : classified.flowCategory === "accommodation"
+        ? "accommodation"
+        : classified.flowCategory === "incoming_convoy"
+          ? "incoming_convoy"
+          : "aid_need";
+
+  return {
+    entityType,
+    title: classified.title,
+    description: classified.description,
+    category:
+      classified.flowCategory === "accommodation"
+        ? "shelter"
+        : classified.cargoType === "medicine"
+          ? "medical"
+          : classified.cargoType === "food"
+            ? "food"
+            : "other",
+    urgency:
+      classified.flowCategory === "sos_medical" ? "critical" : "high",
+    quantityNeeded: classified.bedCapacity ?? 1,
+    contactName: classified.driverName,
+    contactPhone: classified.phone ?? undefined,
+    commune: classified.location.commune,
+    villageName: classified.location.village ?? undefined,
+    damageKeywords: classified.oxygenRequired
+      ? ["أكسجين", "طبي"]
+      : classified.venueType
+        ? [classified.venueType]
+        : ["حاجة عامة"],
+    requires4x4: /4x4|جبلي|وعر|مسلك/.test(classified.description),
+    emergencyType: classified.emergencyType ?? "medical",
+    confidence: classified.confidence,
+    flowCategory: classified.flowCategory,
+    bedCapacity: classified.bedCapacity,
+    venueType: classified.venueType,
+    departureWilaya: classified.departureWilaya,
+    driverName: classified.driverName,
+    cargoType: classified.cargoType,
+    vehicleType: classified.vehicleType,
+    entryPoint: classified.entryPoint,
+    etaHoursFromNow: classified.etaHoursFromNow,
+    oxygenRequired: classified.oxygenRequired,
+  };
+}
+
+function classifiedToGeo(classified: ClassifiedFeedPost): GeoLocatedVillage {
+  const { location } = classified;
+  return {
+    query: location.village ?? location.communeAr,
+    matchedLabel: location.matchedLabel,
+    commune: location.commune,
+    commune_ar: location.communeAr,
+    daira: location.daira,
+    daira_ar: location.dairaAr,
+    lat: location.lat,
+    lng: location.lng,
+    confidence: location.confidence,
+    source:
+      location.source === "douar_alias"
+        ? "dossier"
+        : location.source === "commune_index"
+          ? "commune_index"
+          : "fallback",
+  };
+}
 
 export async function persistExtractedFeedEntities(input: {
   extracted: ExtractedAidNeed;
@@ -614,12 +709,17 @@ export async function persistExtractedFeedEntities(input: {
   const { extracted, geo, sourceText } = input;
   const daira = resolveDairaForCommune(geo.commune);
 
-  if (extracted.entityType === "sos_alert") {
+  if (
+    extracted.entityType === "sos_alert" ||
+    extracted.flowCategory === "sos_medical"
+  ) {
+    const oxygenNote = extracted.oxygenRequired ? " | 🫁 حاجة أكسجين عاجلة" : "";
     const [saved] = await db
       .insert(urgentAlerts)
       .values({
-        emergencyType: extracted.emergencyType ?? inferEmergencyType(extracted.damageKeywords),
-        description: `${extracted.description} | ${extracted.requires4x4 ? "⚠️ مسلك وعر 4x4" : "طريق سالك"}`,
+        emergencyType:
+          extracted.emergencyType ?? inferEmergencyType(extracted.damageKeywords),
+        description: `${extracted.description}${oxygenNote} | ${extracted.requires4x4 ? "⚠️ مسلك وعر 4x4" : "طريق سالك"}`,
         reporterName: extracted.contactName ?? "رصد تلقائي عبر الوكيل الذكي",
         reporterPhone: extracted.contactPhone ?? null,
         daira,
@@ -637,6 +737,39 @@ export async function persistExtractedFeedEntities(input: {
     return { kind: "sos_alert", id: saved.id };
   }
 
+  if (
+    extracted.entityType === "incoming_convoy" ||
+    extracted.flowCategory === "incoming_convoy"
+  ) {
+    const eta = new Date();
+    eta.setHours(eta.getHours() + (extracted.etaHoursFromNow ?? 6));
+
+    const [convoy] = await db
+      .insert(incomingConvoys)
+      .values({
+        departureWilaya: extracted.departureWilaya ?? "غير محددة",
+        driverName: extracted.driverName ?? extracted.contactName ?? "سائق قافلة",
+        driverPhone: extracted.contactPhone ?? "0500000000",
+        driverWhatsapp: extracted.contactPhone ?? null,
+        vehicleType: extracted.vehicleType ?? "truck",
+        cargoType: extracted.cargoType ?? "mixed",
+        eta,
+        entryPoint: extracted.entryPoint ?? "setif_south",
+        status: "planned",
+        notes: `مستورد من فيسبوك: ${sourceText.slice(0, 500)}`,
+      })
+      .returning({ id: incomingConvoys.id });
+
+    revalidatePath("/");
+    revalidatePath("/map");
+    revalidatePath("/guide");
+    return { kind: "incoming_convoy", id: convoy.id };
+  }
+
+  const isAccommodation =
+    extracted.entityType === "accommodation" ||
+    extracted.flowCategory === "accommodation";
+
   const [location] = await db
     .insert(locations)
     .values({
@@ -648,16 +781,25 @@ export async function persistExtractedFeedEntities(input: {
     })
     .returning();
 
+  const venueLabel = extracted.venueType ? ` — ${extracted.venueType}` : "";
+  const bedLabel = extracted.bedCapacity
+    ? ` (${extracted.bedCapacity} سرير)`
+    : "";
+
   const [need] = await db
     .insert(needs)
     .values({
       locationId: location.id,
-      title: extracted.title,
-      description: extracted.description,
-      category: extracted.category,
+      title: isAccommodation
+        ? `إيواء ومبيت${venueLabel}${bedLabel}`
+        : extracted.title,
+      description: isAccommodation
+        ? `${extracted.description}\n\n🏠 عرض إيواء مستورد من فيسبوك.`
+        : extracted.description,
+      category: isAccommodation ? "shelter" : extracted.category,
       urgency: extracted.urgency,
       status: "open",
-      quantityNeeded: extracted.quantityNeeded,
+      quantityNeeded: extracted.bedCapacity ?? extracted.quantityNeeded,
       quantityFulfilled: 0,
       contactName: extracted.contactName ?? "منشور مجتمعي",
       contactPhone: extracted.contactPhone ?? null,
@@ -670,7 +812,9 @@ export async function persistExtractedFeedEntities(input: {
   revalidatePath("/map");
   revalidatePath("/report");
 
-  return { kind: "aid_need", id: need.id, locationId: location.id };
+  return isAccommodation
+    ? { kind: "accommodation", id: need.id, locationId: location.id }
+    : { kind: "aid_need", id: need.id, locationId: location.id };
 }
 
 export { CRISIS_AGENT_PERSONA } from "@/lib/agent/coordinator-knowledge";
@@ -712,23 +856,13 @@ export async function processSocialFeed(rawText: string): Promise<{
   toolResults: Array<{ toolName: string; output: unknown }>;
   extracted: ExtractedAidNeed | null;
   geo: GeoLocatedVillage | null;
+  classified: ClassifiedFeedPost | null;
   saved: SavedFeedRecord | null;
-  structured: {
-    entityType: string | null;
-    title: string | null;
-    commune: string | null;
-    communeAr: string | null;
-    daira: string | null;
-    village: string | null;
-    phone: string | null;
-    urgency: string | null;
-    lat: number | null;
-    lng: number | null;
-    recordId: number | null;
-    recordKind: SavedFeedRecord["kind"] | null;
-  };
+  structured: FeedStructuredResult;
 }> {
   try {
+    const classified = classifyFeedPost(rawText);
+
     const result = await generateAgentText({
       model: assertCrisisAgentModel(),
       system: FEED_AGENT_SYSTEM,
@@ -745,12 +879,11 @@ export async function processSocialFeed(rawText: string): Promise<{
     const extracted =
       (toolResults.find((entry) => entry.toolName === "extractAidNeed")
         ?.output as ExtractedAidNeed | undefined) ??
-      heuristicExtractAidNeed(rawText);
+      classifiedToExtracted(classified);
 
     const geo =
       (toolResults.find((entry) => entry.toolName === "geoLocateVillage")
-        ?.output as GeoLocatedVillage | undefined) ??
-      geoLocateVillage(extracted.villageName ?? extracted.commune, extracted.commune);
+        ?.output as GeoLocatedVillage | undefined) ?? classifiedToGeo(classified);
 
     let saved: SavedFeedRecord | null = null;
     if (extracted.description.trim()) {
@@ -766,21 +899,14 @@ export async function processSocialFeed(rawText: string): Promise<{
       toolResults,
       extracted,
       geo,
+      classified,
       saved,
-      structured: {
-        entityType: extracted.entityType,
-        title: extracted.title,
-        commune: geo.commune,
-        communeAr: geo.commune_ar,
-        daira: geo.daira,
-        village: extracted.villageName ?? geo.matchedLabel,
-        phone: extracted.contactPhone ?? null,
-        urgency: extracted.urgency,
-        lat: geo.lat,
-        lng: geo.lng,
-        recordId: saved?.id ?? null,
-        recordKind: saved?.kind ?? null,
-      },
+      structured: buildFeedStructuredResult({
+        extracted,
+        geo,
+        classified,
+        saved,
+      }),
     };
   } catch (error) {
     console.error("processSocialFeed fallback:", error);
