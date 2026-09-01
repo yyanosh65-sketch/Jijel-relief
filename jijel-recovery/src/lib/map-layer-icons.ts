@@ -51,3 +51,32 @@ export function createFacilityMarkerIcon(type: "veterinary" | "civil_protection"
     iconAnchor: [11, 11],
   });
 }
+
+const WAYPOINT_COLORS: Record<string, string> = {
+  lodging: "#2563eb",
+  kitchen: "#ea580c",
+  fuel: "#ca8a04",
+  warehouse: "#7c3aed",
+  reception: "#dc2626",
+};
+
+const WAYPOINT_ICONS: Record<string, string> = {
+  lodging: "🛏️",
+  kitchen: "🍲",
+  fuel: "⛽",
+  warehouse: "📦",
+  reception: "🚩",
+};
+
+export function createWaypointMarkerIcon(type: string): L.DivIcon {
+  const color = WAYPOINT_COLORS[type] ?? "#475569";
+  const symbol = WAYPOINT_ICONS[type] ?? "📍";
+
+  return L.divIcon({
+    className: "",
+    html: `<span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:9999px;background:${color};color:#fff;font-size:12px;border:2px solid #fff;box-shadow:0 2px 4px rgba(0,0,0,0.25)">${symbol}</span>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
+  });
+}

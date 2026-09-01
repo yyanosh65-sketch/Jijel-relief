@@ -13,6 +13,7 @@ import {
   type RoadAccessPoint,
   type VillageDossier,
 } from "@/lib/intelligence";
+import { convoyWaypoints, type ConvoyWaypoint } from "@/lib/convoy-waypoints";
 import type { ActionResult } from "@/lib/types";
 import type { SubmitUrgentAlertInput } from "@/actions/emergency";
 
@@ -36,6 +37,7 @@ export type MapIntelligenceData = {
   facilities: EmergencyFacility[];
   roads: RoadAccessPoint[];
   sosAlerts: SosMapAlert[];
+  waypoints: ConvoyWaypoint[];
 };
 
 export async function submitSosAlert(
@@ -130,6 +132,7 @@ export async function getMapIntelligence(): Promise<
         facilities: villageIntelligence.facilities,
         roads: villageIntelligence.roads,
         sosAlerts: sosResult.success ? (sosResult.data ?? []) : [],
+        waypoints: convoyWaypoints,
       },
     };
   } catch (error) {

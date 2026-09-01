@@ -9,6 +9,7 @@ export const MAP_LAYER_LABELS = {
   roads: "حالة المسالك",
   facilities: "ديار الإغاثة والبيطرة",
   villages: "البلديات والدواوير",
+  waypoints: "دليل القوافل ومحطات الطريق",
 } as const;
 
 export const MAP_LEGEND_LABELS = {

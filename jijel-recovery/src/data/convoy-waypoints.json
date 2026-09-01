@@ -1,0 +1,207 @@
+{
+  "waypoints": [
+    {
+      "id": "reception-bejaia-west",
+      "type": "reception",
+      "name_ar": "نقطة استقبال مدخل بجاية الغربي",
+      "lat": 36.7482,
+      "lng": 5.5124,
+      "phone": "034471200",
+      "whatsapp": "0555789012",
+      "opening_hours": "24/7 أثناء الأزمات",
+      "capacity": "توجيه 12 قافلة/يوم — موقف شاحنات",
+      "notes": "تسجيل الوصول وتحديد مسار التفريغ"
+    },
+    {
+      "id": "reception-setif-south",
+      "type": "reception",
+      "name_ar": "نقطة استقبال مدخل سطيف الجنوبي",
+      "lat": 36.6125,
+      "lng": 5.8841,
+      "phone": "034718050",
+      "whatsapp": "0771345678",
+      "opening_hours": "06:00 — 22:00",
+      "capacity": "موقف 8 شاحنات + مرافقة 4x4",
+      "notes": "مسار جبلي — لازم مرافق للشاحنات الكبيرة"
+    },
+    {
+      "id": "reception-skikda-east",
+      "type": "reception",
+      "name_ar": "نقطة استقبال مدخل سكيكدة الشرقي",
+      "lat": 36.8721,
+      "lng": 6.2145,
+      "phone": "038760012",
+      "whatsapp": "0662233445",
+      "opening_hours": "07:00 — 21:00",
+      "capacity": "توجيه 10 قوافل/يوم",
+      "notes": "اتصال مسبق قبل الوصول بساعتين"
+    },
+    {
+      "id": "lodging-jijel-youth",
+      "type": "lodging",
+      "name_ar": "مبيت مجاني — دار الشباب جيجل",
+      "lat": 36.8198,
+      "lng": 5.7589,
+      "phone": "034471880",
+      "whatsapp": "0555781234",
+      "opening_hours": "18:00 — 08:00",
+      "capacity": "40 سرير — رجال ونساء منفصلين",
+      "notes": "جِيب بطانية شخصية إن أمكن"
+    },
+    {
+      "id": "lodging-taher-community",
+      "type": "lodging",
+      "name_ar": "إيواء تضامني — قاعة متعددة الطاهير",
+      "lat": 36.7778,
+      "lng": 5.8925,
+      "phone": "034718050",
+      "whatsapp": "0667123456",
+      "opening_hours": "20:00 — 07:00",
+      "capacity": "25 سرير",
+      "notes": "أولوية لمتطوعي القوافل القادمة من بعيد"
+    },
+    {
+      "id": "lodging-texenna-mosque",
+      "type": "lodging",
+      "name_ar": "مبيت ليلي — مسجد تكسنة",
+      "lat": 36.6612,
+      "lng": 5.7418,
+      "phone": "0772456789",
+      "whatsapp": "0772456789",
+      "opening_hours": "بعد صلاة العشاء",
+      "capacity": "15 سرير — رجال فقط",
+      "notes": "احترام آداب المكان"
+    },
+    {
+      "id": "kitchen-jijel-solidarity",
+      "type": "kitchen",
+      "name_ar": "مطبخ تضامني — مركز جيجل",
+      "lat": 36.8215,
+      "lng": 5.7642,
+      "phone": "034471200",
+      "whatsapp": "0555789012",
+      "opening_hours": "11:30 — 14:30 و 18:30 — 20:30",
+      "capacity": "200 وجبة/يوم",
+      "notes": "وجبات مجانية للمتطوعين والسائقين"
+    },
+    {
+      "id": "kitchen-taher-field",
+      "type": "kitchen",
+      "name_ar": "مطبخ ميداني الطاهير",
+      "lat": 36.7795,
+      "lng": 5.8968,
+      "phone": "034718050",
+      "whatsapp": "0771345678",
+      "opening_hours": "12:00 — 15:00",
+      "capacity": "120 وجبة/يوم",
+      "notes": "تسجيل مسبق للقوافل الكبيرة"
+    },
+    {
+      "id": "kitchen-el-aouana",
+      "type": "kitchen",
+      "name_ar": "مطعم تضامني العوانة",
+      "lat": 36.8405,
+      "lng": 5.8702,
+      "phone": "0661987654",
+      "whatsapp": "0661987654",
+      "opening_hours": "11:00 — 20:00",
+      "capacity": "80 وجبة/يوم",
+      "notes": "وجبة ساخنة + شاي للسائقين"
+    },
+    {
+      "id": "fuel-jijel-route-n5",
+      "type": "fuel",
+      "name_ar": "محطة بنزين RN5 — مدخل جيجل",
+      "lat": 36.8156,
+      "lng": 5.7485,
+      "phone": "034471500",
+      "whatsapp": null,
+      "opening_hours": "06:00 — 23:00",
+      "capacity": "ديزل + بنزين — صفوف قصيرة صباحاً",
+      "notes": "تعبئة كاملة قبل دخول المسلك الجبلي"
+    },
+    {
+      "id": "fuel-taher-intersection",
+      "type": "fuel",
+      "name_ar": "محطة الطاهير — تقاطع الطريق الوطني",
+      "lat": 36.7762,
+      "lng": 5.8888,
+      "phone": "034718200",
+      "whatsapp": null,
+      "opening_hours": "24/7",
+      "capacity": "ديزل متوفر — أولوية للقوافل الإغاثية",
+      "notes": "اطلب إيصال للتبرعات اللوجستية"
+    },
+    {
+      "id": "fuel-skikda-approach",
+      "type": "fuel",
+      "name_ar": "محطة الاقتراب من سكيكدة",
+      "lat": 36.8588,
+      "lng": 6.1821,
+      "phone": "038760450",
+      "whatsapp": null,
+      "opening_hours": "06:00 — 22:00",
+      "capacity": "بنزين + ديزل",
+      "notes": "آخر محطة قبل المدخل الشرقي"
+    },
+    {
+      "id": "warehouse-jijel-central",
+      "type": "warehouse",
+      "name_ar": "مستودع الإغاثة المركزي — جيجل",
+      "lat": 36.8185,
+      "lng": 5.762,
+      "phone": "034471200",
+      "whatsapp": "0555789012",
+      "opening_hours": "08:00 — 18:00",
+      "capacity": "استقبال 500 طن/أسبوع",
+      "notes": "تفريغ الشاحنات الكبيرة — رافعة متوفرة"
+    },
+    {
+      "id": "warehouse-taher",
+      "type": "warehouse",
+      "name_ar": "مستودع تجميع الطاهير",
+      "lat": 36.7765,
+      "lng": 5.891,
+      "phone": "034718050",
+      "whatsapp": "0771345678",
+      "opening_hours": "08:00 — 17:00",
+      "capacity": "200 طن تخزين جاف",
+      "notes": "أغذية وأغطية وعتاد فلاحي"
+    },
+    {
+      "id": "warehouse-texenna",
+      "type": "warehouse",
+      "name_ar": "مستودع ميداني تكسنة",
+      "lat": 36.654,
+      "lng": 5.745,
+      "phone": "0772456789",
+      "whatsapp": "0772456789",
+      "opening_hours": "09:00 — 16:00",
+      "capacity": "120 طن — مولد كهربائي",
+      "notes": "4x4 للتوزيع على المداشر الجبلية"
+    }
+  ],
+  "entranceCoordinators": [
+    {
+      "entry_point": "bejaia_west",
+      "name_ar": "كريم بن عودة",
+      "phone": "0555789012",
+      "whatsapp": "0555789012",
+      "notes": "منسق استقبال مدخل بجاية — يتكفل بتعيين مرافق محلي"
+    },
+    {
+      "entry_point": "setif_south",
+      "name_ar": "نادية حمداني",
+      "phone": "0771345678",
+      "whatsapp": "0771345678",
+      "notes": "منسقة مدخل سطيف — خبرة في المسالك الجبلية"
+    },
+    {
+      "entry_point": "skikda_east",
+      "name_ar": "رشيد قادري",
+      "phone": "0662233445",
+      "whatsapp": "0662233445",
+      "notes": "منسق مدخل سكيكدة — تنسيق مع المستودعات الشرقية"
+    }
+  ]
+}

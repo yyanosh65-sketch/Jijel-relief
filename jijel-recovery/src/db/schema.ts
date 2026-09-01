@@ -76,6 +76,35 @@ export const helperStatusEnum = pgEnum("helper_status", [
   "inactive",
 ]);
 
+export const convoyVehicleTypeEnum = pgEnum("convoy_vehicle_type", [
+  "truck",
+  "pickup_4x4",
+  "van",
+  "bus",
+]);
+
+export const convoyCargoTypeEnum = pgEnum("convoy_cargo_type", [
+  "food",
+  "farm_equipment",
+  "blankets",
+  "medicine",
+  "mixed",
+]);
+
+export const convoyEntryPointEnum = pgEnum("convoy_entry_point", [
+  "bejaia_west",
+  "setif_south",
+  "skikda_east",
+]);
+
+export const convoyStatusEnum = pgEnum("convoy_status", [
+  "planned",
+  "en_route",
+  "arrived",
+  "completed",
+  "cancelled",
+]);
+
 const geographyPoint = customType<{ data: string; driverData: string }>({
   dataType() {
     return "geography(Point,4326)";
@@ -184,6 +213,25 @@ export const communityHelpers = pgTable("community_helpers", {
     .notNull(),
 });
 
+export const convoys = pgTable("convoys", {
+  id: serial("id").primaryKey(),
+  departureWilaya: text("departure_wilaya").notNull(),
+  driverName: text("driver_name").notNull(),
+  driverPhone: text("driver_phone").notNull(),
+  driverWhatsapp: text("driver_whatsapp"),
+  vehicleType: convoyVehicleTypeEnum("vehicle_type").notNull(),
+  cargoType: convoyCargoTypeEnum("cargo_type").notNull(),
+  eta: timestamp("eta", { withTimezone: true }).notNull(),
+  entryPoint: convoyEntryPointEnum("entry_point").notNull(),
+  status: convoyStatusEnum("status").notNull().default("planned"),
+  welcomingGuideName: text("welcoming_guide_name"),
+  welcomingGuidePhone: text("welcoming_guide_phone"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const locationsRelations = relations(locations, ({ many }) => ({
   needs: many(needs),
 }));
@@ -218,3 +266,8 @@ export type CommunityHelper = typeof communityHelpers.$inferSelect;
 export type HelperSkill = (typeof helperSkillEnum.enumValues)[number];
 export type HelperStatus = (typeof helperStatusEnum.enumValues)[number];
 export type UrgentAlert = typeof urgentAlerts.$inferSelect;
+export type Convoy = typeof convoys.$inferSelect;
+export type ConvoyVehicleType = (typeof convoyVehicleTypeEnum.enumValues)[number];
+export type ConvoyCargoType = (typeof convoyCargoTypeEnum.enumValues)[number];
+export type ConvoyEntryPoint = (typeof convoyEntryPointEnum.enumValues)[number];
+export type ConvoyStatus = (typeof convoyStatusEnum.enumValues)[number];

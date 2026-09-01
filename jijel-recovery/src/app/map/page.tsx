@@ -58,6 +58,7 @@ export default async function MapPage() {
                 facilities: [],
                 roads: [],
                 sosAlerts: [],
+                waypoints: [],
               }
             }
           />
