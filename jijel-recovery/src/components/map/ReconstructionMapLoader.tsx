@@ -17,6 +17,8 @@ import {
   filterAndSortNeeds,
   parseNeedSearchParams,
 } from "@/lib/need-search";
+import { glassPanelClass } from "@/lib/ui-labels";
+import { cn } from "@/lib/utils";
 
 const ReconstructionMap = dynamic(() => import("./ReconstructionMap"), {
   ssr: false,
@@ -108,18 +110,26 @@ export default function ReconstructionMapLoader({
           />
         </div>
 
-        <aside className="flex h-[45vh] flex-col border-t border-zinc-200 bg-zinc-50 lg:h-full lg:w-96 lg:border-t-0 lg:border-l">
-          <div className="border-b border-zinc-200 px-4 py-3">
-            <h2 className="text-sm font-semibold text-zinc-900">
-              الحاجيات المسجلة — Besoins vérifiés
+        <aside
+          dir="rtl"
+          className="flex h-[45vh] flex-col border-t border-slate-200/80 bg-slate-50/80 backdrop-blur-sm lg:h-full lg:w-96 lg:border-t-0 lg:border-l"
+        >
+          <div className="border-b border-slate-200/80 px-4 py-3">
+            <h2 className="text-sm font-semibold text-slate-900">
+              حاجيات المداشر
             </h2>
-            <p className="text-xs text-zinc-500">
+            <p className="text-xs text-slate-500">
               {filteredNeeds.length} من {needs.length} احتياج
             </p>
           </div>
           <div className="flex-1 space-y-3 overflow-y-auto p-4">
             {filteredNeeds.length === 0 ? (
-              <p className="rounded-xl border border-dashed border-zinc-300 bg-white px-4 py-6 text-center text-sm text-zinc-500">
+              <p
+                className={cn(
+                  glassPanelClass,
+                  "px-4 py-6 text-center text-sm text-slate-500",
+                )}
+              >
                 لا توجد نتائج مطابقة — جرّب توسيع نطاق البحث أو تعديل الفلاتر.
               </p>
             ) : null}

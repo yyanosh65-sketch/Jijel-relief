@@ -37,11 +37,43 @@ body {
 }
 
 .sos-floating-button {
-  animation: sos-pulse-shadow 2s ease-in-out infinite;
+  animation: sos-pulse-glow 2.4s ease-in-out infinite;
+}
+
+.progress-bar-fill {
+  transition: width 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: progress-reveal 0.9s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .sos-marker-pulse {
   animation: sos-marker-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes sos-pulse-glow {
+  0%,
+  100% {
+    box-shadow:
+      0 10px 25px -5px rgb(239 68 68 / 0.35),
+      0 0 0 0 rgb(239 68 68 / 0.45);
+  }
+  50% {
+    box-shadow:
+      0 14px 30px -5px rgb(239 68 68 / 0.45),
+      0 0 0 14px rgb(239 68 68 / 0);
+  }
+}
+
+@keyframes progress-reveal {
+  from {
+    opacity: 0.6;
+    transform: scaleX(0.35);
+    transform-origin: right center;
+  }
+  to {
+    opacity: 1;
+    transform: scaleX(1);
+    transform-origin: right center;
+  }
 }
 
 @keyframes sos-pulse-shadow {

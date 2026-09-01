@@ -2,17 +2,13 @@ import ReportDamageForm from "@/components/forms/ReportDamageForm";
 
 export default function ReportPage() {
   return (
-    <main className="min-h-dvh bg-zinc-50">
-      <header className="border-b border-zinc-200 bg-white px-4 py-5">
-        <h1 className="text-xl font-semibold text-zinc-900">
-          تسجيل ضرر — Signaler un besoin
+    <main dir="rtl" className="min-h-dvh bg-gradient-to-b from-slate-50 to-white">
+      <header className="border-b border-slate-200/80 bg-white/90 px-4 py-5 backdrop-blur-md">
+        <h1 className="text-xl font-semibold text-slate-900">
+          تسجيل ضرر
         </h1>
-        <p className="mt-1 text-sm text-zinc-600">
+        <p className="mt-1 text-sm text-slate-600">
           ساعد المجتمع ديال جيجل باش نعرفو فين الخدمة محتاجة.
-        </p>
-        <p className="text-xs text-zinc-500">
-          Aidez la communauté de Jijel à cartographier les besoins de
-          reconstruction.
         </p>
       </header>
 

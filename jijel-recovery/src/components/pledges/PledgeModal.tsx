@@ -10,13 +10,14 @@ import {
   formatAlgerianPhoneHint,
   isValidAlgerianPhone,
 } from "@/lib/phone";
+import { NeedProgressBar, glassPanelClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 export const PLEDGE_TYPES = [
-  { value: "goods", labelFr: "Matériel / Biens", labelAr: "مواد" },
-  { value: "financial", labelFr: "Soutien financier", labelAr: "دعم مالي" },
-  { value: "labor", labelFr: "Main-d'œuvre", labelAr: "عمل / يد عاملة" },
-  { value: "transport", labelFr: "Transport / Logistique", labelAr: "نقل" },
+  { value: "goods", labelAr: "مواد وعتاد" },
+  { value: "financial", labelAr: "دعم مالي" },
+  { value: "labor", labelAr: "يد عاملة" },
+  { value: "transport", labelAr: "نقل ولوجستيك" },
 ] as const;
 
 export type PledgeType = (typeof PLEDGE_TYPES)[number]["value"];
@@ -47,17 +48,17 @@ function buildPledgeWhatsAppMessage(
   form: FormState,
 ): string {
   const pledgeTypeLabel =
-    PLEDGE_TYPES.find((type) => type.value === form.pledgeType)?.labelFr ??
+    PLEDGE_TYPES.find((type) => type.value === form.pledgeType)?.labelAr ??
     form.pledgeType;
 
   return [
-    "Salam,",
-    `Ana ${form.contributorName} n3awen f had l7aja: ${need.title}.`,
-    `Commune: ${need.location.name} (${need.location.daira}).`,
-    `Quantité: ${form.quantity} / ${need.quantityNeeded - need.quantityFulfilled} restant.`,
-    `Type: ${pledgeTypeLabel}.`,
-    `Tel donateur: ${form.contributorContact}.`,
-    "Merci!",
+    "السلام عليكم،",
+    `أنا ${form.contributorName}، نحب نعاون في: ${need.title}.`,
+    `البلدية: ${need.location.name} — ${need.location.daira}.`,
+    `الكمية: ${form.quantity} من ${need.quantityNeeded - need.quantityFulfilled} المتبقية.`,
+    `نوع المساهمة: ${pledgeTypeLabel}.`,
+    `هاتفي: ${form.contributorContact}.`,
+    "شكراً.",
   ].join("\n");
 }
 
@@ -89,7 +90,7 @@ export default function PledgeModal({
 
   const remaining = need.quantityNeeded - need.quantityFulfilled;
   const pledgeTypeLabel =
-    PLEDGE_TYPES.find((type) => type.value === form.pledgeType)?.labelFr ??
+    PLEDGE_TYPES.find((type) => type.value === form.pledgeType)?.labelAr ??
     form.pledgeType;
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -101,16 +102,14 @@ export default function PledgeModal({
     setError(null);
 
     if (!isValidAlgerianPhone(form.contributorContact)) {
-      setError(
-        "رقم جزائري غالط — Numéro algérien invalide (05/06/07 ou +213).",
-      );
+      setError(`رقم جزائري غير صالح — ${formatAlgerianPhoneHint()}`);
       return;
     }
 
     const quantity = Number(form.quantity);
 
     if (!quantity || quantity <= 0 || quantity > remaining) {
-      setError("الكمية غالطة — Quantité invalide.");
+      setError("الكمية غير صالحة.");
       return;
     }
 
@@ -121,14 +120,14 @@ export default function PledgeModal({
       contributorName: form.contributorName.trim(),
       contributorContact: form.contributorContact.trim(),
       quantity,
-      notes: `Pledge type: ${pledgeTypeLabel}`,
+      notes: `نوع المساهمة: ${pledgeTypeLabel}`,
       status: "pending",
     });
 
     setIsSubmitting(false);
 
     if (!result.success) {
-      setError(result.error ?? "تعذر إرسال التعهد — Échec de l'engagement.");
+      setError(result.error ?? "تعذر تسجيل المساهمة.");
       return;
     }
 
@@ -154,28 +153,31 @@ export default function PledgeModal({
   }
 
   return (
-    <div className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/50 p-4 sm:items-center">
+    <div
+      dir="rtl"
+      className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/50 p-4 backdrop-blur-sm sm:items-center"
+    >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="pledge-modal-title"
-        className="w-full max-w-md rounded-2xl bg-white shadow-xl"
+        className={cn(glassPanelClass, "w-full max-w-md")}
       >
-        <div className="flex items-start justify-between border-b border-zinc-200 px-5 py-4">
+        <div className="flex items-start justify-between border-b border-slate-200/80 px-5 py-4">
           <div>
-            <h2 id="pledge-modal-title" className="text-lg font-semibold text-zinc-900">
-              Adopt / Pledge
+            <h2 id="pledge-modal-title" className="text-lg font-semibold text-slate-900">
+              نعاون في هاد الخير
             </h2>
-            <p className="mt-1 text-sm text-zinc-600">{need.title}</p>
-            <p className="text-xs text-zinc-500">
-              {need.location.name} · {need.location.daira}
+            <p className="mt-1 text-sm text-slate-600">{need.title}</p>
+            <p className="text-xs text-slate-500">
+              {need.location.name} — {need.location.daira}
             </p>
           </div>
           <button
             type="button"
             onClick={handleClose}
-            className="rounded-full p-1 text-zinc-500 hover:bg-zinc-100"
-            aria-label="Close"
+            className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
+            aria-label="إغلاق"
           >
             <X className="h-5 w-5" />
           </button>
@@ -184,13 +186,12 @@ export default function PledgeModal({
         {isCompleted ? (
           <div className="space-y-4 px-5 py-6">
             <p className="text-sm font-medium text-emerald-700">
-              تم تسجيل التعهد بنجاح — Engagement enregistré!
+              تسجّل تعاونك بنجاح — بارك الله فيك!
             </p>
             {whatsappUrl ? (
               <>
-                <p className="text-sm text-zinc-600">
-                  تواصل مباشرة مع المستفيد عبر واتساب — Contactez le bénéficiaire
-                  sur WhatsApp.
+                <p className="text-sm text-slate-600">
+                  تواصل مباشرة مع المنسق عبر واتساب.
                 </p>
                 <a
                   href={whatsappUrl}
@@ -199,33 +200,35 @@ export default function PledgeModal({
                   className="flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#25D366] px-4 text-sm font-semibold text-white hover:bg-[#1ebe5d]"
                 >
                   <MessageCircle className="h-4 w-4" />
-                  WhatsApp
+                  واتساب
                 </a>
               </>
             ) : (
-              <p className="text-sm text-zinc-600">
-                ما كاينش رقم واتساب للمستفيد — Aucun téléphone bénéficiaire
-                disponible.
+              <p className="text-sm text-slate-600">
+                ما كاينش رقم واتساب للمنسق حالياً.
               </p>
             )}
             <button
               type="button"
               onClick={handleClose}
-              className="w-full rounded-xl border border-zinc-300 px-4 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-50"
+              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
             >
-              إغلاق / Fermer
+              إغلاق
             </button>
           </div>
         ) : (
           <form className="space-y-4 px-5 py-6" onSubmit={handleSubmit}>
-            <div className="rounded-xl bg-zinc-50 px-3 py-2 text-xs text-zinc-600">
-              {need.quantityFulfilled} / {need.quantityNeeded} fulfilled ·{" "}
-              {remaining} remaining
-            </div>
+            <NeedProgressBar
+              fulfilled={need.quantityFulfilled}
+              needed={need.quantityNeeded}
+            />
+            <p className="text-xs text-slate-500">
+              باقي {remaining} وحدة للتكفّل الكامل
+            </p>
 
             <div>
               <label htmlFor="contributorName" className="mb-1 block text-sm font-medium">
-                الاسم / Nom du donateur
+                الاسم الكامل
               </label>
               <input
                 id="contributorName"
@@ -237,7 +240,7 @@ export default function PledgeModal({
                     contributorName: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm outline-none focus:border-emerald-600"
+                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm outline-none focus:border-emerald-600"
               />
             </div>
 
@@ -246,7 +249,7 @@ export default function PledgeModal({
                 htmlFor="contributorContact"
                 className="mb-1 block text-sm font-medium"
               >
-                الهاتف / Téléphone
+                رقم الهاتف
               </label>
               <input
                 id="contributorContact"
@@ -261,14 +264,14 @@ export default function PledgeModal({
                     contributorContact: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm outline-none focus:border-emerald-600"
+                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm outline-none focus:border-emerald-600"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="quantity" className="mb-1 block text-sm font-medium">
-                  الكمية / Quantité
+                  الكمية
                 </label>
                 <input
                   id="quantity"
@@ -283,13 +286,13 @@ export default function PledgeModal({
                       quantity: event.target.value,
                     }))
                   }
-                  className="min-h-11 w-full rounded-xl border border-zinc-300 px-3 text-sm outline-none focus:border-emerald-600"
+                  className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm outline-none focus:border-emerald-600"
                 />
               </div>
 
               <div>
                 <label htmlFor="pledgeType" className="mb-1 block text-sm font-medium">
-                  النوع / Type
+                  نوع المساهمة
                 </label>
                 <select
                   id="pledgeType"
@@ -300,11 +303,11 @@ export default function PledgeModal({
                       pledgeType: event.target.value as PledgeType,
                     }))
                   }
-                  className="min-h-11 w-full rounded-xl border border-zinc-300 bg-white px-3 text-sm outline-none focus:border-emerald-600"
+                  className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm outline-none focus:border-emerald-600"
                 >
                   {PLEDGE_TYPES.map((type) => (
                     <option key={type.value} value={type.value}>
-                      {type.labelAr} — {type.labelFr}
+                      {type.labelAr}
                     </option>
                   ))}
                 </select>
@@ -319,7 +322,7 @@ export default function PledgeModal({
               type="submit"
               disabled={isSubmitting || remaining <= 0}
               className={cn(
-                "flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60",
+                "flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white shadow-md transition hover:scale-[1.02] hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60",
               )}
             >
               {isSubmitting ? (
@@ -328,7 +331,7 @@ export default function PledgeModal({
                   جاري الإرسال...
                 </>
               ) : (
-                "تعهد / Confirmer le pledge"
+                "نعاون في هاد الخير"
               )}
             </button>
           </form>

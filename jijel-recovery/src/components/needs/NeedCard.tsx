@@ -2,6 +2,7 @@
 
 import type { MapNeed } from "@/actions/needs";
 import { getMarkerColor } from "@/lib/map-utils";
+import { NeedProgressBar, glassPanelClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 type NeedCardProps = {
@@ -19,18 +20,16 @@ const MARKER_DOT: Record<ReturnType<typeof getMarkerColor>, string> = {
 export default function NeedCard({ need, onPledge, isSelected }: NeedCardProps) {
   const color = getMarkerColor(need);
   const remaining = need.quantityNeeded - need.quantityFulfilled;
-  const progress =
-    need.quantityNeeded > 0
-      ? Math.min((need.quantityFulfilled / need.quantityNeeded) * 100, 100)
-      : 0;
 
   return (
     <article
+      dir="rtl"
       className={cn(
-        "rounded-2xl border bg-white p-4 shadow-sm transition",
+        glassPanelClass,
+        "p-4 transition hover:shadow-xl",
         isSelected
-          ? "border-emerald-600 ring-2 ring-emerald-100"
-          : "border-zinc-200",
+          ? "border-emerald-500/80 ring-2 ring-emerald-100"
+          : "border-slate-200/80",
       )}
     >
       <div className="flex items-start gap-3">
@@ -38,26 +37,18 @@ export default function NeedCard({ need, onPledge, isSelected }: NeedCardProps) 
           className={cn("mt-1 h-3 w-3 shrink-0 rounded-full", MARKER_DOT[color])}
         />
         <div className="min-w-0 flex-1">
-          <h3 className="truncate text-sm font-semibold text-zinc-900">
+          <h3 className="truncate text-sm font-semibold text-slate-900">
             {need.title}
           </h3>
-          <p className="mt-1 text-xs text-zinc-600">
-            {need.location.name} · {need.location.daira}
+          <p className="mt-1 text-xs text-slate-600">
+            {need.location.name} — {need.location.daira}
           </p>
-          <div className="mt-3 space-y-1">
-            <div className="flex justify-between text-xs text-zinc-500">
-              <span>
-                {need.quantityFulfilled}/{need.quantityNeeded}
-              </span>
-              <span>{Math.round(progress)}%</span>
-            </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-zinc-200">
-              <div
-                className="h-full rounded-full bg-emerald-600"
-                style={{ width: `${progress}%` }}
-              />
-            </div>
-          </div>
+          <NeedProgressBar
+            className="mt-3"
+            fulfilled={need.quantityFulfilled}
+            needed={need.quantityNeeded}
+            size="sm"
+          />
         </div>
       </div>
 
@@ -65,9 +56,9 @@ export default function NeedCard({ need, onPledge, isSelected }: NeedCardProps) 
         type="button"
         onClick={() => onPledge(need)}
         disabled={remaining <= 0}
-        className="mt-4 w-full rounded-xl bg-emerald-700 px-3 py-2.5 text-sm font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-4 w-full rounded-xl bg-emerald-700 px-3 py-2.5 text-sm font-semibold text-white shadow-md transition hover:scale-[1.02] hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-50"
       >
-        Adopt / Pledge
+        نعاون في هاد الخير
       </button>
     </article>
   );

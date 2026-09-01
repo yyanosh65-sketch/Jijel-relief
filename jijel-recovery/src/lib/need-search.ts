@@ -34,10 +34,10 @@ export const SEARCH_CATEGORY_OPTIONS: Array<{
   id: NeedSearchCategoryId;
   labelAr: string;
 }> = [
-  { id: "olive_trees", labelAr: "زيتون ومشاتل" },
-  { id: "livestock", labelAr: "مواشي ونحل" },
-  { id: "shelter", labelAr: "ترميم وسكن" },
-  { id: "tools", labelAr: "عتاد وسقي" },
+  { id: "olive_trees", labelAr: "غراسة الزيتون 🌱" },
+  { id: "livestock", labelAr: "المواشي وخلايا النحل 🐑" },
+  { id: "shelter", labelAr: "ترميم الديار 🏠" },
+  { id: "tools", labelAr: "موتورات الما والعتاد ⚙️" },
 ];
 
 export const URGENCY_FILTER_OPTIONS: Array<{

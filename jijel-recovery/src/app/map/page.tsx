@@ -12,21 +12,20 @@ export default async function MapPage() {
 
   if (!needsResult.success || !intelligenceResult.success) {
     return (
-      <main className="flex h-dvh flex-col">
-        <header className="border-b border-zinc-200 bg-white px-4 py-3">
-          <h1 className="text-lg font-semibold text-zinc-900">
+      <main dir="rtl" className="flex h-dvh flex-col bg-gradient-to-b from-slate-50 to-white">
+        <header className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur-md">
+          <h1 className="text-lg font-semibold text-slate-900">
             خريطة إعادة الإعمار بجيجل
           </h1>
         </header>
-        <div className="flex flex-1 flex-col items-center justify-center gap-3 bg-zinc-100 px-6 text-center">
+        <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
           <p className="text-sm text-red-600">
             {needsResult.error ??
               intelligenceResult.error ??
               "تعذر تحميل بيانات الخريطة."}
           </p>
-          <p className="text-xs text-zinc-500">
-            تأكد من تشغيل PostgreSQL المحلي — Vérifiez que PostgreSQL local est
-            démarré.
+          <p className="text-xs text-slate-500">
+            تأكد من تشغيل قاعدة البيانات المحلية.
           </p>
         </div>
       </main>
@@ -34,15 +33,13 @@ export default async function MapPage() {
   }
 
   return (
-    <main className="flex h-dvh flex-col">
-      <header className="border-b border-zinc-200 bg-white px-4 py-3">
-        <h1 className="text-lg font-semibold text-zinc-900">
+    <main dir="rtl" className="flex h-dvh flex-col bg-gradient-to-b from-slate-50 to-white">
+      <header className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur-md">
+        <h1 className="text-lg font-semibold text-slate-900">
           خريطة إعادة الإعمار بجيجل
         </h1>
-        <p className="text-sm text-zinc-600">
-          احتياجات مجتمعية موثّقة عبر بلديات وقرى ولاية جيجل.
-          <span className="mx-1 text-zinc-400">·</span>
-          <span className="text-zinc-500">Carte des besoins vérifiés.</span>
+        <p className="text-sm text-slate-600">
+          احتياجات موثقة عبر بلديات ودواوير ولاية جيجل — عاون وين تقدر
         </p>
       </header>
       <div className="flex-1">

@@ -13,22 +13,13 @@ export type MapCategoryId = "olive_trees" | "livestock" | "shelter" | "tools";
 export type MapCategory = {
   id: MapCategoryId;
   labelAr: string;
-  labelFr: string;
 };
 
 export const MAP_CATEGORIES: MapCategory[] = [
-  { id: "olive_trees", labelAr: "أشجار الزيتون", labelFr: "Olive Trees" },
-  {
-    id: "livestock",
-    labelAr: "المواشي وتربية النحل",
-    labelFr: "Livestock",
-  },
-  { id: "shelter", labelAr: "ترميم المنازل", labelFr: "Shelter" },
-  {
-    id: "tools",
-    labelAr: "العتاد والآلات",
-    labelFr: "Tools & Pumps",
-  },
+  { id: "olive_trees", labelAr: "غراسة الزيتون 🌱" },
+  { id: "livestock", labelAr: "المواشي وخلايا النحل 🐑" },
+  { id: "shelter", labelAr: "ترميم الديار 🏠" },
+  { id: "tools", labelAr: "موتورات الما والعتاد ⚙️" },
 ];
 
 export type MarkerColor = "red" | "orange" | "green";

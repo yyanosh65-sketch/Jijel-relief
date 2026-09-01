@@ -18,6 +18,7 @@ import {
   type UrgencyFilterGroup,
 } from "@/lib/need-search";
 import { cn } from "@/lib/utils";
+import { glassPanelClass } from "@/lib/ui-labels";
 
 function toggleListValue<T extends string>(values: T[], value: T): T[] {
   return values.includes(value)
@@ -44,18 +45,6 @@ export default function AdvancedNeedSearch() {
     setQueryDraft(filters.query);
   }, [filters.query]);
 
-  useEffect(() => {
-    const timeout = window.setTimeout(() => {
-      if (queryDraft === filters.query) {
-        return;
-      }
-
-      patchFilters({ query: queryDraft });
-    }, 300);
-
-    return () => window.clearTimeout(timeout);
-  }, [filters.query, patchFilters, queryDraft]);
-
   const replaceFilters = useCallback(
     (next: NeedSearchFilters) => {
       const params = buildNeedSearchParams(next);
@@ -73,6 +62,18 @@ export default function AdvancedNeedSearch() {
     },
     [filters, replaceFilters],
   );
+
+  useEffect(() => {
+    const timeout = window.setTimeout(() => {
+      if (queryDraft === filters.query) {
+        return;
+      }
+
+      patchFilters({ query: queryDraft });
+    }, 300);
+
+    return () => window.clearTimeout(timeout);
+  }, [filters.query, patchFilters, queryDraft]);
 
   const captureGps = useCallback(() => {
     setIsCapturingGps(true);
@@ -125,15 +126,14 @@ export default function AdvancedNeedSearch() {
   return (
     <section
       dir="rtl"
-      className="border-b border-zinc-200 bg-white"
+      className={cn(glassPanelClass, "border-x-0 border-t-0 rounded-none")}
       aria-label="بحث متقدم عن الاحتياجات"
     >
-      <div className="flex items-center justify-between gap-3 border-b border-zinc-100 px-4 py-3">
+      <div className="flex items-center justify-between gap-3 border-b border-slate-200/80 px-4 py-3">
         <div>
-          <h2 className="text-sm font-bold text-zinc-900">
+          <h2 className="text-sm font-bold text-slate-900">
             بحث وتصفية الاحتياجات
           </h2>
-          <p className="text-xs text-zinc-500">Recherche avancée des besoins</p>
         </div>
         <button
           type="button"

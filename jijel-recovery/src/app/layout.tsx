@@ -10,9 +10,9 @@ const cairo = Cairo({
 });
 
 export const metadata: Metadata = {
-  title: "جيجل للتعافي | Jijel Recovery",
+  title: "جيجل للتعافي",
   description:
-    "منصة مجتمعية لتسجيل احتياجات إعادة الإعمار في ولاية جيجل — Plateforme communautaire de reconstruction à Jijel.",
+    "منصة مجتمعية لتسجيل احتياجات إعادة الإعمار في ولاية جيجل — عاون وين تقدر.",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
@@ -22,7 +22,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       dir="rtl"
       className={`${cairo.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col font-sans">
+      <body dir="rtl" className="flex min-h-full flex-col font-sans">
         <AppShell>{children}</AppShell>
       </body>
     </html>

@@ -30,6 +30,12 @@ import {
   type MarkerColor,
 } from "@/lib/map-utils";
 import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
+import {
+  glassPanelClass,
+  MAP_LAYER_LABELS,
+  MAP_LEGEND_LABELS,
+  NeedProgressBar,
+} from "@/lib/ui-labels";
 import { buildWhatsAppUrl } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
@@ -60,16 +66,15 @@ type ReconstructionMapProps = {
   onVillageClick: (dossierId: string) => void;
 };
 
-type MapLayerKey = "needs" | "sos" | "roads" | "facilities" | "villages";
+type MapLayerKey = keyof typeof MAP_LAYER_LABELS;
 
-const LAYER_TOGGLES: Array<{ key: MapLayerKey; labelAr: string; labelFr: string }> =
-  [
-    { key: "needs", labelAr: "الاحتياجات", labelFr: "Needs" },
-    { key: "sos", labelAr: "تنبيهات SOS", labelFr: "SOS Alerts" },
-    { key: "roads", labelAr: "حالة الطرق", labelFr: "Road Access" },
-    { key: "facilities", labelAr: "مرافق الطوارئ", labelFr: "Facilities" },
-    { key: "villages", labelAr: "القرى والدوائر", labelFr: "Villages" },
-  ];
+const LAYER_TOGGLES: Array<{ key: MapLayerKey; labelAr: string }> = [
+  { key: "needs", labelAr: MAP_LAYER_LABELS.needs },
+  { key: "sos", labelAr: MAP_LAYER_LABELS.sos },
+  { key: "roads", labelAr: MAP_LAYER_LABELS.roads },
+  { key: "facilities", labelAr: MAP_LAYER_LABELS.facilities },
+  { key: "villages", labelAr: MAP_LAYER_LABELS.villages },
+];
 
 function getSosLabel(type: SosMapAlert["emergencyType"]): string {
   return (
@@ -113,10 +118,6 @@ function NeedPopupContent({
   const [isSuccess, setIsSuccess] = useState(false);
 
   const remaining = need.quantityNeeded - need.quantityFulfilled;
-  const progress =
-    need.quantityNeeded > 0
-      ? Math.min((need.quantityFulfilled / need.quantityNeeded) * 100, 100)
-      : 0;
 
   const locationHeader = formatLocationHeader(
     need.location.address,
@@ -158,9 +159,8 @@ function NeedPopupContent({
     return (
       <div dir="rtl" className="min-w-[240px] space-y-2 p-1 text-right">
         <p className="text-sm font-medium text-emerald-700">
-          شكراً! تم تسجيل تعهدك بنجاح.
+          شكراً! تسجّل تعاونك بنجاح.
         </p>
-        <p className="text-xs text-zinc-500">Merci — engagement enregistré.</p>
         {whatsappUrl ? (
           <a
             href={whatsappUrl}
@@ -180,26 +180,13 @@ function NeedPopupContent({
     <div dir="rtl" className="min-w-[250px] space-y-3 p-1 text-right">
       <div>
         <h3 className="text-sm font-semibold text-zinc-900">{need.title}</h3>
-        <p className="mt-1 text-xs text-zinc-600">{locationHeader}</p>
-        <p className="mt-0.5 text-[10px] text-zinc-400">
-          Commune · Village · Daïra
-        </p>
+        <p className="mt-1 text-xs text-slate-600">{locationHeader}</p>
       </div>
 
-      <div className="space-y-1">
-        <div className="flex justify-between text-xs text-zinc-600">
-          <span>{Math.round(progress)}%</span>
-          <span>
-            تم توفير {need.quantityFulfilled} من أصل {need.quantityNeeded}
-          </span>
-        </div>
-        <div className="h-2 overflow-hidden rounded-full bg-zinc-200">
-          <div
-            className="h-full rounded-full bg-emerald-600"
-            style={{ width: `${progress}%` }}
-          />
-        </div>
-      </div>
+      <NeedProgressBar
+        fulfilled={need.quantityFulfilled}
+        needed={need.quantityNeeded}
+      />
 
       {remaining > 0 ? (
         <form className="space-y-2" onSubmit={handleSubmit}>
@@ -257,7 +244,7 @@ function NeedPopupContent({
               {isSubmitting ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                "تكفّل بهاد الاحتياج"
+                "نعاون في هاد الخير"
               )}
             </button>
 
@@ -280,7 +267,7 @@ function NeedPopupContent({
             onClick={() => onPledgeClick(need)}
             className="w-full text-center text-[11px] text-zinc-500 underline-offset-2 hover:text-emerald-700 hover:underline"
           >
-            فتح نموذج التعهد الكامل (Formulaire complet)
+            فتح نموذج التعاون الكامل
           </button>
         </form>
       ) : (
@@ -355,7 +342,12 @@ export default function ReconstructionMap({
   return (
     <div dir="rtl" className="relative h-full w-full">
       <div className="pointer-events-none absolute inset-x-0 top-0 z-[1000] flex flex-col items-center gap-2 p-4">
-        <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur">
+        <div
+          className={cn(
+            glassPanelClass,
+            "pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 p-2",
+          )}
+        >
           {MAP_CATEGORIES.map((category) => {
             const isActive = activeCategories.has(category.id);
 
@@ -367,18 +359,22 @@ export default function ReconstructionMap({
                 className={cn(
                   "rounded-full px-3 py-1.5 text-xs font-medium transition",
                   isActive
-                    ? "bg-emerald-700 text-white"
-                    : "bg-zinc-100 text-zinc-500",
+                    ? "bg-emerald-700 text-white shadow-sm"
+                    : "bg-slate-100/90 text-slate-600 hover:bg-slate-200",
                 )}
               >
-                <span>{category.labelAr}</span>
-                <span className="opacity-80"> ({category.labelFr})</span>
+                {category.labelAr}
               </button>
             );
           })}
         </div>
 
-        <div className="pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 rounded-2xl border border-white/70 bg-white/95 p-2 shadow-lg backdrop-blur">
+        <div
+          className={cn(
+            glassPanelClass,
+            "pointer-events-auto flex max-w-full flex-wrap items-center justify-center gap-2 p-2",
+          )}
+        >
           {LAYER_TOGGLES.map((layer) => {
             const isActive = layers[layer.key];
 
@@ -390,32 +386,36 @@ export default function ReconstructionMap({
                 className={cn(
                   "rounded-full px-3 py-1.5 text-xs font-medium transition",
                   isActive
-                    ? "bg-zinc-800 text-white"
-                    : "bg-zinc-100 text-zinc-500",
+                    ? "bg-slate-800 text-white shadow-sm"
+                    : "bg-slate-100/90 text-slate-600 hover:bg-slate-200",
                 )}
               >
-                {layer.labelAr}{" "}
-                <span className="opacity-75">({layer.labelFr})</span>
+                {layer.labelAr}
               </button>
             );
           })}
         </div>
       </div>
 
-      <div className="pointer-events-none absolute bottom-4 right-4 z-[1000] rounded-xl border border-white/70 bg-white/95 p-3 text-xs shadow-lg backdrop-blur">
-        <p className="mb-2 font-semibold text-zinc-800">دليل الألوان</p>
-        <ul className="space-y-1 text-zinc-600">
+      <div
+        className={cn(
+          glassPanelClass,
+          "pointer-events-none absolute bottom-4 right-4 z-[1000] p-3 text-xs",
+        )}
+      >
+        <p className="mb-2 font-semibold text-slate-800">دليل الألوان</p>
+        <ul className="space-y-1 text-slate-600">
           <li className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-red-600" />
-            أولوية حرجة (Critical)
+            {MAP_LEGEND_LABELS.red}
           </li>
           <li className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-orange-600" />
-            أولوية متوسطة (Moderate)
+            {MAP_LEGEND_LABELS.orange}
           </li>
           <li className="flex items-center gap-2">
             <span className="h-3 w-3 rounded-full bg-green-600" />
-            قيد التنفيذ (In progress)
+            {MAP_LEGEND_LABELS.green}
           </li>
         </ul>
       </div>
@@ -513,8 +513,8 @@ export default function ReconstructionMap({
                       🚨 {getSosLabel(alert.emergencyType)}
                     </p>
                     <p className="mt-1">{alert.description}</p>
-                    <p className="mt-1 text-xs text-zinc-500">
-                      {alert.commune} · {alert.daira}
+                    <p className="mt-1 text-xs text-slate-500">
+                      {alert.commune} — {alert.daira}
                     </p>
                   </div>
                 </Popup>
@@ -549,7 +549,12 @@ export default function ReconstructionMap({
 
       {layers.needs && visibleNeeds.length === 0 ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-20 z-[1000] flex justify-center px-4">
-          <div className="flex items-center gap-2 rounded-full bg-white/95 px-4 py-2 text-sm text-zinc-600 shadow-lg">
+          <div
+            className={cn(
+              glassPanelClass,
+              "flex items-center gap-2 px-4 py-2 text-sm text-slate-600",
+            )}
+          >
             <MapPin className="h-4 w-4" />
             ما كاينش احتياجات مطابقة للفلاتر المختارة.
           </div>

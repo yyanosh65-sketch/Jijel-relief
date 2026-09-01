@@ -170,11 +170,11 @@ export default function SosAlertButton() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="sos-floating-button fixed bottom-5 left-5 z-[3000] flex max-w-[min(90vw,320px)] items-center gap-2 rounded-full bg-red-600 px-4 py-3 text-sm font-bold text-white shadow-lg hover:bg-red-700"
+        className="sos-floating-button fixed bottom-5 right-5 z-[3000] flex max-w-[min(90vw,300px)] items-center gap-2 rounded-full bg-red-600 px-4 py-3 text-sm font-bold text-white shadow-red-500/30 transition-all hover:scale-105 hover:bg-red-700"
         aria-label="إرسال نداء استغاثة عاجل"
       >
         <span className="text-lg">🚨</span>
-        <span>إرسال نداء استغاثة عاجل (SOS)</span>
+        <span>نداء فزعة عاجل</span>
       </button>
 
       {isOpen ? (
@@ -183,14 +183,13 @@ export default function SosAlertButton() {
             role="dialog"
             aria-modal="true"
             dir="rtl"
-            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl bg-white shadow-2xl"
+            className="max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200/80 bg-white/95 shadow-2xl backdrop-blur-md"
           >
             <div className="flex items-center justify-between border-b border-red-200 bg-red-50 px-5 py-4">
               <div>
                 <h2 className="text-lg font-bold text-red-700">
-                  🚨 نداء استغاثة عاجل
+                  🚨 نداء فزعة عاجل
                 </h2>
-                <p className="text-xs text-red-600/80">SOS Emergency Alert</p>
               </div>
               <button
                 type="button"
@@ -236,7 +235,6 @@ export default function SosAlertButton() {
                     >
                       <span className="text-lg">{option.icon}</span>
                       <p className="mt-1 font-semibold">{option.labelAr}</p>
-                      <p className="text-[10px] text-zinc-500">{option.labelFr}</p>
                     </button>
                   ))}
                 </div>

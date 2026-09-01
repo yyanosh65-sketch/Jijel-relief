@@ -122,19 +122,8 @@ const INITIAL_CONTACT: ContactState = {
   phone: "",
 };
 
-function BilingualLabel({
-  dz,
-  fr,
-}: {
-  dz: string;
-  fr: string;
-}) {
-  return (
-    <span className="block">
-      <span className="font-medium text-zinc-900">{dz}</span>
-      <span className="mt-0.5 block text-xs text-zinc-500">{fr}</span>
-    </span>
-  );
+function FieldLabel({ label }: { label: string }) {
+  return <span className="font-medium text-slate-900">{label}</span>;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -338,7 +327,7 @@ export default function ReportDamageForm() {
     setIsSubmitting(true);
 
     const unitLabel =
-      QUANTITY_UNITS.find((unit) => unit.value === need.unit)?.labelFr ??
+      QUANTITY_UNITS.find((unit) => unit.value === need.unit)?.labelDz ??
       need.unit;
 
     const formData = new FormData();
@@ -418,7 +407,7 @@ export default function ReportDamageForm() {
       <div className="space-y-3">
         <div className="flex items-center justify-between text-xs font-medium text-zinc-500">
           <span>
-            الخطوة {step} من 3 — Étape {step} sur 3
+            الخطوة {step} من 3
           </span>
           <span>{Math.round((step / 3) * 100)}%</span>
         </div>
@@ -451,7 +440,7 @@ export default function ReportDamageForm() {
 
           <div>
             <label htmlFor="daira" className="mb-2 block text-sm">
-              <BilingualLabel dz="الدائرة" fr="Daïra" />
+              <FieldLabel label="الدائرة" />
             </label>
             <select
               id="daira"
@@ -471,7 +460,7 @@ export default function ReportDamageForm() {
 
           <div>
             <label htmlFor="commune" className="mb-2 block text-sm">
-              <BilingualLabel dz="البلدية" fr="Commune" />
+              <FieldLabel label="البلدية" />
             </label>
             <select
               id="commune"
@@ -496,7 +485,7 @@ export default function ReportDamageForm() {
 
           <div>
             <label htmlFor="village" className="mb-2 block text-sm">
-              <BilingualLabel dz="القرية / الحي" fr="Village ou quartier" />
+              <FieldLabel label="القرية / الحي" />
             </label>
             <input
               id="village"
@@ -562,7 +551,7 @@ export default function ReportDamageForm() {
 
           <div>
             <p className="mb-2 text-sm">
-              <BilingualLabel dz="الفئة" fr="Catégorie" />
+              <FieldLabel label="الفئة" />
             </p>
             <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
               {CATEGORY_OPTIONS.map((option) => {
@@ -590,9 +579,6 @@ export default function ReportDamageForm() {
                     <span className="font-medium leading-tight">
                       {option.labelDz}
                     </span>
-                    <span className="text-[10px] leading-tight text-zinc-500">
-                      {option.labelFr}
-                    </span>
                   </button>
                 );
               })}
@@ -602,7 +588,7 @@ export default function ReportDamageForm() {
 
           <div>
             <label htmlFor="title" className="mb-2 block text-sm">
-              <BilingualLabel dz="العنوان" fr="Titre du besoin" />
+              <FieldLabel label="العنوان" />
             </label>
             <input
               id="title"
@@ -622,7 +608,7 @@ export default function ReportDamageForm() {
 
           <div>
             <label htmlFor="description" className="mb-2 block text-sm">
-              <BilingualLabel dz="الوصف" fr="Description" />
+              <FieldLabel label="الوصف" />
             </label>
             <textarea
               id="description"
@@ -643,7 +629,7 @@ export default function ReportDamageForm() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label htmlFor="quantity" className="mb-2 block text-sm">
-                <BilingualLabel dz="الكمية" fr="Quantité" />
+                <FieldLabel label="الكمية" />
               </label>
               <input
                 id="quantity"
@@ -663,7 +649,7 @@ export default function ReportDamageForm() {
 
             <div>
               <label htmlFor="unit" className="mb-2 block text-sm">
-                <BilingualLabel dz="الوحدة" fr="Unité" />
+                <FieldLabel label="الوحدة" />
               </label>
               <select
                 id="unit"
@@ -678,7 +664,7 @@ export default function ReportDamageForm() {
               >
                 {QUANTITY_UNITS.map((unit) => (
                   <option key={unit.value} value={unit.value}>
-                    {unit.labelDz} — {unit.labelFr}
+                    {unit.labelDz}
                   </option>
                 ))}
               </select>
@@ -704,7 +690,7 @@ export default function ReportDamageForm() {
 
           <div>
             <label htmlFor="contactName" className="mb-2 block text-sm">
-              <BilingualLabel dz="الاسم واللقب" fr="Nom et prénom" />
+              <FieldLabel label="الاسم واللقب" />
             </label>
             <input
               id="contactName"
@@ -723,7 +709,7 @@ export default function ReportDamageForm() {
 
           <div>
             <label htmlFor="contactPhone" className="mb-2 block text-sm">
-              <BilingualLabel dz="رقم الهاتف" fr="Téléphone mobile" />
+              <FieldLabel label="رقم الهاتف" />
             </label>
             <input
               id="contactPhone"
