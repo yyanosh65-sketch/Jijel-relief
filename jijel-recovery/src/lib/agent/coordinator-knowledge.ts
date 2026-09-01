@@ -68,6 +68,22 @@ export const KNOWN_DOUARS: Array<{
     dairaAr: "العنصر",
     notes: "نقطة تجمّع محلية — مرافقة 4x4 للحمولة الثقيلة",
   },
+  {
+    aliases: ["مشتى لمنازل", "مشتى", "moshti lmenazel", "moshti"],
+    commune: "Bouraoui Belhadef",
+    communeAr: "بوراوي بلهادف",
+    daira: "El Ancer",
+    dairaAr: "العنصر",
+    notes: "دشرة بوراوي بلهادف — مسلك جبلي",
+  },
+  {
+    aliases: ["بوراوي بلهادف", "بوراوي", "bouraoui belhadef", "bouraoui"],
+    commune: "Bouraoui Belhadef",
+    communeAr: "بوراوي بلهادف",
+    daira: "El Ancer",
+    dairaAr: "العنصر",
+    notes: "بلدية جبلية — انقطاع ماء وكهرباء",
+  },
 ];
 
 function normalizeArabic(value: string): string {
