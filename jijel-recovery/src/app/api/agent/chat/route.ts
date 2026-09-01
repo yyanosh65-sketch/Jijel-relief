@@ -1,23 +1,12 @@
 import {
   assertCrisisAgentModel,
   getConfiguredCrisisAgentProvider,
+  runChatFallback,
   runCrisisAgentChat,
 } from "@/lib/agent/crisis-agent";
 
 export async function POST(req: Request) {
   try {
-    if (!getConfiguredCrisisAgentProvider()) {
-      return Response.json(
-        {
-          error:
-            "لم يتم ضبط مفتاح GOOGLE_GENERATIVE_AI_API_KEY أو OPENAI_API_KEY.",
-        },
-        { status: 503 },
-      );
-    }
-
-    assertCrisisAgentModel();
-
     const body = await req.json();
     const userMessage = String(body.message ?? "").trim();
     const history = Array.isArray(body.messages) ? body.messages : [];
@@ -40,6 +29,12 @@ export async function POST(req: Request) {
       { role: "user" as const, content: userMessage },
     ];
 
+    if (!getConfiguredCrisisAgentProvider()) {
+      const fallback = await runChatFallback({ messages });
+      return Response.json(fallback);
+    }
+
+    assertCrisisAgentModel();
     const result = await runCrisisAgentChat({ messages });
 
     return Response.json(result);

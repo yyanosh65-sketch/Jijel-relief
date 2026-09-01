@@ -2,24 +2,13 @@ import {
   assertCrisisAgentModel,
   getConfiguredCrisisAgentProvider,
   processSocialFeed,
+  processSocialFeedFallback,
 } from "@/lib/agent/crisis-agent";
 import { buildFeedDispatchWhatsAppMessage } from "@/lib/feed-parser";
 import { verifiedReliefContacts } from "@/lib/relief-contacts";
 
 export async function POST(req: Request) {
   try {
-    if (!getConfiguredCrisisAgentProvider()) {
-      return Response.json(
-        {
-          error:
-            "لم يتم ضبط مفتاح GOOGLE_GENERATIVE_AI_API_KEY أو OPENAI_API_KEY.",
-        },
-        { status: 503 },
-      );
-    }
-
-    assertCrisisAgentModel();
-
     const body = await req.json();
     const rawText = String(body.rawText ?? body.postText ?? "").trim();
 
@@ -27,7 +16,16 @@ export async function POST(req: Request) {
       return Response.json({ error: "النص فارغ." }, { status: 400 });
     }
 
-    const result = await processSocialFeed(rawText);
+    const result = getConfiguredCrisisAgentProvider()
+      ? await (async () => {
+          assertCrisisAgentModel();
+          return processSocialFeed(rawText);
+        })()
+      : await (async () => {
+          const fallback = await processSocialFeedFallback(rawText);
+          const { fallback: _fallback, ...payload } = fallback;
+          return payload;
+        })();
 
     let dispatch: {
       shareUrl: string;

@@ -1,5 +1,3 @@
-import { google } from "@ai-sdk/google";
-import { openai } from "@ai-sdk/openai";
 import {
   generateText,
   stepCountIs,
@@ -42,9 +40,16 @@ import {
   resolveDairaForCommune,
 } from "@/lib/agent/deficit";
 import { generateDailyOperationsReport } from "@/lib/agent/operations-report";
+import {
+  createAgentAbortSignal,
+  deepseek,
+  DEEPSEEK_CHAT_MODEL,
+  isAgentTransportError,
+  isDeepSeekConfigured,
+} from "@/lib/agent/deepseek";
 import villageIntelligence from "@/data/village-intelligence.json";
 
-export type CrisisAgentProvider = "google" | "openai";
+export type CrisisAgentProvider = "deepseek";
 
 const EXTRACT_AID_NEED_SCHEMA = z.object({
   rawText: z.string().describe("النص الخام المستخرج من المنشور أو التسجيل الصوتي"),
@@ -138,34 +143,225 @@ function normalizeArabic(value: string): string {
 }
 
 export function getConfiguredCrisisAgentProvider(): CrisisAgentProvider | null {
-  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
-    return "google";
-  }
-  if (process.env.OPENAI_API_KEY) {
-    return "openai";
+  if (isDeepSeekConfigured()) {
+    return "deepseek";
   }
   return null;
 }
 
 export function getCrisisAgentModel(): LanguageModel | null {
-  const provider = getConfiguredCrisisAgentProvider();
-  if (provider === "google") {
-    return google("gemini-2.5-flash");
+  if (!isDeepSeekConfigured()) {
+    return null;
   }
-  if (provider === "openai") {
-    return openai("gpt-4o-mini");
-  }
-  return null;
+  return deepseek(DEEPSEEK_CHAT_MODEL);
 }
 
 export function assertCrisisAgentModel(): LanguageModel {
   const model = getCrisisAgentModel();
   if (!model) {
-    throw new Error(
-      "لم يتم ضبط مفتاح GOOGLE_GENERATIVE_AI_API_KEY أو OPENAI_API_KEY.",
-    );
+    throw new Error("لم يتم ضبط مفتاح DEEPSEEK_API_KEY.");
   }
   return model;
+}
+
+async function generateAgentText(
+  input: Parameters<typeof generateText>[0],
+): Promise<Awaited<ReturnType<typeof generateText>>> {
+  return generateText({
+    ...input,
+    abortSignal: input.abortSignal ?? createAgentAbortSignal(),
+  });
+}
+
+function extractLastUserText(messages: ModelMessage[]): string {
+  for (let index = messages.length - 1; index >= 0; index -= 1) {
+    const message = messages[index];
+    if (message.role !== "user") {
+      continue;
+    }
+
+    if (typeof message.content === "string") {
+      return message.content;
+    }
+
+    if (Array.isArray(message.content)) {
+      return message.content
+        .filter((part) => part.type === "text")
+        .map((part) => part.text)
+        .join("\n");
+    }
+  }
+
+  return "";
+}
+
+function extractDairaHint(text: string): string {
+  const match = text.match(
+    /(?:دائرة|في)\s+(العنصر|الطاهير|تكسنة|العوانة|جيملة|زيامة|جمعة بني حبيبي|الشحنة)/i,
+  );
+  return match?.[1] ?? "العنصر";
+}
+
+function inferCargoTypeFromText(text: string): (typeof convoyCargoTypeEnum.enumValues)[number] {
+  if (/علف|ماء|خزان|مؤن|أغذية/i.test(text)) {
+    return "food";
+  }
+  if (/عتاد|فلاح|أنابيب|مضخة/i.test(text)) {
+    return "farm_equipment";
+  }
+  if (/دواء|طب|إسعاف/i.test(text)) {
+    return "medicine";
+  }
+  if (/بطانية|غطاء|ملابس/i.test(text)) {
+    return "blankets";
+  }
+  return "mixed";
+}
+
+export async function runChatFallback(input: {
+  messages: ModelMessage[];
+}): Promise<{
+  text: string;
+  toolResults: Array<{ toolName: string; output: unknown }>;
+  fallback: true;
+}> {
+  const userText = extractLastUserText(input.messages);
+  const toolResults: Array<{ toolName: string; output: unknown }> = [];
+
+  if (/مسالك|طريق|مقطوع|تاكسنة|عراقن|تبلوط/i.test(userText)) {
+    const area =
+      userText.match(/(?:في|ب)\s+([^?.!]+)/i)?.[1]?.trim() ?? "تاكسنة";
+    const output = checkMountainRoadStatus(area);
+    toolResults.push({ toolName: "checkMountainRoads", output });
+    return {
+      text: `${CRISIS_AGENT_PERSONA.name}: راه الاتصال بالخادم مقطوع — هاذي آخر معلومة محلية على ${output.areaLabel}: ${output.terrain.labelAr}.`,
+      toolResults,
+      fallback: true,
+    };
+  }
+
+  if (/4x4|جهات اتصال|اتصال|فرق/i.test(userText)) {
+    const dairaQuery = extractDairaHint(userText);
+    const contacts = getFieldContactsForDaira({
+      dairaQuery,
+      require4x4: /4x4/i.test(userText),
+    });
+    const output = { dairaQuery, count: contacts.length, contacts };
+    toolResults.push({ toolName: "getLocalFieldContacts", output });
+    const first = contacts[0];
+    return {
+      text: first
+        ? `${CRISIS_AGENT_PERSONA.name}: اتصل بـ ${first.contactPerson} — ${first.phone}${first.is4x4Team ? " (4x4)" : ""}.`
+        : `${CRISIS_AGENT_PERSONA.name}: ما لقيناش جهات اتصال محلية مطابقة دابا.`,
+      toolResults,
+      fallback: true,
+    };
+  }
+
+  if (/قافلة|حمولة|علف|شاحنة|وجهة/i.test(userText)) {
+    const cargoType = inferCargoTypeFromText(userText);
+    const output = await routeCargoConvoy({ cargoType });
+    toolResults.push({ toolName: "routeCargoConvoy", output });
+    if (output.found && output.destination) {
+      return {
+        text: `${CRISIS_AGENT_PERSONA.name}: وجّه القافلة لـ ${output.destination.communeAr} — عجز ${output.destination.deficitUnits} وحدة. ${output.localCoordinator ? `اتصل بـ ${output.localCoordinator.nameAr}: ${output.localCoordinator.phone}` : ""}`,
+        toolResults,
+        fallback: true,
+      };
+    }
+  }
+
+  if (/تقرير|عمليات|يومي/i.test(userText)) {
+    const output = await generateDailyOperationsReport();
+    toolResults.push({ toolName: "generateOperationsReport", output });
+    return {
+      text: `${CRISIS_AGENT_PERSONA.name}: التقرير اليومي جاهز — ${output.stats.openNeeds} احتياج مفتوح و ${output.stats.activeSosAlerts} نداء SOS نشط.`,
+      toolResults,
+      fallback: true,
+    };
+  }
+
+  if (/إحصائ|احصائ|نداءات|SOS|عجز/i.test(userText)) {
+    const output = await getReliefStatsSummary();
+    toolResults.push({ toolName: "getReliefStats", output });
+    return {
+      text: `${CRISIS_AGENT_PERSONA.name}: راه ${output.openNeeds} احتياج مفتوح، ${output.activeSosAlerts} نداء SOS نشط، و ${output.incomingConvoys} قافلة قادمة.`,
+      toolResults,
+      fallback: true,
+    };
+  }
+
+  return {
+    text: `${CRISIS_AGENT_PERSONA.name}: تعذّر الاتصال بخادم الذكاء الاصطناعي — جرّب مرة أخرى أو اتصل بالمنسّق مباشرة.`,
+    toolResults,
+    fallback: true,
+  };
+}
+
+export async function processSocialFeedFallback(rawText: string): Promise<{
+  text: string;
+  toolResults: Array<{ toolName: string; output: unknown }>;
+  extracted: ExtractedAidNeed;
+  geo: GeoLocatedVillage;
+  saved: SavedFeedRecord | null;
+  structured: {
+    entityType: string | null;
+    title: string | null;
+    commune: string | null;
+    communeAr: string | null;
+    daira: string | null;
+    village: string | null;
+    phone: string | null;
+    urgency: string | null;
+    lat: number | null;
+    lng: number | null;
+    recordId: number | null;
+    recordKind: SavedFeedRecord["kind"] | null;
+  };
+  fallback: true;
+}> {
+  const extracted = heuristicExtractAidNeed(rawText);
+  const geo = geoLocateVillage(
+    extracted.villageName ?? extracted.commune,
+    extracted.commune,
+  );
+
+  const toolResults = [
+    { toolName: "extractAidNeed", output: extracted },
+    { toolName: "geoLocateVillage", output: geo },
+  ];
+
+  let saved: SavedFeedRecord | null = null;
+  if (extracted.description.trim()) {
+    saved = await persistExtractedFeedEntities({
+      extracted,
+      geo,
+      sourceText: rawText,
+    });
+  }
+
+  return {
+    text: `${CRISIS_AGENT_PERSONA.name}: تم تحليل المنشور محلياً (وضع احتياطي) — ${extracted.title} في ${geo.commune_ar}.`,
+    toolResults,
+    extracted,
+    geo,
+    saved,
+    structured: {
+      entityType: extracted.entityType,
+      title: extracted.title,
+      commune: geo.commune,
+      communeAr: geo.commune_ar,
+      daira: geo.daira,
+      village: extracted.villageName ?? geo.matchedLabel,
+      phone: extracted.contactPhone ?? null,
+      urgency: extracted.urgency,
+      lat: geo.lat,
+      lng: geo.lng,
+      recordId: saved?.id ?? null,
+      recordKind: saved?.kind ?? null,
+    },
+    fallback: true,
+  };
 }
 
 function inferEmergencyType(keywords: string[]): SosEmergencyType {
@@ -176,7 +372,7 @@ function inferEmergencyType(keywords: string[]): SosEmergencyType {
   return "medical";
 }
 
-function heuristicExtractAidNeed(rawText: string): ExtractedAidNeed {
+export function heuristicExtractAidNeed(rawText: string): ExtractedAidNeed {
   const phoneMatch = rawText.match(/0[567]\d{8}/);
   const keywords: string[] = [];
   const hazardPatterns = [
@@ -484,22 +680,31 @@ export async function runCrisisAgentChat(input: {
 }): Promise<{
   text: string;
   toolResults: Array<{ toolName: string; output: unknown }>;
+  fallback?: boolean;
 }> {
-  const result = await generateText({
-    model: assertCrisisAgentModel(),
-    system: CRISIS_AGENT_SYSTEM,
-    messages: input.messages,
-    tools: createCrisisAgentTools(),
-    stopWhen: stepCountIs(6),
-  });
+  try {
+    const result = await generateAgentText({
+      model: assertCrisisAgentModel(),
+      system: CRISIS_AGENT_SYSTEM,
+      messages: input.messages,
+      tools: createCrisisAgentTools(),
+      stopWhen: stepCountIs(6),
+    });
 
-  return {
-    text: result.text,
-    toolResults: result.toolResults.map((entry) => ({
-      toolName: entry.toolName,
-      output: entry.output,
-    })),
-  };
+    return {
+      text: result.text,
+      toolResults: result.toolResults.map((entry) => ({
+        toolName: entry.toolName,
+        output: entry.output,
+      })),
+    };
+  } catch (error) {
+    console.error("runCrisisAgentChat fallback:", error);
+    if (!isAgentTransportError(error)) {
+      throw error;
+    }
+    return runChatFallback(input);
+  }
 }
 
 export async function processSocialFeed(rawText: string): Promise<{
@@ -523,57 +728,67 @@ export async function processSocialFeed(rawText: string): Promise<{
     recordKind: SavedFeedRecord["kind"] | null;
   };
 }> {
-  const result = await generateText({
-    model: assertCrisisAgentModel(),
-    system: FEED_AGENT_SYSTEM,
-    prompt: rawText,
-    tools: createCrisisAgentTools(),
-    stopWhen: stepCountIs(5),
-  });
+  try {
+    const result = await generateAgentText({
+      model: assertCrisisAgentModel(),
+      system: FEED_AGENT_SYSTEM,
+      prompt: rawText,
+      tools: createCrisisAgentTools(),
+      stopWhen: stepCountIs(5),
+    });
 
-  const toolResults = result.toolResults.map((entry) => ({
-    toolName: entry.toolName,
-    output: entry.output,
-  }));
+    const toolResults = result.toolResults.map((entry) => ({
+      toolName: entry.toolName,
+      output: entry.output,
+    }));
 
-  const extracted =
-    (toolResults.find((entry) => entry.toolName === "extractAidNeed")
-      ?.output as ExtractedAidNeed | undefined) ??
-    heuristicExtractAidNeed(rawText);
+    const extracted =
+      (toolResults.find((entry) => entry.toolName === "extractAidNeed")
+        ?.output as ExtractedAidNeed | undefined) ??
+      heuristicExtractAidNeed(rawText);
 
-  const geo =
-    (toolResults.find((entry) => entry.toolName === "geoLocateVillage")
-      ?.output as GeoLocatedVillage | undefined) ??
-    geoLocateVillage(extracted.villageName ?? extracted.commune, extracted.commune);
+    const geo =
+      (toolResults.find((entry) => entry.toolName === "geoLocateVillage")
+        ?.output as GeoLocatedVillage | undefined) ??
+      geoLocateVillage(extracted.villageName ?? extracted.commune, extracted.commune);
 
-  let saved: SavedFeedRecord | null = null;
-  if (extracted.description.trim()) {
-    saved = await persistExtractedFeedEntities({
+    let saved: SavedFeedRecord | null = null;
+    if (extracted.description.trim()) {
+      saved = await persistExtractedFeedEntities({
+        extracted,
+        geo,
+        sourceText: rawText,
+      });
+    }
+
+    return {
+      text: result.text,
+      toolResults,
       extracted,
       geo,
-      sourceText: rawText,
-    });
+      saved,
+      structured: {
+        entityType: extracted.entityType,
+        title: extracted.title,
+        commune: geo.commune,
+        communeAr: geo.commune_ar,
+        daira: geo.daira,
+        village: extracted.villageName ?? geo.matchedLabel,
+        phone: extracted.contactPhone ?? null,
+        urgency: extracted.urgency,
+        lat: geo.lat,
+        lng: geo.lng,
+        recordId: saved?.id ?? null,
+        recordKind: saved?.kind ?? null,
+      },
+    };
+  } catch (error) {
+    console.error("processSocialFeed fallback:", error);
+    if (!isAgentTransportError(error)) {
+      throw error;
+    }
+    const fallback = await processSocialFeedFallback(rawText);
+    const { fallback: _fallback, ...result } = fallback;
+    return result;
   }
-
-  return {
-    text: result.text,
-    toolResults,
-    extracted,
-    geo,
-    saved,
-    structured: {
-      entityType: extracted.entityType,
-      title: extracted.title,
-      commune: geo.commune,
-      communeAr: geo.commune_ar,
-      daira: geo.daira,
-      village: extracted.villageName ?? geo.matchedLabel,
-      phone: extracted.contactPhone ?? null,
-      urgency: extracted.urgency,
-      lat: geo.lat,
-      lng: geo.lng,
-      recordId: saved?.id ?? null,
-      recordKind: saved?.kind ?? null,
-    },
-  };
 }
