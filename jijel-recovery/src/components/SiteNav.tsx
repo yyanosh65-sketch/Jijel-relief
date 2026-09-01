@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 const NAV_ITEMS = [
   { href: "/", label: "خريطة الإعمار", icon: "🗺️", match: (path: string) => path === "/" || path === "/map" },
   { href: "/guide", label: "دليل القوافل والمداخل", icon: "🚚", match: (path: string) => path.startsWith("/guide") },
-  { href: "/report", label: "تسجيل ضرر أو احتياج", icon: "📝", match: (path: string) => path.startsWith("/report") },
+  { href: "/report", label: "+ تسجيل ضرر أو احتياج جديد", icon: "📝", match: (path: string) => path.startsWith("/report") },
 ] as const;
 
 export default function SiteNav() {

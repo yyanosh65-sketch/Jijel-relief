@@ -1,6 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -106,12 +107,27 @@ export default function ReconstructionMapLoader({
   }
 
   const needsListHeader = (
-    <div className="border-b border-slate-200/80 px-4 py-3">
-      <h2 className="text-sm font-semibold text-slate-900">
-        حاجيات موثقة
-      </h2>
-      <p className="text-xs text-slate-500">
-        {filteredNeeds.length} من {needs.length} احتياج
+    <div className="space-y-3 border-b border-slate-200/80 px-4 py-3">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">
+            حاجيات موثقة
+          </h2>
+          <p className="text-xs text-slate-500">
+            {filteredNeeds.length} من {needs.length} احتياج
+          </p>
+        </div>
+        <Link
+          href="/report"
+          className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800"
+        >
+          <span aria-hidden>+</span>
+          تسجيل ضرر أو احتياج جديد
+        </Link>
+      </div>
+      <p className="text-[11px] leading-relaxed text-slate-500">
+        أي مواطن أو رئيس جمعية محلية يمكنه إضافة احتياج موثّق يظهر مباشرة على
+        الخريطة والقائمة.
       </p>
     </div>
   );

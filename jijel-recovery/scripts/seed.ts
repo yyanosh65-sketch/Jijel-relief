@@ -30,6 +30,7 @@ type SeedNeed = {
   quantityFulfilled: number;
   contactName: string;
   contactPhone: string;
+  contactWhatsapp?: string;
   pledges?: Array<{
     contributorName: string;
     contributorContact: string;
@@ -41,105 +42,219 @@ type SeedNeed = {
 const SEED_NEEDS: SeedNeed[] = [
   {
     location: {
-      name: "Taher centre",
-      daira: "Taher",
-      address: "Taher",
-      lat: 36.7785,
-      lng: 5.8942,
+      name: "El Ancer",
+      daira: "El Ancer",
+      address: "دوار بني عائشة",
+      lat: 36.668,
+      lng: 5.846,
     },
-    title: "غراسة زيتون لبساتين متضررة",
-    description: "عائلات تحتاج غراسة زيتون لإعادة غرس البساتين المحروقة.",
+    title: "1200 شتلة زيتون + 80 لفة أنابيب سقي",
+    description:
+      "إعادة غرس بساتين الزيتون المحروقة في دوار بني عائشة وتوصيل شبكة السقي للمزارع المتضررة.",
     category: "other",
     urgency: "critical",
     status: "open",
-    quantityNeeded: 120,
-    quantityFulfilled: 0,
-    contactName: "Karim B.",
-    contactPhone: "0555123456",
-  },
-  {
-    location: {
-      name: "El Aouana",
-      daira: "El Aouana",
-      address: "El Aouana",
-      lat: 36.8422,
-      lng: 5.8715,
-    },
-    title: "أغنام لصغار المربين المتضررين",
-    description: "دعم عاجل للمربين الذين فقدوا قطعانهم.",
-    category: "food",
-    urgency: "high",
-    status: "partial",
-    quantityNeeded: 25,
-    quantityFulfilled: 10,
-    contactName: "Nadia M.",
-    contactPhone: "0661234567",
+    quantityNeeded: 1280,
+    quantityFulfilled: 120,
+    contactName: "سفيان بوالقمح",
+    contactPhone: "0554123987",
     pledges: [
       {
-        contributorName: "Association Solidarité",
-        contributorContact: "0770123456",
-        quantity: 10,
+        contributorName: "جمعية الخير بالعنصر",
+        contributorContact: "0770123400",
+        quantity: 120,
         status: "confirmed",
       },
     ],
   },
   {
     location: {
-      name: "Texenna",
-      daira: "Texenna",
-      address: "Texenna",
-      lat: 36.6621,
-      lng: 5.7428,
+      name: "Djemaa Beni Habibi",
+      daira: "El Ancer",
+      address: "تابلوط وتاسيفت",
+      lat: 36.6847,
+      lng: 5.8194,
     },
-    title: "صفائح وقرميد لترميم الأسقف",
-    description: "مواد تسقيف ضرورية قبل أمطار الشتاء.",
-    category: "shelter",
-    urgency: "high",
-    status: "open",
-    quantityNeeded: 40,
-    quantityFulfilled: 0,
-    contactName: "Yacine H.",
-    contactPhone: "0771987654",
+    title: "45 خزان ماء 3000L + 15 مضخة ماء",
+    description:
+      "تأمين تخزين ماء الشرب وضخه لعائلات تابلوط وتاسيفت بعد انقطاع الشبكة الجبلية.",
+    category: "water",
+    urgency: "critical",
+    status: "partial",
+    quantityNeeded: 60,
+    quantityFulfilled: 12,
+    contactName: "رشيد كحول",
+    contactPhone: "0771894523",
+    pledges: [
+      {
+        contributorName: "تنسيقية الإغاثة بالعنصر",
+        contributorContact: "0661987654",
+        quantity: 12,
+        status: "delivered",
+      },
+    ],
   },
   {
     location: {
-      name: "Jijel ville",
-      daira: "Jijel",
-      address: "Jijel",
-      lat: 36.8205,
-      lng: 5.7667,
+      name: "Chahna",
+      daira: "Taher",
+      address: "بني خطاب وبوشارف",
+      lat: 36.8014,
+      lng: 5.8836,
     },
-    title: "عتاد فلاحي وأنابيب سقي",
-    description: "أدوات يدوية وعتاد صغير لعائلات فلاحية.",
-    category: "transport",
-    urgency: "medium",
+    title: "60 صندوق نحل + 400 قنطار أعلاف مواشي",
+    description:
+      "دعم صغار المربين في بني خطاب وبوشارف بعد فقدان خلايا النحل ونفاد أعلاف الماشية.",
+    category: "food",
+    urgency: "critical",
     status: "open",
-    quantityNeeded: 30,
+    quantityNeeded: 460,
+    quantityFulfilled: 40,
+    contactName: "عبد الرزاق بولوداني",
+    contactPhone: "0771239845",
+    pledges: [
+      {
+        contributorName: "تعاونية الشحنة",
+        contributorContact: "0555332211",
+        quantity: 40,
+        status: "confirmed",
+      },
+    ],
+  },
+  {
+    location: {
+      name: "Boucif Ouled Askeur",
+      daira: "Taher",
+      address: "سوق السبت وقاع الزان",
+      lat: 36.7667,
+      lng: 5.9167,
+    },
+    title: "350 لوح زنك عازل + إسمنت لترميم الأسقف",
+    description:
+      "مواد تسقيف عاجلة لمنازل متضررة في سوق السبت وقاع الزان قبل موسم الأمطار.",
+    category: "shelter",
+    urgency: "high",
+    status: "open",
+    quantityNeeded: 350,
+    quantityFulfilled: 45,
+    contactName: "مراد بوحنيك",
+    contactPhone: "0663451122",
+    pledges: [
+      {
+        contributorName: "متطوعو الطاهير",
+        contributorContact: "0555778899",
+        quantity: 45,
+        status: "pending",
+      },
+    ],
+  },
+  {
+    location: {
+      name: "Bouraoui Belhadef",
+      daira: "El Ancer",
+      address: "أولاد رابح",
+      lat: 36.6514,
+      lng: 5.8822,
+    },
+    title: "800 شتلة زيتون + 2500م خراطيم مياه",
+    description:
+      "إعادة غرس بساتين أولاد رابح وإيصال مياه السقي للقطع الفلاحية المعزولة.",
+    category: "other",
+    urgency: "critical",
+    status: "open",
+    quantityNeeded: 800,
     quantityFulfilled: 0,
-    contactName: "Samir L.",
-    contactPhone: "0555987654",
+    contactName: "عيسى معوش",
+    contactPhone: "0558776655",
+  },
+  {
+    location: {
+      name: "Texenna",
+      daira: "Texenna",
+      address: "الحدادة وكعوان",
+      lat: 36.6556,
+      lng: 5.7444,
+    },
+    title: "أدوية بيطرية + 30 رأس غنم لصغار المربين",
+    description:
+      "علاج قطعان متضررة ودعم عيني للمربين الصغار في الحدادة وكعوان.",
+    category: "food",
+    urgency: "high",
+    status: "partial",
+    quantityNeeded: 30,
+    quantityFulfilled: 8,
+    contactName: "بلال قيطوني",
+    contactPhone: "0661223344",
+    pledges: [
+      {
+        contributorName: "وحدة بيطرة تكسنة",
+        contributorContact: "034718033",
+        quantity: 8,
+        status: "delivered",
+      },
+    ],
+  },
+  {
+    location: {
+      name: "Djimla",
+      daira: "Djimla",
+      address: "دوار العرابة",
+      lat: 36.915,
+      lng: 5.752,
+    },
+    title: "500 شتلة كستناء وأشجار مثمرة + عتاد فلاحي يدوي",
+    description:
+      "تنويع غطاء نباتي في دوار العرابة وتأمين معاول ومقصات وعتاد يدوي للفلاحين.",
+    category: "other",
+    urgency: "high",
+    status: "open",
+    quantityNeeded: 500,
+    quantityFulfilled: 60,
+    contactName: "يوسف بن عودة",
+    contactPhone: "0556011223",
+    pledges: [
+      {
+        contributorName: "جمعية الفلاحين بجيملة",
+        contributorContact: "0770456789",
+        quantity: 60,
+        status: "confirmed",
+      },
+    ],
   },
   {
     location: {
       name: "Ziama Mansouriah",
       daira: "Ziama Mansouriah",
-      address: "Ziama Mansouriah",
-      lat: 36.5334,
-      lng: 5.7341,
+      address: "تيزي نيزنت",
+      lat: 36.528,
+      lng: 5.748,
     },
-    title: "صهاريج ومضخات ماء الشرب",
-    description: "تخزين ماء الشرب للقرى الجبلية المعزولة.",
+    title: "20 صهريج ماء + ترميم شبكة المنبع الجبلي",
+    description:
+      "نقل ماء الشرب لدوار تيزي نيزنت وإصلاح خط التغذية من المنبع الجبلي.",
     category: "water",
     urgency: "critical",
     status: "open",
-    quantityNeeded: 15,
-    quantityFulfilled: 0,
-    contactName: "Fatima Z.",
-    contactPhone: "0677112233",
+    quantityNeeded: 20,
+    quantityFulfilled: 3,
+    contactName: "نبيل زروقي",
+    contactPhone: "0667890123",
+    pledges: [
+      {
+        contributorName: "لجنة الماء بزيامة",
+        contributorContact: "0677112233",
+        quantity: 3,
+        status: "confirmed",
+      },
+    ],
   },
 ];
 
 async function runMigration(pool: Pool): Promise<void> {
+  if (process.env.SKIP_MIGRATIONS === "1") {
+    return;
+  }
+
   const migrationPaths = [
     resolve(__dirname, "../drizzle/0001_init.sql"),
     resolve(__dirname, "../drizzle/0002_intelligence.sql"),
@@ -167,12 +282,19 @@ async function seedDatabase(): Promise<void> {
   try {
     await runMigration(pool);
 
+    if (process.env.FORCE_NEEDS_SEED === "1") {
+      await pool.query("DELETE FROM pledges");
+      await pool.query("DELETE FROM needs");
+      await pool.query("DELETE FROM locations");
+      console.log("Cleared existing needs for forced reseed.");
+    }
+
     const existing = await pool.query<{ count: string }>(
       "SELECT COUNT(*)::text AS count FROM needs",
     );
 
     if (Number(existing.rows[0]?.count ?? 0) > 0) {
-      console.log("Database already seeded. Skipping.");
+      console.log("Database already seeded. Skipping. Set FORCE_NEEDS_SEED=1 to replace.");
       return;
     }
 
@@ -203,6 +325,7 @@ async function seedDatabase(): Promise<void> {
           quantityFulfilled: seed.quantityFulfilled,
           contactName: seed.contactName,
           contactPhone: seed.contactPhone,
+          contactWhatsapp: seed.contactWhatsapp ?? seed.contactPhone,
         })
         .returning();
 
@@ -219,7 +342,7 @@ async function seedDatabase(): Promise<void> {
       }
     }
 
-    console.log(`Seeded ${SEED_NEEDS.length} sample needs around Jijel.`);
+    console.log(`Seeded ${SEED_NEEDS.length} field recovery needs across affected Jijel communes.`);
   } finally {
     await pool.end();
   }

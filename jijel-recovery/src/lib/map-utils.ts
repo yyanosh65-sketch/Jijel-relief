@@ -39,10 +39,37 @@ const CATEGORY_HINTS: Record<MapCategoryId, NeedCategory[]> = {
 };
 
 const TITLE_KEYWORDS: Record<MapCategoryId, string[]> = {
-  olive_trees: ["olive", "tree", "arbre"],
-  livestock: ["livestock", "sheep", "goat", "cattle", "bétail", "mouton", "bee", "نحل", "apiculture"],
-  shelter: ["shelter", "housing", "home", "abri"],
-  tools: ["tool", "equipment", "outil", "matériel", "pump", "مضخة", "آلة"],
+  olive_trees: ["olive", "tree", "arbre", "زيتون", "شتلة", "غراسة", "كستناء"],
+  livestock: [
+    "livestock",
+    "sheep",
+    "goat",
+    "cattle",
+    "bétail",
+    "mouton",
+    "bee",
+    "نحل",
+    "apiculture",
+    "أعلاف",
+    "غنم",
+    "مواشي",
+    "بيطر",
+  ],
+  shelter: ["shelter", "housing", "home", "abri", "سقف", "أسقف", "زنك", "إسمنت", "ترميم"],
+  tools: [
+    "tool",
+    "equipment",
+    "outil",
+    "matériel",
+    "pump",
+    "مضخة",
+    "آلة",
+    "عتاد",
+    "أنابيب",
+    "خراطيم",
+    "صهريج",
+    "خزان",
+  ],
 };
 
 export function getUrgencyScore(urgency: NeedUrgency): number {
