@@ -53,6 +53,12 @@ export const sosAlertStatusEnum = pgEnum("sos_alert_status", [
   "resolved",
 ]);
 
+export const facilityTypeEnum = pgEnum("facility_type", [
+  "civil_protection",
+  "veterinary_clinic",
+  "forest_conservancy",
+]);
+
 const geographyPoint = customType<{ data: string; driverData: string }>({
   dataType() {
     return "geography(Point,4326)";
@@ -123,6 +129,20 @@ export const sosAlerts = pgTable("sos_alerts", {
     .notNull(),
 });
 
+export const emergencyFacilities = pgTable("emergency_facilities", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  facilityType: facilityTypeEnum("facility_type").notNull(),
+  commune: text("commune").notNull(),
+  coordinates: geographyPoint("coordinates").notNull(),
+  hotlinePhone: text("hotline_phone").notNull(),
+  secondaryPhone: text("secondary_phone"),
+  availableServices: text("available_services").array().notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const locationsRelations = relations(locations, ({ many }) => ({
   needs: many(needs),
 }));
@@ -151,3 +171,5 @@ export type NeedStatus = (typeof needStatusEnum.enumValues)[number];
 export type PledgeStatus = (typeof pledgeStatusEnum.enumValues)[number];
 export type SosEmergencyType = (typeof sosEmergencyTypeEnum.enumValues)[number];
 export type SosAlertStatus = (typeof sosAlertStatusEnum.enumValues)[number];
+export type FacilityType = (typeof facilityTypeEnum.enumValues)[number];
+export type EmergencyFacility = typeof emergencyFacilities.$inferSelect;

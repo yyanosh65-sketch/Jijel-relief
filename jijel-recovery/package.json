@@ -7,8 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "db:migrate": "psql \"$DATABASE_URL\" -f drizzle/0001_init.sql",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:migrate": "psql \"$DATABASE_URL\" -f drizzle/0001_init.sql && psql \"$DATABASE_URL\" -f drizzle/0002_intelligence.sql && psql \"$DATABASE_URL\" -f drizzle/0003_emergency_facilities.sql",
+    "db:seed": "tsx scripts/seed.ts",
+    "db:seed:facilities": "tsx src/db/seed.ts"
   },
   "dependencies": {
     "@types/leaflet": "^1.9.22",
