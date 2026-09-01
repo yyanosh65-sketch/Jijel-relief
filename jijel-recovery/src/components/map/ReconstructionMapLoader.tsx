@@ -1,7 +1,7 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
 import type { MapIntelligenceData } from "@/actions/intelligence";
@@ -13,12 +13,10 @@ import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
 import NeedCard from "@/components/needs/NeedCard";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
+import { useNeedSearchFilters } from "@/hooks/useNeedSearchFilters";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
 import { getDossierById, getNearbyFacilities } from "@/lib/intelligence";
-import {
-  filterAndSortNeeds,
-  parseNeedSearchParams,
-} from "@/lib/need-search";
+import { filterAndSortNeeds } from "@/lib/need-search";
 import { glassPanelClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
@@ -43,11 +41,7 @@ export default function ReconstructionMapLoader({
   layout = "sidebar",
 }: ReconstructionMapLoaderProps) {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const filters = useMemo(
-    () => parseNeedSearchParams(searchParams),
-    [searchParams],
-  );
+  const filters = useNeedSearchFilters();
   const filteredNeeds = useMemo(
     () => filterAndSortNeeds(needs, filters, intelligence),
     [filters, intelligence, needs],

@@ -1,16 +1,16 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Loader2, LocateFixed, Search, SlidersHorizontal } from "lucide-react";
-import { usePathname, useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 
+import { useNeedSearchFilters } from "@/hooks/useNeedSearchFilters";
 import type { RoadPassability } from "@/lib/intelligence";
 import {
   buildNeedSearchParams,
   formatRadiusLabel,
   isGpsOutsideJijel,
   MAX_RADIUS_KM,
-  parseNeedSearchParams,
   ROAD_ACCESS_OPTIONS,
   SEARCH_CATEGORY_OPTIONS,
   SHOW_ALL_WILAYA_RADIUS,
@@ -33,12 +33,7 @@ function toggleListValue<T extends string>(values: T[], value: T): T[] {
 export default function AdvancedNeedSearch() {
   const router = useRouter();
   const pathname = usePathname();
-  const searchParams = useSearchParams();
-
-  const filters = useMemo(
-    () => parseNeedSearchParams(searchParams),
-    [searchParams],
-  );
+  const filters = useNeedSearchFilters();
 
   const [isExpanded, setIsExpanded] = useState(true);
   const [queryDraft, setQueryDraft] = useState(filters.query);
