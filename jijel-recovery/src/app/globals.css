@@ -40,8 +40,20 @@ select option {
 }
 
 input:not([type="checkbox"]):not([type="radio"]),
-textarea {
-  color: #0f172a;
+textarea,
+input.form-text-field,
+textarea.form-text-field {
+  color: #0f172a !important;
+  background-color: #ffffff;
+  font-weight: 600;
+  -webkit-text-fill-color: #0f172a;
+}
+
+input:not([type="checkbox"]):not([type="radio"])::placeholder,
+textarea::placeholder {
+  color: #94a3b8;
+  -webkit-text-fill-color: #94a3b8;
+  opacity: 1;
 }
 
 .leaflet-container {

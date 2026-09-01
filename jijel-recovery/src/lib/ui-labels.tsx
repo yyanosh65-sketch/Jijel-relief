@@ -12,10 +12,10 @@ export const selectFieldClass =
   "form-select-field min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm text-slate-900 font-semibold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none disabled:bg-slate-100 disabled:text-slate-700";
 
 export const formInputClass =
-  "min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none";
+  "form-text-field min-h-11 w-full rounded-xl border-2 border-slate-300 bg-white px-3 text-sm text-slate-900 placeholder:text-slate-400 font-semibold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none";
 
 export const formTextareaClass =
-  "w-full rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 font-medium focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none";
+  "form-text-field w-full rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 font-semibold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none";
 
 export const primaryNextButtonClass =
   "rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50";

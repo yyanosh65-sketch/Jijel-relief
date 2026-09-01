@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { Bot, Loader2, MessageSquare, X } from "lucide-react";
 
 import { cn } from "@/lib/utils";
+import { formInputClass } from "@/lib/ui-labels";
 
 type ChatMessage = {
   id: string;
@@ -116,11 +117,11 @@ export default function AgentCopilot() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="fixed bottom-24 right-6 z-[3150] inline-flex items-center gap-2 rounded-full bg-violet-700 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition hover:-translate-y-0.5 hover:bg-violet-800 sm:bottom-6 sm:right-24"
+        className="fixed bottom-6 left-6 z-50 inline-flex items-center gap-2 rounded-full bg-violet-700 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition hover:-translate-y-0.5 hover:bg-violet-800"
         aria-label="فتح مساعد الإغاثة الذكي"
       >
         <Bot className="h-5 w-5" />
-        <span className="hidden sm:inline">مساعد الإغاثة</span>
+        <span className="hidden sm:inline">🤖 مساعد الإغاثة</span>
       </button>
 
       {open ? (
@@ -213,7 +214,7 @@ export default function AgentCopilot() {
                   value={input}
                   onChange={(event) => setInput(event.target.value)}
                   placeholder="اسأل عن عجز المناطق، توجيه قافلة، أو نداء SOS…"
-                  className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+                  className={cn(formInputClass, "flex-1 focus:border-violet-400 focus:ring-violet-500/20")}
                 />
                 <button
                   type="submit"

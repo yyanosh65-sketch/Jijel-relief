@@ -183,7 +183,7 @@ export default function SosAlertButton() {
       <button
         type="button"
         onClick={() => setIsOpen(true)}
-        className="sos-floating-button fixed bottom-6 right-6 z-[3200] inline-flex items-center justify-center gap-2 rounded-full bg-red-600 px-4 py-3 text-sm font-bold leading-none text-white shadow-lg shadow-red-500/30 transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-red-700"
+        className="sos-floating-button fixed bottom-6 right-6 z-50 inline-flex items-center justify-center gap-2 rounded-full bg-red-600 px-4 py-3 text-sm font-bold leading-none text-white shadow-lg shadow-red-500/30 transition-all duration-200 hover:-translate-y-0.5 hover:scale-[1.02] hover:bg-red-700"
         aria-label="إرسال نداء استغاثة عاجل"
       >
         <span className="text-base leading-none" aria-hidden>
