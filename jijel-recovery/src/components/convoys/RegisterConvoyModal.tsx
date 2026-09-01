@@ -12,13 +12,15 @@ import {
   CONVOY_VEHICLE_OPTIONS,
 } from "@/lib/convoys";
 import { formatAlgerianPhoneHint } from "@/lib/phone";
-import { glassPanelClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 type RegisterConvoyModalProps = {
   open: boolean;
   onClose: () => void;
 };
+
+const INPUT_CLASS =
+  "min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:border-sky-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20";
 
 type FormState = {
   departureWilaya: string;
@@ -55,6 +57,19 @@ export default function RegisterConvoyModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [guideAssignUrl, setGuideAssignUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
+
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
 
   useEffect(() => {
     if (!open) {
@@ -128,37 +143,39 @@ export default function RegisterConvoyModal({
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 z-[3200] flex items-end justify-center bg-black/50 p-4 backdrop-blur-sm sm:items-center"
+      className="fixed inset-0 z-[9999] flex items-center justify-center overflow-y-auto bg-slate-950/70 p-4 backdrop-blur-md"
+      onClick={onClose}
     >
       <div
         role="dialog"
         aria-modal="true"
-        className={cn(
-          glassPanelClass,
-          "max-h-[90vh] w-full max-w-lg overflow-y-auto",
-        )}
+        aria-labelledby="register-convoy-title"
+        className="relative z-10 my-8 w-full max-w-lg rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl"
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-slate-200/80 px-5 py-4">
-          <div>
-            <h2 className="text-lg font-bold text-slate-900">
-              🚚 رانا جايين نعاونو (تسجيل قافلة قادمة)
-            </h2>
-            <p className="mt-1 text-xs text-slate-600">
-              سجّل قافلتك باش نستقبلوك ونعيّنو مرافق محلي عند المدخل.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
-            aria-label="إغلاق"
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 left-4 rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+          aria-label="إغلاق"
+        >
+          <X className="h-5 w-5" />
+        </button>
+
+        <div className="mb-6 border-b border-slate-100 pb-4 pr-10">
+          <h2
+            id="register-convoy-title"
+            className="text-lg font-bold text-slate-900"
           >
-            <X className="h-5 w-5" />
-          </button>
+            🚚 تسجيل قافلة إغاثة قادمة لجيجل
+          </h2>
+          <p className="mt-1 text-xs text-slate-500">
+            سجّل قافلتك باش نستقبلوك ونعيّنو مرافق محلي عند المدخل.
+          </p>
         </div>
 
         {guideAssignUrl ? (
-          <div className="space-y-4 px-5 py-6 text-center">
+          <div className="space-y-4 text-center">
             <p className="font-semibold text-emerald-700">
               تم تسجيل القافلة بنجاح!
             </p>
@@ -194,9 +211,9 @@ export default function RegisterConvoyModal({
             </button>
           </div>
         ) : (
-          <form className="space-y-4 px-5 py-6" onSubmit={handleSubmit}>
+          <form className="space-y-4" onSubmit={handleSubmit}>
             <div>
-              <label className="mb-1 block text-sm font-medium">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
                 ولاية الانطلاق
               </label>
               <select
@@ -208,7 +225,7 @@ export default function RegisterConvoyModal({
                     departureWilaya: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm"
+                className={INPUT_CLASS}
               >
                 <option value="">اختر الولاية</option>
                 {ALGERIAN_WILAYAS.map((wilaya) => (
@@ -220,7 +237,7 @@ export default function RegisterConvoyModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
                 اسم السائق / مسؤول القافلة
               </label>
               <input
@@ -232,12 +249,12 @@ export default function RegisterConvoyModal({
                     driverName: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm"
+                className={INPUT_CLASS}
               />
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
                 رقم الهاتف
               </label>
               <input
@@ -251,7 +268,7 @@ export default function RegisterConvoyModal({
                     driverPhone: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm"
+                className={INPUT_CLASS}
               />
               <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
                 <input
@@ -277,13 +294,13 @@ export default function RegisterConvoyModal({
                       driverWhatsapp: event.target.value,
                     }))
                   }
-                  className="mt-2 min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm"
+                  className="mt-2 min-h-11 w-full rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:border-sky-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20"
                 />
               ) : null}
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium">نوع المركبة</p>
+              <p className="mb-2 text-sm font-medium text-slate-700">نوع المركبة</p>
               <div className="grid grid-cols-2 gap-2">
                 {CONVOY_VEHICLE_OPTIONS.map((option) => (
                   <button
@@ -309,7 +326,7 @@ export default function RegisterConvoyModal({
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium">نوع الحمولة</p>
+              <p className="mb-2 text-sm font-medium text-slate-700">نوع الحمولة</p>
               <div className="grid grid-cols-2 gap-2">
                 {CONVOY_CARGO_OPTIONS.map((option) => (
                   <button
@@ -335,7 +352,7 @@ export default function RegisterConvoyModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
                 وقت الوصول التقريبي (ETA)
               </label>
               <input
@@ -348,12 +365,12 @@ export default function RegisterConvoyModal({
                     eta: event.target.value,
                   }))
                 }
-                className="min-h-11 w-full rounded-xl border border-slate-300 bg-white/80 px-3 text-sm"
+                className={INPUT_CLASS}
               />
             </div>
 
             <div>
-              <p className="mb-2 text-sm font-medium">
+              <p className="mb-2 text-sm font-medium text-slate-700">
                 المدخل المتوقع لجيجل
               </p>
               <div className="space-y-2">
@@ -381,7 +398,7 @@ export default function RegisterConvoyModal({
             </div>
 
             <div>
-              <label className="mb-1 block text-sm font-medium">
+              <label className="mb-1 block text-sm font-medium text-slate-700">
                 ملاحظات إضافية (اختياري)
               </label>
               <textarea
@@ -394,7 +411,7 @@ export default function RegisterConvoyModal({
                   }))
                 }
                 placeholder="عدد المركبات، حجم الحمولة، احتياج مرافق 4x4..."
-                className="w-full rounded-xl border border-slate-300 bg-white/80 px-3 py-2 text-sm"
+                className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-900 focus:border-sky-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-sky-500/20"
               />
             </div>
 
