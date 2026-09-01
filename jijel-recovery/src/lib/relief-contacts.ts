@@ -1,5 +1,6 @@
 import reliefContactsData from "@/data/relief-contacts.json";
 import { getCommuneArabicName, getDairaArabicName } from "@/lib/locations";
+import type { RoadAccessibility } from "@/lib/locations";
 
 export type JsonReliefContactCategory =
   | "relief_hub"
@@ -15,6 +16,9 @@ export type VerifiedReliefContact = {
   location_details: string;
   lat: number;
   lng: number;
+  exact_address_ar: string;
+  landmark: string;
+  road_accessibility: RoadAccessibility;
   contact_person: string;
   phone: string;
   whatsapp: string;

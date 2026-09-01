@@ -61,11 +61,32 @@ textarea::placeholder {
 }
 
 .leaflet-popup-content-wrapper {
-  border-radius: 0.75rem;
+  border-radius: 1rem;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
+  color: #0f172a;
 }
 
 .leaflet-popup-content {
-  margin: 0.75rem;
+  margin: 0;
+  color: #0f172a;
+}
+
+.leaflet-popup-content .map-popup-content,
+.leaflet-popup-content .map-popup-content * {
+  color: inherit;
+}
+
+.leaflet-popup-content .map-popup-content h3,
+.leaflet-popup-content .map-popup-content p,
+.leaflet-popup-content .map-popup-content span {
+  color: #0f172a;
+}
+
+.leaflet-popup-tip {
+  border: 1px solid #e2e8f0;
+  background: #ffffff;
 }
 
 .leaflet-popup {

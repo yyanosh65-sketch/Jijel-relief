@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import L from "leaflet";
-import { Loader2, MapPin, MessageCircle } from "lucide-react";
+import { Loader2, MapPin } from "lucide-react";
 import {
   MapContainer,
   Marker,
@@ -13,6 +13,7 @@ import {
 import { createPledge } from "@/actions/pledges";
 import type { MapIntelligenceData, SosMapAlert } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
+import MapPopupShell from "@/components/map/MapPopupShell";
 import { translateNeedTitle } from "@/lib/need-display";
 import { formatLocationHeader } from "@/lib/locations";
 import {
@@ -21,6 +22,12 @@ import {
   createSosMarkerIcon,
   createVillageMarkerIcon,
 } from "@/lib/map-layer-icons";
+import {
+  MAP_POINT_TYPE_LABELS,
+  resolveCommuneMapDetails,
+  roadPassabilityToAccessibility,
+  getRoadPassabilityLabel,
+} from "@/lib/map-location-display";
 import {
   DEFAULT_MAP_ZOOM,
   getMarkerColor,
@@ -128,6 +135,12 @@ function NeedPopupContent({
     need.location.daira,
   );
 
+  const mapDetails = resolveCommuneMapDetails(
+    need.location.address ?? need.location.name,
+    need.location.daira ?? "",
+    need.location.name,
+  );
+
   const whatsappUrl = need.contactPhone
     ? buildWhatsAppUrl(
         need.contactPhone,
@@ -160,34 +173,36 @@ function NeedPopupContent({
 
   if (isSuccess) {
     return (
-      <div dir="rtl" className="min-w-[240px] space-y-2 p-1 text-right">
+      <MapPopupShell
+        pointTypeLabel={MAP_POINT_TYPE_LABELS.need}
+        title={translateNeedTitle(need.title)}
+        addressHierarchy={mapDetails.addressHierarchy}
+        exactAddressAr={mapDetails.exactAddressAr ?? locationHeader}
+        roadAccessibility={mapDetails.roadAccessibility}
+        lat={need.lat}
+        lng={need.lng}
+        phone={need.contactPhone}
+        whatsappUrl={whatsappUrl}
+      >
         <p className="text-sm font-medium text-emerald-700">
           شكراً! تسجّل تعاونك بنجاح.
         </p>
-        {whatsappUrl ? (
-          <a
-            href={whatsappUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#25D366] px-3 text-xs font-semibold text-white hover:bg-[#1ebe5d]"
-          >
-            <MessageCircle className="h-4 w-4" />
-            تواصل واتساب مع المنسق
-          </a>
-        ) : null}
-      </div>
+      </MapPopupShell>
     );
   }
 
   return (
-    <div dir="rtl" className="min-w-[250px] space-y-3 p-1 text-right">
-      <div>
-        <h3 className="text-sm font-semibold text-zinc-900">
-          {translateNeedTitle(need.title)}
-        </h3>
-        <p className="mt-1 text-xs text-slate-600">{locationHeader}</p>
-      </div>
-
+    <MapPopupShell
+      pointTypeLabel={MAP_POINT_TYPE_LABELS.need}
+      title={translateNeedTitle(need.title)}
+      addressHierarchy={mapDetails.addressHierarchy}
+      exactAddressAr={mapDetails.exactAddressAr ?? locationHeader}
+      roadAccessibility={mapDetails.roadAccessibility}
+      lat={need.lat}
+      lng={need.lng}
+      phone={need.contactPhone}
+      whatsappUrl={whatsappUrl}
+    >
       <NeedProgressBar
         fulfilled={need.quantityFulfilled}
         needed={need.quantityNeeded}
@@ -206,7 +221,7 @@ function NeedPopupContent({
                 contributorName: event.target.value,
               }))
             }
-            className="w-full rounded-md border border-zinc-300 px-2 py-2 text-sm outline-none focus:border-emerald-600"
+            className="w-full rounded-md border border-zinc-300 px-2 py-2 text-sm text-slate-900 outline-none focus:border-emerald-600"
           />
           <input
             required
@@ -220,7 +235,7 @@ function NeedPopupContent({
                 contributorContact: event.target.value,
               }))
             }
-            className="w-full rounded-md border border-zinc-300 px-2 py-2 text-sm outline-none focus:border-emerald-600"
+            className="w-full rounded-md border border-zinc-300 px-2 py-2 text-sm text-slate-900 outline-none focus:border-emerald-600"
           />
           <input
             required
@@ -235,37 +250,22 @@ function NeedPopupContent({
                 quantity: event.target.value,
               }))
             }
-            className="w-full rounded-md border border-zinc-300 px-2 py-2 text-sm outline-none focus:border-emerald-600"
+            className="w-full rounded-md border border-zinc-300 px-2 py-2 text-sm text-slate-900 outline-none focus:border-emerald-600"
           />
 
           {error ? <p className="text-xs text-red-600">{error}</p> : null}
 
-          <div className="flex gap-2">
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="flex min-h-10 flex-1 items-center justify-center gap-1 rounded-md bg-emerald-700 px-3 text-xs font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "نعاون في هاد الخير"
-              )}
-            </button>
-
-            {whatsappUrl ? (
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex min-h-10 items-center justify-center rounded-md bg-[#25D366] px-3 text-white hover:bg-[#1ebe5d]"
-                title="واتساب المنسق"
-                aria-label="واتساب المنسق"
-              >
-                <MessageCircle className="h-4 w-4" />
-              </a>
-            ) : null}
-          </div>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="flex min-h-10 w-full items-center justify-center gap-1 rounded-md bg-emerald-700 px-3 text-xs font-semibold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isSubmitting ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              "نعاون في هاد الخير"
+            )}
+          </button>
 
           <button
             type="button"
@@ -280,7 +280,7 @@ function NeedPopupContent({
           تم تلبية هذا الاحتياج بالكامل.
         </p>
       )}
-    </div>
+    </MapPopupShell>
   );
 }
 
@@ -455,17 +455,41 @@ export default function ReconstructionMap({
                 }}
               >
                 <Popup>
-                  <div dir="rtl" className="text-right text-sm">
-                    <p className="font-semibold">{pin.name_ar}</p>
-                    <p className="text-xs text-zinc-500">{pin.name}</p>
+                  <MapPopupShell
+                    pointTypeLabel={
+                      pin.type === "daira"
+                        ? MAP_POINT_TYPE_LABELS.daira
+                        : MAP_POINT_TYPE_LABELS.village
+                    }
+                    title={pin.name_ar}
+                    addressHierarchy={resolveCommuneMapDetails(
+                      pin.name,
+                      pin.daira,
+                      pin.name_ar,
+                    ).addressHierarchy}
+                    exactAddressAr={
+                      resolveCommuneMapDetails(pin.name, pin.daira, pin.name_ar)
+                        .exactAddressAr
+                    }
+                    roadAccessibility={
+                      roadPassabilityToAccessibility(pin.roadPassability)
+                    }
+                    lat={pin.lat}
+                    lng={pin.lng}
+                    phone={pin.coordinator.phone}
+                    whatsappUrl={buildWhatsAppUrl(
+                      pin.coordinator.phone,
+                      `السلام عليكم، نحتاج معلومات عن ${pin.name_ar}`,
+                    )}
+                  >
                     <button
                       type="button"
                       onClick={() => onVillageClick(pin.id)}
-                      className="mt-2 w-full rounded-md bg-blue-700 px-2 py-1.5 text-xs text-white"
+                      className="w-full rounded-xl bg-blue-700 px-3 py-2 text-xs font-bold text-white hover:bg-blue-800"
                     >
                       فتح ملف القرية
                     </button>
-                  </div>
+                  </MapPopupShell>
                 </Popup>
               </Marker>
             ))
@@ -479,10 +503,18 @@ export default function ReconstructionMap({
                 icon={createRoadMarkerIcon(road.passability)}
               >
                 <Popup>
-                  <div dir="rtl" className="text-right text-sm">
-                    <p className="font-semibold">{road.name_ar}</p>
-                    <p className="text-xs text-zinc-500">{road.notes}</p>
-                  </div>
+                  <MapPopupShell
+                    pointTypeLabel={MAP_POINT_TYPE_LABELS.road}
+                    title={road.name_ar}
+                    addressHierarchy={`ولاية جيجل > ${road.name_ar}`}
+                    exactAddressAr={road.notes}
+                    roadAccessibility={roadPassabilityToAccessibility(
+                      road.passability,
+                    )}
+                    roadLabel={getRoadPassabilityLabel(road.passability)}
+                    lat={road.lat}
+                    lng={road.lng}
+                  />
                 </Popup>
               </Marker>
             ))
@@ -496,15 +528,26 @@ export default function ReconstructionMap({
                 icon={createFacilityMarkerIcon(facility.type)}
               >
                 <Popup>
-                  <div dir="rtl" className="text-right text-sm">
-                    <p className="font-semibold">{facility.name_ar}</p>
-                    <a
-                      href={`tel:${facility.phone}`}
-                      className="mt-1 inline-block text-xs font-bold text-red-700"
-                    >
-                      📞 {facility.phone}
-                    </a>
-                  </div>
+                  <MapPopupShell
+                    pointTypeLabel={MAP_POINT_TYPE_LABELS.facility}
+                    title={facility.name_ar}
+                    addressHierarchy={resolveCommuneMapDetails(
+                      facility.commune,
+                      facility.daira,
+                    ).addressHierarchy}
+                    exactAddressAr={facility.name_ar}
+                    roadAccessibility={
+                      resolveCommuneMapDetails(facility.commune, facility.daira)
+                        .roadAccessibility
+                    }
+                    lat={facility.lat}
+                    lng={facility.lng}
+                    phone={facility.phone}
+                    whatsappUrl={buildWhatsAppUrl(
+                      facility.phone,
+                      `السلام عليكم، نحتاج مساعدة من ${facility.name_ar}`,
+                    )}
+                  />
                 </Popup>
               </Marker>
             ))
@@ -519,15 +562,22 @@ export default function ReconstructionMap({
                 zIndexOffset={1000}
               >
                 <Popup>
-                  <div dir="rtl" className="min-w-[200px] text-right text-sm">
-                    <p className="font-bold text-red-700">
-                      🚨 {getSosLabel(alert.emergencyType)}
-                    </p>
-                    <p className="mt-1">{alert.description}</p>
-                    <p className="mt-1 text-xs text-slate-500">
-                      {alert.commune} — {alert.daira}
-                    </p>
-                  </div>
+                  <MapPopupShell
+                    pointTypeLabel={MAP_POINT_TYPE_LABELS.sos}
+                    title={`🚨 ${getSosLabel(alert.emergencyType)}`}
+                    addressHierarchy={resolveCommuneMapDetails(
+                      alert.commune,
+                      alert.daira,
+                      alert.village ?? undefined,
+                    ).addressHierarchy}
+                    exactAddressAr={alert.description}
+                    roadAccessibility={
+                      resolveCommuneMapDetails(alert.commune, alert.daira)
+                        .roadAccessibility
+                    }
+                    lat={alert.lat}
+                    lng={alert.lng}
+                  />
                 </Popup>
               </Marker>
             ))

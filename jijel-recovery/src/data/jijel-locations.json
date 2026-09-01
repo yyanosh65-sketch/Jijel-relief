@@ -13,7 +13,10 @@
           "name": "Jijel",
           "name_ar": "جيجل",
           "lat": 36.8211,
-          "lng": 5.7667
+          "lng": 5.7667,
+          "exact_address_ar": "مركز بلدية جيجل، دائرة جيجل، ولاية جيجل",
+          "landmark": "مركز بلدية جيجل",
+          "road_accessibility": "paved_heavy_truck"
         }
       ]
     },
@@ -25,13 +28,19 @@
           "name": "Djimla",
           "name_ar": "جيملة",
           "lat": 36.9208,
-          "lng": 5.7583
+          "lng": 5.7583,
+          "exact_address_ar": "دشرة جيملة، دائرة جيملة، ولاية جيجل",
+          "landmark": "منعرج دخول دشرة جيملة",
+          "road_accessibility": "mountain_4x4_only"
         },
         {
           "name": "Boudriaa Ben Yadjis",
           "name_ar": "بودريعة بن ياجيس",
           "lat": 36.8836,
-          "lng": 5.7814
+          "lng": 5.7814,
+          "exact_address_ar": "دشرة بودريعة بن ياجيس، دائرة جيملة، ولاية جيجل",
+          "landmark": "منعرج دخول دشرة بودريعة بن ياجيس",
+          "road_accessibility": "mountain_4x4_only"
         }
       ]
     },
@@ -43,25 +52,37 @@
           "name": "El Ancer",
           "name_ar": "العنصر",
           "lat": 36.6731,
-          "lng": 5.8508
+          "lng": 5.8508,
+          "exact_address_ar": "مركز بلدية العنصر، دائرة العنصر، ولاية جيجل",
+          "landmark": "مركز بلدية العنصر",
+          "road_accessibility": "light_vehicles"
         },
         {
           "name": "Bouraoui Belhadef",
           "name_ar": "بوراوي بلهادف",
           "lat": 36.6514,
-          "lng": 5.8822
+          "lng": 5.8822,
+          "exact_address_ar": "مركز بلدية بوراوي بلهادف، دائرة العنصر، ولاية جيجل",
+          "landmark": "مركز بلدية بوراوي بلهادف",
+          "road_accessibility": "light_vehicles"
         },
         {
           "name": "Djemaa Beni Habibi",
           "name_ar": "جمعة بني حبيبي",
           "lat": 36.6847,
-          "lng": 5.8194
+          "lng": 5.8194,
+          "exact_address_ar": "مركز بلدية جمعة بني حبيبي، دائرة العنصر، ولاية جيجل",
+          "landmark": "مركز بلدية جمعة بني حبيبي",
+          "road_accessibility": "light_vehicles"
         },
         {
           "name": "Kheïri Oued Adjoul",
           "name_ar": "خيري واد عجول",
           "lat": 36.7028,
-          "lng": 5.8681
+          "lng": 5.8681,
+          "exact_address_ar": "مركز بلدية خيري واد عجول، دائرة العنصر، ولاية جيجل",
+          "landmark": "مركز بلدية خيري واد عجول",
+          "road_accessibility": "light_vehicles"
         }
       ]
     },
@@ -73,13 +94,19 @@
           "name": "El Aouana",
           "name_ar": "العوانة",
           "lat": 36.8419,
-          "lng": 5.8717
+          "lng": 5.8717,
+          "exact_address_ar": "مركز بلدية العوانة، دائرة العوانة، ولاية جيجل",
+          "landmark": "مركز بلدية العوانة",
+          "road_accessibility": "paved_heavy_truck"
         },
         {
           "name": "Selma Benziada",
           "name_ar": "سلمى بن زياد",
           "lat": 36.8667,
-          "lng": 5.9036
+          "lng": 5.9036,
+          "exact_address_ar": "دشرة سلمى بن زياد، دائرة العوانة، ولاية جيجل",
+          "landmark": "منعرج دخول دشرة سلمى بن زياد",
+          "road_accessibility": "mountain_4x4_only"
         }
       ]
     },
@@ -91,13 +118,19 @@
           "name": "El Milia",
           "name_ar": "الميلية",
           "lat": 36.7533,
-          "lng": 6.0083
+          "lng": 6.0083,
+          "exact_address_ar": "مركز بلدية الميلية، دائرة الميلية، ولاية جيجل",
+          "landmark": "مركز بلدية الميلية",
+          "road_accessibility": "paved_heavy_truck"
         },
         {
           "name": "Ouled Yahia Khedrouche",
           "name_ar": "أولاد يحيى خدروش",
           "lat": 36.7681,
-          "lng": 6.0514
+          "lng": 6.0514,
+          "exact_address_ar": "مركز بلدية أولاد يحيى خدروش، دائرة الميلية، ولاية جيجل",
+          "landmark": "مركز بلدية أولاد يحيى خدروش",
+          "road_accessibility": "paved_heavy_truck"
         }
       ]
     },
@@ -109,25 +142,37 @@
           "name": "Chekfa",
           "name_ar": "الشقفة",
           "lat": 36.7647,
-          "lng": 5.96
+          "lng": 5.96,
+          "exact_address_ar": "مركز بلدية الشقفة، دائرة الشقفة، ولاية جيجل",
+          "landmark": "مركز بلدية الشقفة",
+          "road_accessibility": "paved_heavy_truck"
         },
         {
           "name": "El Kennar Nouchfi",
           "name_ar": "القنار نوشفي",
           "lat": 36.7336,
-          "lng": 5.9831
+          "lng": 5.9831,
+          "exact_address_ar": "مركز بلدية القنار نوشفي، دائرة الشقفة، ولاية جيجل",
+          "landmark": "مركز بلدية القنار نوشفي",
+          "road_accessibility": "paved_heavy_truck"
         },
         {
           "name": "Bordj T'har",
           "name_ar": "برج الطهر",
           "lat": 36.7836,
-          "lng": 5.9336
+          "lng": 5.9336,
+          "exact_address_ar": "مركز بلدية برج الطهر، دائرة الشقفة، ولاية جيجل",
+          "landmark": "مركز بلدية برج الطهر",
+          "road_accessibility": "paved_heavy_truck"
         },
         {
           "name": "Sidi Abdelaziz",
           "name_ar": "سيدي عبد العزيز",
           "lat": 36.7514,
-          "lng": 5.9519
+          "lng": 5.9519,
+          "exact_address_ar": "مركز بلدية سيدي عبد العزيز، دائرة الشقفة، ولاية جيجل",
+          "landmark": "مركز بلدية سيدي عبد العزيز",
+          "road_accessibility": "paved_heavy_truck"
         }
       ]
     },
@@ -139,13 +184,19 @@
           "name": "Settara",
           "name_ar": "سطارة",
           "lat": 36.8486,
-          "lng": 5.9519
+          "lng": 5.9519,
+          "exact_address_ar": "دشرة سطارة، دائرة سطارة، ولاية جيجل",
+          "landmark": "منعرج دخول دشرة سطارة",
+          "road_accessibility": "mountain_4x4_only"
         },
         {
           "name": "Ghebala",
           "name_ar": "غبالة",
           "lat": 36.8336,
-          "lng": 6.0014
+          "lng": 6.0014,
+          "exact_address_ar": "مركز بلدية غبالة، دائرة سطارة، ولاية جيجل",
+          "landmark": "مركز بلدية غبالة",
+          "road_accessibility": "light_vehicles"
         }
       ]
     },
@@ -157,13 +208,19 @@
           "name": "Sidi Maarouf",
           "name_ar": "سيدي معروف",
           "lat": 36.7083,
-          "lng": 5.9083
+          "lng": 5.9083,
+          "exact_address_ar": "مركز بلدية سيدي معروف، دائرة سيدي معروف، ولاية جيجل",
+          "landmark": "مركز بلدية سيدي معروف",
+          "road_accessibility": "paved_heavy_truck"
         },
         {
           "name": "Ouled Rabah",
           "name_ar": "أولاد رابح",
           "lat": 36.6847,
-          "lng": 5.9519
+          "lng": 5.9519,
+          "exact_address_ar": "مركز بلدية أولاد رابح، دائرة سيدي معروف، ولاية جيجل",
+          "landmark": "مركز بلدية أولاد رابح",
+          "road_accessibility": "paved_heavy_truck"
         }
       ]
     },
@@ -175,31 +232,46 @@
           "name": "Taher",
           "name_ar": "الطاهير",
           "lat": 36.7783,
-          "lng": 5.8944
+          "lng": 5.8944,
+          "exact_address_ar": "دشرة الطاهير، دائرة الطاهير، ولاية جيجل",
+          "landmark": "منعرج دخول دشرة الطاهير",
+          "road_accessibility": "mountain_4x4_only"
         },
         {
           "name": "Emir Abdelkader",
           "name_ar": "الأمير عبد القادر",
           "lat": 36.8167,
-          "lng": 5.9167
+          "lng": 5.9167,
+          "exact_address_ar": "مركز بلدية الأمير عبد القادر، دائرة الطاهير، ولاية جيجل",
+          "landmark": "مركز بلدية الأمير عبد القادر",
+          "road_accessibility": "paved_heavy_truck"
         },
         {
           "name": "Ouadjana",
           "name_ar": "وجانة",
           "lat": 36.7519,
-          "lng": 5.8836
+          "lng": 5.8836,
+          "exact_address_ar": "مركز بلدية وجانة، دائرة الطاهير، ولاية جيجل",
+          "landmark": "مركز بلدية وجانة",
+          "road_accessibility": "paved_heavy_truck"
         },
         {
           "name": "Chahna",
           "name_ar": "الشحنة",
           "lat": 36.8014,
-          "lng": 5.8836
+          "lng": 5.8836,
+          "exact_address_ar": "مركز بلدية الشحنة، دائرة الطاهير، ولاية جيجل",
+          "landmark": "مركز بلدية الشحنة",
+          "road_accessibility": "paved_heavy_truck"
         },
         {
           "name": "Boucif Ouled Askeur",
           "name_ar": "بوصيف أولاد عسكر",
           "lat": 36.7667,
-          "lng": 5.9167
+          "lng": 5.9167,
+          "exact_address_ar": "مركز بلدية بوصيف أولاد عسكر، دائرة الطاهير، ولاية جيجل",
+          "landmark": "مركز بلدية بوصيف أولاد عسكر",
+          "road_accessibility": "paved_heavy_truck"
         }
       ]
     },
@@ -211,13 +283,19 @@
           "name": "Texenna",
           "name_ar": "تكسنة",
           "lat": 36.6556,
-          "lng": 5.7444
+          "lng": 5.7444,
+          "exact_address_ar": "دشرة تكسنة، دائرة تكسنة، ولاية جيجل",
+          "landmark": "منعرج دخول دشرة تكسنة",
+          "road_accessibility": "mountain_4x4_only"
         },
         {
           "name": "Kaous",
           "name_ar": "قوس",
           "lat": 36.6167,
-          "lng": 5.7833
+          "lng": 5.7833,
+          "exact_address_ar": "دشرة قوس، دائرة تكسنة، ولاية جيجل",
+          "landmark": "منعرج دخول دشرة قوس",
+          "road_accessibility": "mountain_4x4_only"
         }
       ]
     },
@@ -229,13 +307,19 @@
           "name": "Ziama Mansouriah",
           "name_ar": "زيامة منصورية",
           "lat": 36.5333,
-          "lng": 5.7333
+          "lng": 5.7333,
+          "exact_address_ar": "دشرة زيامة منصورية، دائرة زيامة منصورية، ولاية جيجل",
+          "landmark": "منعرج دخول دشرة زيامة منصورية",
+          "road_accessibility": "mountain_4x4_only"
         },
         {
           "name": "Eraguene",
           "name_ar": "إيراقن",
           "lat": 36.5167,
-          "lng": 5.8167
+          "lng": 5.8167,
+          "exact_address_ar": "دشرة إيراقن، دائرة زيامة منصورية، ولاية جيجل",
+          "landmark": "منعرج دخول دشرة إيراقن",
+          "road_accessibility": "mountain_4x4_only"
         }
       ]
     }

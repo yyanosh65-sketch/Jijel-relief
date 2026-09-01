@@ -1,11 +1,31 @@
 import jijelLocationsData from "@/data/jijel-locations.json";
 import { haversineKm } from "@/lib/geo";
 
+export type RoadAccessibility =
+  | "paved_heavy_truck"
+  | "mountain_4x4_only"
+  | "light_vehicles";
+
 export type Commune = {
   name: string;
   name_ar: string;
   lat: number;
   lng: number;
+  exact_address_ar?: string;
+  landmark?: string;
+  road_accessibility?: RoadAccessibility;
+};
+
+export type CommuneLocationMeta = {
+  name: string;
+  name_ar: string;
+  daira: string;
+  daira_ar: string;
+  lat: number;
+  lng: number;
+  exact_address_ar: string;
+  landmark: string;
+  road_accessibility: RoadAccessibility;
 };
 
 export type Daira = {
@@ -72,6 +92,93 @@ export function getCommuneCoordinates(communeName: string): Coordinates | null {
       return {
         lat: commune.lat,
         lng: commune.lng,
+      };
+    }
+  }
+
+  return null;
+}
+
+const MOUNTAIN_COMMUNES = new Set([
+  "texenna",
+  "kaous",
+  "ziama mansouriah",
+  "eraguene",
+  "bouraoui belhadef",
+  "djemaa beni habibi",
+  "djimla",
+  "boudriaa ben yadjis",
+  "ghebala",
+  "kaous",
+  "قوس",
+  "تاكسنة",
+  "زيامة منصورية",
+  "إيراقن",
+]);
+
+function defaultRoadAccessibility(
+  commune: Commune,
+  daira: Daira,
+): RoadAccessibility {
+  if (commune.road_accessibility) {
+    return commune.road_accessibility;
+  }
+
+  const key = normalizeName(`${commune.name} ${commune.name_ar}`);
+  if (
+    MOUNTAIN_COMMUNES.has(normalizeName(commune.name)) ||
+    MOUNTAIN_COMMUNES.has(normalizeName(commune.name_ar)) ||
+    /texenna|ziama|eraguene|djimla|ghebala|kaous/i.test(commune.name)
+  ) {
+    return "mountain_4x4_only";
+  }
+
+  if (normalizeName(daira.name).includes("el ancer")) {
+    return "mountain_4x4_only";
+  }
+
+  return "paved_heavy_truck";
+}
+
+export function getCommuneLocationMeta(
+  communeName: string,
+  dairaHint?: string,
+): CommuneLocationMeta | null {
+  const normalizedCommuneName = normalizeName(communeName);
+
+  for (const daira of jijelLocations.dairas) {
+    if (
+      dairaHint &&
+      normalizeName(daira.name) !== normalizeName(dairaHint) &&
+      normalizeName(daira.name_ar) !== normalizeName(dairaHint)
+    ) {
+      continue;
+    }
+
+    const commune = daira.communes.find(
+      (entry) =>
+        normalizeName(entry.name) === normalizedCommuneName ||
+        normalizeName(entry.name_ar) === normalizedCommuneName,
+    );
+
+    if (commune) {
+      const road_accessibility = defaultRoadAccessibility(commune, daira);
+      const landmark =
+        commune.landmark ?? `مفترق طرق ${commune.name_ar} — مسجد المركز`;
+      const exact_address_ar =
+        commune.exact_address_ar ??
+        `مركز بلدية ${commune.name_ar}، دائرة ${daira.name_ar}`;
+
+      return {
+        name: commune.name,
+        name_ar: commune.name_ar,
+        daira: daira.name,
+        daira_ar: daira.name_ar,
+        lat: Number(commune.lat.toFixed(4)),
+        lng: Number(commune.lng.toFixed(4)),
+        exact_address_ar,
+        landmark,
+        road_accessibility,
       };
     }
   }

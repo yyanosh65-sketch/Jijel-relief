@@ -2,10 +2,14 @@
 
 import { Marker, Popup } from "react-leaflet";
 
-import ContactActionButtons from "@/components/ui/ContactActionButtons";
+import MapPopupShell from "@/components/map/MapPopupShell";
 import { WAYPOINT_TYPE_LABELS } from "@/lib/convoys";
 import type { ConvoyWaypoint } from "@/lib/convoy-waypoints";
 import { createWaypointMarkerIcon } from "@/lib/map-layer-icons";
+import {
+  getWaypointPointTypeLabel,
+  getWaypointTypeIcon,
+} from "@/lib/map-location-display";
 import { buildWhatsAppUrl } from "@/lib/phone";
 
 type WaypointsLayerProps = {
@@ -22,27 +26,26 @@ function WaypointPopupContent({ waypoint }: { waypoint: ConvoyWaypoint }) {
   );
 
   return (
-    <div dir="rtl" className="min-w-[220px] text-right text-sm">
-      <p className="font-bold text-slate-900">
-        {typeMeta.icon} {waypoint.name_ar}
-      </p>
-      <p className="mt-1 text-xs text-slate-500">{typeMeta.labelAr}</p>
-      <p className="mt-2 text-xs text-slate-700">
-        <span className="font-medium">الساعات:</span> {waypoint.opening_hours}
-      </p>
-      <p className="mt-1 text-xs text-slate-700">
-        <span className="font-medium">السعة:</span> {waypoint.capacity}
-      </p>
-      {waypoint.notes ? (
-        <p className="mt-1 text-xs text-slate-600">{waypoint.notes}</p>
-      ) : null}
-      <ContactActionButtons
-        phone={waypoint.phone}
-        whatsappUrl={whatsappUrl}
-        className="mt-3"
-        compact
-      />
-    </div>
+    <MapPopupShell
+      pointTypeLabel={getWaypointPointTypeLabel(waypoint.type)}
+      title={`${getWaypointTypeIcon(waypoint.type)} ${waypoint.name_ar}`}
+      addressHierarchy={`ولاية جيجل > ${typeMeta.labelAr} > ${waypoint.name_ar}`}
+      exactAddressAr={waypoint.notes || undefined}
+      roadAccessibility="paved_heavy_truck"
+      lat={waypoint.lat}
+      lng={waypoint.lng}
+      phone={waypoint.phone}
+      whatsappUrl={whatsappUrl}
+    >
+      <div className="space-y-1 text-xs text-slate-800">
+        <p>
+          <span className="font-bold">الساعات:</span> {waypoint.opening_hours}
+        </p>
+        <p>
+          <span className="font-bold">السعة:</span> {waypoint.capacity}
+        </p>
+      </div>
+    </MapPopupShell>
   );
 }
 
