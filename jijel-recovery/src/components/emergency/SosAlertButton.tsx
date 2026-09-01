@@ -56,6 +56,9 @@ export default function SosAlertButton() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [helperDispatch, setHelperDispatch] = useState<
+    import("@/lib/agent/sos-dispatch").SosDispatchBundle | null
+  >(null);
 
   const dairas = useMemo(() => getDairas(), []);
   const communes = useMemo(
@@ -166,6 +169,7 @@ export default function SosAlertButton() {
     }
 
     setIsSuccess(true);
+    setHelperDispatch(result.data?.helperDispatch ?? null);
   }
 
   function handleClose() {
@@ -176,6 +180,7 @@ export default function SosAlertButton() {
     setError(null);
     setGpsMessage(null);
     setIsSuccess(false);
+    setHelperDispatch(null);
   }
 
   return (
@@ -216,10 +221,47 @@ export default function SosAlertButton() {
             </div>
 
             {isSuccess ? (
-              <div className="space-y-3 px-5 py-6 text-center">
-                <p className="font-semibold text-emerald-700">
+              <div className="space-y-4 px-5 py-6">
+                <p className="text-center font-semibold text-emerald-700">
                   تم إرسال النداء! الفرق الميدانية ستتواصل معك.
                 </p>
+
+                {helperDispatch && helperDispatch.helpers.length > 0 ? (
+                  <div className="rounded-xl border border-emerald-200 bg-emerald-50/60 p-4">
+                    <p className="mb-3 text-sm font-bold text-emerald-900">
+                      📲 أرسل النداء فوراً لأقرب {helperDispatch.helpers.length}{" "}
+                      متطوعين (ضمن {helperDispatch.radiusKm} كم)
+                    </p>
+                    <ul className="space-y-2">
+                      {helperDispatch.helpers.map((helper) => (
+                        <li key={helper.id}>
+                          <a
+                            href={helper.whatsappDispatchUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex items-center justify-between gap-2 rounded-xl border border-emerald-300 bg-white px-3 py-2.5 text-sm font-semibold text-emerald-800 transition hover:bg-emerald-100"
+                          >
+                            <span>
+                              {helper.name} — {helper.distanceKm} كم
+                            </span>
+                            <span className="text-xs text-emerald-600">
+                              واتساب →
+                            </span>
+                          </a>
+                          <p className="mt-1 text-[11px] text-slate-600">
+                            {helper.skillsLabel} · {helper.communeAr}
+                          </p>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ) : (
+                  <p className="text-center text-xs text-slate-500">
+                    لا يوجد متطوعون موثّقون ضمن 15 كم حالياً — الفرق الرسمية
+                    تلقّت النداء.
+                  </p>
+                )}
+
                 <button
                   type="button"
                   onClick={handleClose}

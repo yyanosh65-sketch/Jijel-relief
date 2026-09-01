@@ -22,6 +22,10 @@ import {
   type NearestContact,
   type NearestHelpInput,
 } from "@/lib/nearest-help";
+import {
+  findNearestHelpersForSos,
+  type SosDispatchBundle,
+} from "@/lib/agent/sos-dispatch";
 import { haversineKmSql } from "@/lib/geo";
 import type { ActionResult } from "@/lib/types";
 
@@ -56,7 +60,10 @@ export type UrgentAlertRecord = {
   mediaUrls: string[];
   voiceNoteData: string | null;
   createdAt: Date;
+  helperDispatch?: SosDispatchBundle;
 };
+
+export type { SosDispatchBundle };
 
 function revalidateEmergencyPaths(): void {
   revalidatePath("/");
@@ -290,6 +297,24 @@ export async function submitUrgentAlert(
 
     revalidateEmergencyPaths();
 
+    let helperDispatch: SosDispatchBundle | undefined;
+    try {
+      helperDispatch = await findNearestHelpersForSos({
+        lat: input.lat,
+        lng: input.lng,
+        emergencyType: input.emergencyType,
+        description: input.description,
+        commune: input.commune,
+        village: input.village,
+        reporterName: input.reporterName,
+        reporterPhone: input.reporterPhone,
+        limit: 3,
+        radiusKm: 15,
+      });
+    } catch (dispatchError) {
+      console.error("SOS helper dispatch error:", dispatchError);
+    }
+
     return {
       success: true,
       data: {
@@ -305,6 +330,7 @@ export async function submitUrgentAlert(
         mediaUrls: alert.mediaUrls ?? [],
         voiceNoteData: alert.voiceNoteData,
         createdAt: alert.createdAt,
+        helperDispatch,
       },
     };
   } catch (error) {

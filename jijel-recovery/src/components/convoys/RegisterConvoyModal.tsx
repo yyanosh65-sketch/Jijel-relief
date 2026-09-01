@@ -2,10 +2,11 @@
 
 import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
-import { Copy, Loader2 } from "lucide-react";
+import { Copy, Loader2, MapPin } from "lucide-react";
 
 import { registerConvoy } from "@/actions/convoys";
 import type { ConvoyCargoType, ConvoyEntryPoint, ConvoyVehicleType } from "@/db/schema";
+import type { CargoRouteRecommendation } from "@/lib/agent/cargo-router";
 import {
   ALGERIAN_WILAYAS,
   CONVOY_CARGO_OPTIONS,
@@ -65,6 +66,10 @@ export default function RegisterConvoyModal({
   const [guideAssignUrl, setGuideAssignUrl] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [cargoRoute, setCargoRoute] = useState<CargoRouteRecommendation | null>(
+    null,
+  );
+  const [isLoadingRoute, setIsLoadingRoute] = useState(false);
 
   useEffect(() => {
     setMounted(true);
@@ -92,6 +97,44 @@ export default function RegisterConvoyModal({
       setCopied(false);
     }
   }, [open]);
+
+  useEffect(() => {
+    if (!open || !form.cargoType) {
+      setCargoRoute(null);
+      return;
+    }
+
+    const controller = new AbortController();
+    setIsLoadingRoute(true);
+
+    const params = new URLSearchParams({ cargoType: form.cargoType });
+    if (form.vehicleType) {
+      params.set("vehicleType", form.vehicleType);
+    }
+    if (form.entryPoint) {
+      params.set("entryPoint", form.entryPoint);
+    }
+
+    void fetch(`/api/agent/cargo-route?${params.toString()}`, {
+      signal: controller.signal,
+    })
+      .then((response) => response.json())
+      .then((payload: { route?: CargoRouteRecommendation }) => {
+        setCargoRoute(payload.route ?? null);
+      })
+      .catch(() => {
+        if (!controller.signal.aborted) {
+          setCargoRoute(null);
+        }
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) {
+          setIsLoadingRoute(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [open, form.cargoType, form.vehicleType, form.entryPoint]);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -362,6 +405,54 @@ export default function RegisterConvoyModal({
                 ))}
               </div>
             </div>
+
+            {form.cargoType ? (
+              <div className="rounded-xl border border-sky-200 bg-sky-50/70 p-4">
+                <div className="mb-2 flex items-center gap-2 text-sm font-bold text-sky-900">
+                  <MapPin className="h-4 w-4" />
+                  توجيه الحمولة التلقائي (عمي رابح)
+                </div>
+                {isLoadingRoute ? (
+                  <p className="flex items-center gap-2 text-xs text-sky-800">
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    جاري حساب أعلى عجز مطابق...
+                  </p>
+                ) : cargoRoute?.found ? (
+                  <div className="space-y-1.5 text-xs leading-relaxed text-sky-950">
+                    <p>
+                      <strong>الوجهة:</strong> {cargoRoute.destination?.communeAr}{" "}
+                      — دائرة {cargoRoute.destination?.dairaAr}
+                    </p>
+                    <p>
+                      <strong>العجز:</strong> {cargoRoute.destination?.deficitUnits}{" "}
+                      وحدة
+                    </p>
+                    <p>
+                      <strong>المدخل:</strong> {cargoRoute.recommendedEntryPointAr}
+                    </p>
+                    <p>
+                      <strong>التضاريس:</strong> {cargoRoute.terrain?.labelAr}
+                    </p>
+                    {cargoRoute.localCoordinator ? (
+                      <p>
+                        <strong>المنسّق:</strong>{" "}
+                        {cargoRoute.localCoordinator.nameAr} —{" "}
+                        {cargoRoute.localCoordinator.phone}
+                      </p>
+                    ) : null}
+                    {cargoRoute.vehicleWarningAr ? (
+                      <p className="font-semibold text-amber-800">
+                        {cargoRoute.vehicleWarningAr}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : (
+                  <p className="text-xs text-sky-800">
+                    لا عجز مطابق حالياً — سجّل القافلة وسنوجّهك عند التفريغ.
+                  </p>
+                )}
+              </div>
+            ) : null}
 
             <div>
               <label className="mb-1 block text-sm font-medium text-slate-700">

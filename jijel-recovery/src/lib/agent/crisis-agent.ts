@@ -13,6 +13,8 @@ import { z } from "zod";
 import { db } from "@/db";
 import {
   convoyCargoTypeEnum,
+  convoyEntryPointEnum,
+  convoyVehicleTypeEnum,
   locations,
   needCategoryEnum,
   needs,
@@ -26,19 +28,20 @@ import {
   resolveAgentLocation,
   type ResolvedAgentLocation,
 } from "@/lib/agent-location";
-import {
-  checkMountainRoadStatus,
+import { checkMountainRoadStatus,
   CRISIS_AGENT_PERSONA,
   enrichConvoyDestination,
   getFieldContactsForDaira,
   JIJEL_ENTRY_POINTS_AR,
   KNOWN_DOUARS,
 } from "@/lib/agent/coordinator-knowledge";
+import { routeCargoConvoy } from "@/lib/agent/cargo-router";
 import {
   findHighestDeficitZone,
   getReliefStatsSummary,
   resolveDairaForCommune,
 } from "@/lib/agent/deficit";
+import { generateDailyOperationsReport } from "@/lib/agent/operations-report";
 import villageIntelligence from "@/data/village-intelligence.json";
 
 export type CrisisAgentProvider = "google" | "openai";
@@ -93,7 +96,9 @@ export type CrisisAgentToolName =
   | "suggestConvoyDestination"
   | "getReliefStats"
   | "getLocalFieldContacts"
-  | "checkMountainRoads";
+  | "checkMountainRoads"
+  | "generateOperationsReport"
+  | "routeCargoConvoy";
 
 const DOUAR_KNOWLEDGE_BLOCK = KNOWN_DOUARS.map(
   (douar) => `- ${douar.aliases[0]} (${douar.communeAr}): ${douar.notes}`,
@@ -114,6 +119,8 @@ ${DOUAR_KNOWLEDGE_BLOCK}
 - عند طلب جهات اتصال أو فرق 4x4 لدائرة معيّنة: استخدم getLocalFieldContacts.
 - عند سؤال عن مسالك جبلية مقطوعة (تاكسنة، إراقن، تبلوط…): استخدم checkMountainRoads.
 - عند إحصائيات الإغاثة: استخدم getReliefStats.
+- عند طلب تقرير يومي للعمليات أو ملخص PDF/Markdown لمسؤولي الميدان: استخدم generateOperationsReport.
+- عند توجيه حمولة قافلة مسجّلة (شاحنة علف، خزانات ماء…): استخدم routeCargoConvoy.
 - لخّص في 3–6 جمل عملية، مع أرقام واضحة يمكن نسخها للواتساب.`;
 
 const FEED_AGENT_SYSTEM = `أنت «${CRISIS_AGENT_PERSONA.name}» تحلّل نداءات فيسبوك لمنصة إغاثة جيجل.
@@ -365,6 +372,29 @@ export function createCrisisAgentTools() {
           .describe("منطقة مثل تاكسنة، إراقن، تبلوط، زيامة، العنصر"),
       }),
       execute: async ({ areaQuery }) => checkMountainRoadStatus(areaQuery),
+    }),
+    routeCargoConvoy: tool({
+      description:
+        "توجيه حمولة قافلة تلقائياً نحو أعلى عجز مع منسّق محلي ومدخل وطريق",
+      inputSchema: z.object({
+        cargoType: z.enum(convoyCargoTypeEnum.enumValues),
+        vehicleType: z.enum(convoyVehicleTypeEnum.enumValues).optional(),
+        preferredEntryPoint: z.enum(convoyEntryPointEnum.enumValues).optional(),
+      }),
+      execute: async ({ cargoType, vehicleType, preferredEntryPoint }) =>
+        routeCargoConvoy({
+          cargoType,
+          vehicleType,
+          preferredEntryPoint,
+        }),
+    }),
+    generateOperationsReport: tool({
+      description:
+        "إنشاء تقرير عمليات يومي Markdown لمسؤولي الإغاثة والميدان",
+      inputSchema: z.object({
+        scope: z.enum(["daily"]).default("daily"),
+      }),
+      execute: async () => generateDailyOperationsReport(),
     }),
     getReliefStats: tool({
       description: "إحصائيات سريعة عن الاحتياجات المفتوحة ونداءات SOS والقوافل",

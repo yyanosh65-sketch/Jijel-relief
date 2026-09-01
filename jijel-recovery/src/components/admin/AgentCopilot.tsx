@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Bot, Loader2, MessageSquare, X } from "lucide-react";
+import { Bot, Download, FileText, Loader2, MessageSquare, X } from "lucide-react";
 
 import { CRISIS_AGENT_PERSONA } from "@/lib/agent/coordinator-knowledge";
 import { cn } from "@/lib/utils";
@@ -24,6 +24,7 @@ const STARTER_PROMPTS = [
   "رانا جايين بشاحنة علف وخزانات ماء، وين الوجهة الأكثر استعجالاً؟",
   "أعطيني جهات الاتصال وفرق 4x4 في دائرة العنصر والجمعة بني حبيبي",
   "كاش مسالك جبلية مقطوعة في أعالي تاكسنة أو إراقن؟",
+  "أعطيني التقرير اليومي للعمليات الميدانية",
 ];
 
 export default function AgentCopilot() {
@@ -38,6 +39,7 @@ export default function AgentCopilot() {
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isDownloadingReport, setIsDownloadingReport] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -109,6 +111,74 @@ export default function AgentCopilot() {
       );
     } finally {
       setIsLoading(false);
+    }
+  }
+
+  async function downloadOperationsReport(format: "markdown" | "print") {
+    setIsDownloadingReport(true);
+    setError(null);
+
+    try {
+      const response = await fetch(
+        `/api/agent/operations-report?format=${format === "markdown" ? "markdown" : "json"}`,
+      );
+
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(payload.error ?? "تعذر إنشاء التقرير.");
+      }
+
+      if (format === "markdown") {
+        const markdown = await response.text();
+        const blob = new Blob([markdown], { type: "text/markdown;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const anchor = document.createElement("a");
+        anchor.href = url;
+        anchor.download = `jijel-operations-${new Date().toISOString().slice(0, 10)}.md`;
+        anchor.click();
+        URL.revokeObjectURL(url);
+        return;
+      }
+
+      const payload = await response.json();
+      const markdown = payload.report?.markdown as string | undefined;
+      if (!markdown) {
+        throw new Error("التقرير فارغ.");
+      }
+
+      const printWindow = window.open("", "_blank", "noopener,noreferrer");
+      if (!printWindow) {
+        throw new Error("تعذر فتح نافذة الطباعة.");
+      }
+
+      printWindow.document.write(`
+        <!DOCTYPE html>
+        <html dir="rtl" lang="ar">
+          <head>
+            <meta charset="utf-8" />
+            <title>تقرير عمليات إغاثة جيجل</title>
+            <style>
+              body { font-family: Tahoma, Arial, sans-serif; padding: 2rem; line-height: 1.7; }
+              h1,h2 { color: #0f172a; }
+              table { border-collapse: collapse; width: 100%; margin: 1rem 0; }
+              th, td { border: 1px solid #cbd5e1; padding: 0.5rem; text-align: right; }
+              pre { white-space: pre-wrap; }
+            </style>
+          </head>
+          <body><pre>${markdown.replace(/</g, "&lt;")}</pre></body>
+        </html>
+      `);
+      printWindow.document.close();
+      printWindow.focus();
+      printWindow.print();
+    } catch (reportError) {
+      setError(
+        reportError instanceof Error
+          ? reportError.message
+          : "تعذر تنزيل التقرير.",
+      );
+    } finally {
+      setIsDownloadingReport(false);
     }
   }
 
@@ -190,6 +260,31 @@ export default function AgentCopilot() {
             </div>
 
             <div className="border-t border-slate-100 p-4">
+              <div className="mb-3 flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  disabled={isDownloadingReport}
+                  onClick={() => void downloadOperationsReport("markdown")}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1.5 text-[11px] font-semibold text-emerald-900 hover:bg-emerald-100 disabled:opacity-50"
+                >
+                  {isDownloadingReport ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="h-3.5 w-3.5" />
+                  )}
+                  تقرير يومي (.md)
+                </button>
+                <button
+                  type="button"
+                  disabled={isDownloadingReport}
+                  onClick={() => void downloadOperationsReport("print")}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-800 hover:bg-slate-50 disabled:opacity-50"
+                >
+                  <FileText className="h-3.5 w-3.5" />
+                  طباعة PDF
+                </button>
+              </div>
+
               <div className="mb-3 flex flex-wrap gap-2">
                 {STARTER_PROMPTS.map((prompt) => (
                   <button
@@ -314,6 +409,38 @@ function ToolResultCard({
               — {String((output.localCoordinator as { phone?: string }).phone)}
             </li>
           ) : null}
+        </ul>
+      ) : null}
+      {toolResult.toolName === "generateOperationsReport" && output ? (
+        <p className="mt-1 whitespace-pre-wrap text-[10px] leading-relaxed">
+          {String((output as { markdown?: string }).markdown ?? "").slice(0, 600)}
+          {String((output as { markdown?: string }).markdown ?? "").length > 600
+            ? "…"
+            : ""}
+        </p>
+      ) : null}
+      {toolResult.toolName === "routeCargoConvoy" &&
+      (output as { found?: boolean })?.found === true ? (
+        <ul className="mt-1 space-y-0.5">
+          <li>
+            الوجهة:{" "}
+            {String(
+              (output as { destination?: { communeAr?: string } }).destination
+                ?.communeAr,
+            )}
+          </li>
+          <li>
+            المنسّق:{" "}
+            {String(
+              (output as { localCoordinator?: { nameAr?: string } })
+                .localCoordinator?.nameAr,
+            )}{" "}
+            —{" "}
+            {String(
+              (output as { localCoordinator?: { phone?: string } })
+                .localCoordinator?.phone,
+            )}
+          </li>
         </ul>
       ) : null}
       {toolResult.toolName === "geoLocateVillage" && output ? (

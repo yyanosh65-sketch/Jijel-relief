@@ -74,6 +74,9 @@ export default function ReportDamageForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successId, setSuccessId] = useState<number | null>(null);
   const [copied, setCopied] = useState(false);
+  const [isAnalyzingVoice, setIsAnalyzingVoice] = useState(false);
+  const [isAnalyzingVision, setIsAnalyzingVision] = useState(false);
+  const [aiMessage, setAiMessage] = useState<string | null>(null);
 
   const dairas = useMemo(() => getDairas(), []);
   const communes = useMemo(
@@ -105,7 +108,163 @@ export default function ReportDamageForm() {
 
   const handleEvidenceChange = useCallback((payload: NeedEvidencePayload) => {
     setEvidence(payload);
+    setAiMessage(null);
   }, []);
+
+  async function analyzeVoiceNote() {
+    if (!evidence.voiceNoteData) {
+      return;
+    }
+
+    setIsAnalyzingVoice(true);
+    setAiMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/agent/voice", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ voiceNoteData: evidence.voiceNoteData }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "تعذر تحليل الرسالة الصوتية.");
+      }
+
+      const structured = payload.structured as {
+        commune?: string;
+        daira?: string;
+        douar?: string;
+        contactPhone?: string;
+        contactName?: string;
+        intakeCategory?: IntakeCategory | "other";
+        quantityNeeded?: number;
+        unit?: string;
+        description?: string;
+        transcript?: string;
+      };
+
+      if (structured.daira) {
+        setDaira(structured.daira);
+      }
+      if (structured.commune) {
+        setCommune(structured.commune);
+      }
+      if (structured.douar) {
+        setVillage(structured.douar);
+      }
+      if (structured.contactName) {
+        setContactName(structured.contactName);
+      }
+      if (structured.contactPhone) {
+        setContactPhone(structured.contactPhone);
+        setContactWhatsapp(structured.contactPhone);
+      }
+      if (
+        structured.intakeCategory &&
+        structured.intakeCategory !== "other"
+      ) {
+        setIntakeCategory(structured.intakeCategory);
+        const category = INTAKE_CATEGORIES.find(
+          (entry) => entry.value === structured.intakeCategory,
+        );
+        if (category) {
+          setUnit(category.unit);
+        }
+      }
+      if (structured.quantityNeeded) {
+        setQuantity(String(structured.quantityNeeded));
+      }
+      if (structured.unit) {
+        setUnit(structured.unit);
+      }
+      if (structured.description) {
+        setDescription(structured.description);
+      }
+
+      setAiMessage(
+        structured.transcript
+          ? `تم تحليل الرسالة الصوتية: «${structured.transcript.slice(0, 120)}${structured.transcript.length > 120 ? "…" : ""}»`
+          : "تم استخراج بيانات الضرر من الرسالة الصوتية.",
+      );
+    } catch (analysisError) {
+      setError(
+        analysisError instanceof Error
+          ? analysisError.message
+          : "تعذر تحليل الرسالة الصوتية.",
+      );
+    } finally {
+      setIsAnalyzingVoice(false);
+    }
+  }
+
+  async function analyzeDamageImages() {
+    const images = evidence.mediaUrls.filter((url) =>
+      url.startsWith("data:image/"),
+    );
+
+    if (images.length === 0) {
+      setError("أرفق صورة واحدة على الأقل للتحليل البصري.");
+      return;
+    }
+
+    setIsAnalyzingVision(true);
+    setAiMessage(null);
+    setError(null);
+
+    try {
+      const response = await fetch("/api/agent/vision", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ imageDataUrls: images }),
+      });
+      const payload = await response.json();
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "تعذر تحليل الصور.");
+      }
+
+      const triage = payload.triage as {
+        intakeCategory?: IntakeCategory | "other";
+        suggestedQuantity?: number;
+        suggestedUnit?: string;
+        summaryAr?: string;
+        urgencyScore?: number;
+      };
+
+      if (triage.intakeCategory && triage.intakeCategory !== "other") {
+        setIntakeCategory(triage.intakeCategory);
+        const category = INTAKE_CATEGORIES.find(
+          (entry) => entry.value === triage.intakeCategory,
+        );
+        if (category) {
+          setUnit(category.unit);
+        }
+      }
+      if (triage.suggestedQuantity) {
+        setQuantity(String(Math.round(triage.suggestedQuantity)));
+      }
+      if (triage.suggestedUnit) {
+        setUnit(triage.suggestedUnit);
+      }
+      if (triage.summaryAr) {
+        setDescription(triage.summaryAr);
+      }
+
+      setAiMessage(
+        `تحليل بصري: ${triage.summaryAr ?? "تم تقدير حجم الضرر"}${typeof triage.urgencyScore === "number" ? ` — درجة الاستعجال ${triage.urgencyScore}/100` : ""}`,
+      );
+    } catch (analysisError) {
+      setError(
+        analysisError instanceof Error
+          ? analysisError.message
+          : "تعذر تحليل الصور.",
+      );
+    } finally {
+      setIsAnalyzingVision(false);
+    }
+  }
 
   useEffect(() => {
     captureGps();
@@ -466,6 +625,45 @@ export default function ReportDamageForm() {
           </div>
 
           <NeedEvidenceCapture value={evidence} onChange={handleEvidenceChange} />
+
+          <div className="flex flex-wrap gap-2">
+            {evidence.voiceNoteData ? (
+              <button
+                type="button"
+                onClick={() => void analyzeVoiceNote()}
+                disabled={isAnalyzingVoice}
+                className="inline-flex items-center gap-2 rounded-xl border border-violet-200 bg-violet-50 px-3 py-2 text-xs font-bold text-violet-900 hover:bg-violet-100 disabled:opacity-50"
+              >
+                {isAnalyzingVoice ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  "🎙️"
+                )}
+                تحليل الرسالة الصوتية (Gemini)
+              </button>
+            ) : null}
+            {evidence.mediaUrls.some((url) => url.startsWith("data:image/")) ? (
+              <button
+                type="button"
+                onClick={() => void analyzeDamageImages()}
+                disabled={isAnalyzingVision}
+                className="inline-flex items-center gap-2 rounded-xl border border-sky-200 bg-sky-50 px-3 py-2 text-xs font-bold text-sky-900 hover:bg-sky-100 disabled:opacity-50"
+              >
+                {isAnalyzingVision ? (
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  "📸"
+                )}
+                تقييم الضرر بالصور (Vision)
+              </button>
+            ) : null}
+          </div>
+
+          {aiMessage ? (
+            <p className="rounded-xl border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs text-emerald-900">
+              {aiMessage}
+            </p>
+          ) : null}
 
           {!canGoStep4 ? (
             <p className="text-center text-xs text-slate-500">
