@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { getMapIntelligence } from "@/actions/intelligence";
 import { getMapNeeds } from "@/actions/needs";
 import ReconstructionMapLoader from "@/components/map/ReconstructionMapLoader";
+import { displayHeadingClass } from "@/lib/ui-labels";
 
 export default async function HomePage() {
   const [needsResult, intelligenceResult] = await Promise.all([
@@ -44,7 +45,9 @@ export default async function HomePage() {
       className="min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-slate-50 via-white to-emerald-50/40"
     >
       <div className="mx-auto max-w-6xl border-b border-slate-200/80 px-4 py-5">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl">
+        <h1
+          className={`${displayHeadingClass} text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl`}
+        >
           خريطة إعادة الإعمار بجيجل
         </h1>
         <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">

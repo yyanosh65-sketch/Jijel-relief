@@ -15,7 +15,7 @@ import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
 import { useNeedSearchFilters } from "@/hooks/useNeedSearchFilters";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
-import { getDossierById, getNearbyFacilities } from "@/lib/intelligence";
+import { getDossierById, getDossierByLocation, getNearbyFacilities } from "@/lib/intelligence";
 import { filterAndSortNeeds } from "@/lib/need-search";
 import { glassPanelClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
@@ -64,6 +64,20 @@ export default function ReconstructionMapLoader({
   function closePledgeModal() {
     setIsPledgeModalOpen(false);
     setSelectedNeed(null);
+  }
+
+  function openDossierFromNeed(need: MapNeed) {
+    const dossier =
+      getDossierByLocation(need.location.name, "commune") ??
+      getDossierByLocation(need.location.daira, "daira");
+
+    if (!dossier) {
+      return;
+    }
+
+    setSelectedDossier(dossier);
+    setDossierFacilities(getNearbyFacilities(dossier));
+    setIsDossierOpen(true);
   }
 
   async function openVillageDossier(dossierId: string) {
@@ -120,6 +134,7 @@ export default function ReconstructionMapLoader({
           need={need}
           isSelected={selectedNeed?.id === need.id}
           onPledge={openPledgeModal}
+          onOpenDossier={openDossierFromNeed}
         />
       ))}
     </div>

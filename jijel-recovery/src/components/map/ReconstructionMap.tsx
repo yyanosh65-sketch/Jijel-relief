@@ -13,6 +13,7 @@ import {
 import { createPledge } from "@/actions/pledges";
 import type { MapIntelligenceData, SosMapAlert } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
+import { translateNeedTitle } from "@/lib/need-display";
 import { formatLocationHeader } from "@/lib/locations";
 import {
   createFacilityMarkerIcon,
@@ -181,7 +182,9 @@ function NeedPopupContent({
   return (
     <div dir="rtl" className="min-w-[250px] space-y-3 p-1 text-right">
       <div>
-        <h3 className="text-sm font-semibold text-zinc-900">{need.title}</h3>
+        <h3 className="text-sm font-semibold text-zinc-900">
+          {translateNeedTitle(need.title)}
+        </h3>
         <p className="mt-1 text-xs text-slate-600">{locationHeader}</p>
       </div>
 
@@ -344,7 +347,7 @@ export default function ReconstructionMap({
 
   return (
     <div dir="rtl" className="relative h-full w-full">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[900] p-3 sm:p-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-[850] p-3 sm:p-4">
         <div
           className={cn(
             glassPanelClass,

@@ -1,21 +1,16 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Droplets,
-  Phone,
-  Shield,
-  Stethoscope,
-  X,
-  Zap,
-} from "lucide-react";
+import { Droplets, MapPin, Shield, Stethoscope, X, Zap } from "lucide-react";
 
+import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
 import {
   INFRASTRUCTURE_LABELS,
   ROAD_PASSABILITY_LABELS,
 } from "@/lib/intelligence";
-import { buildWhatsAppUrl, formatWhatsAppPhone } from "@/lib/phone";
+import { buildWhatsAppUrl } from "@/lib/phone";
+import { premiumCardClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 type VillageDossierDrawerProps = {
@@ -78,7 +73,7 @@ function StatusBadge({
   return (
     <span
       className={cn(
-        "inline-flex rounded-full px-2.5 py-1 text-xs font-medium",
+        "inline-flex rounded-full px-3 py-1 text-xs font-semibold",
         tones[tone],
       )}
     >
@@ -124,43 +119,56 @@ export default function VillageDossierDrawer({
     dossier.coordinator.phone,
     `السلام، نحتاج تنسيق ميداني في ${dossier.name_ar}.`,
   );
-  const coordinatorTel = `tel:${formatWhatsAppPhone(dossier.coordinator.phone)}`;
 
   const veterinary = facilities.filter((f) => f.type === "veterinary");
   const civilProtection = facilities.filter((f) => f.type === "civil_protection");
 
   return (
-    <div className="fixed inset-0 z-[2500] flex justify-start">
+    <div className="fixed inset-0 z-[3500] flex justify-start">
       <button
         type="button"
         aria-label="إغلاق"
-        className="absolute inset-0 bg-black/40"
+        className="absolute inset-0 bg-black/45 backdrop-blur-[2px]"
         onClick={onClose}
       />
 
       <aside
         dir="rtl"
-        className="relative z-10 flex h-full w-full max-w-md flex-col bg-white shadow-2xl"
+        className="relative z-10 flex h-full w-full max-w-md flex-col rounded-l-3xl border-l border-slate-200/80 bg-gradient-to-b from-white to-slate-50 shadow-2xl transition-transform duration-300 ease-out"
       >
-        <header className="border-b border-zinc-200 px-5 py-4">
+        <header className="border-b border-slate-200/80 px-5 py-5">
           <div className="flex items-start justify-between gap-3">
             <div>
-              <p className="text-xs text-zinc-500">
+              <p className="text-xs font-medium text-emerald-700">
                 {dossier.type === "daira" ? "دائرة" : "بلدية"} ·{" "}
                 {dossier.daira_ar}
               </p>
-              <h2 className="text-xl font-bold text-zinc-900">
+              <h2 className="font-[family-name:var(--font-display)] text-xl font-bold text-slate-900">
                 {dossier.name_ar}
               </h2>
-              <p className="text-sm text-zinc-500">{dossier.name}</p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="rounded-full p-1 text-zinc-500 hover:bg-zinc-100"
+              className="rounded-full p-2 text-slate-500 transition-all duration-200 hover:bg-slate-100 hover:text-slate-800"
             >
               <X className="h-5 w-5" />
             </button>
+          </div>
+
+          <div
+            className={cn(
+              premiumCardClass,
+              "mt-4 flex items-center justify-between gap-3 p-3",
+            )}
+          >
+            <div className="flex items-center gap-2">
+              <MapPin className="h-4 w-4 text-emerald-700" />
+              <span className="text-sm font-semibold text-slate-800">
+                حالة المسلك والطريق
+              </span>
+            </div>
+            <StatusBadge label={roadLabel.ar} tone={roadTone(dossier.roadPassability)} />
           </div>
 
           <div className="mt-4 flex gap-2">
@@ -168,10 +176,10 @@ export default function VillageDossierDrawer({
               type="button"
               onClick={() => setActiveTab("overview")}
               className={cn(
-                "flex-1 rounded-lg py-2 text-sm font-medium",
+                "flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200",
                 activeTab === "overview"
-                  ? "bg-emerald-700 text-white"
-                  : "bg-zinc-100 text-zinc-600",
+                  ? "bg-emerald-700 text-white shadow-md"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200",
               )}
             >
               نظرة عامة
@@ -180,10 +188,10 @@ export default function VillageDossierDrawer({
               type="button"
               onClick={() => setActiveTab("emergency")}
               className={cn(
-                "flex-1 rounded-lg py-2 text-sm font-medium",
+                "flex-1 rounded-xl py-2.5 text-sm font-semibold transition-all duration-200",
                 activeTab === "emergency"
-                  ? "bg-emerald-700 text-white"
-                  : "bg-zinc-100 text-zinc-600",
+                  ? "bg-emerald-700 text-white shadow-md"
+                  : "bg-slate-100 text-slate-600 hover:bg-slate-200",
               )}
             >
               خدمات الطوارئ
@@ -193,157 +201,148 @@ export default function VillageDossierDrawer({
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {activeTab === "overview" ? (
-            <div className="space-y-6">
-              <section>
-                <h3 className="mb-3 text-sm font-semibold text-zinc-800">
-                  إحصائيات سكانية
+            <div className="space-y-5">
+              <section className={cn(premiumCardClass, "p-4")}>
+                <h3 className="mb-3 text-sm font-semibold text-slate-800">
+                  إحصائيات الخسائر والأسر المتضررة
                 </h3>
                 <div className="grid grid-cols-2 gap-3">
-                  <div className="rounded-xl bg-zinc-50 p-3">
-                    <p className="text-xs text-zinc-500">السكان</p>
-                    <p className="text-lg font-bold">
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500">السكان</p>
+                    <p className="text-lg font-bold text-slate-900">
                       {dossier.population.toLocaleString("ar-DZ")}
                     </p>
                   </div>
-                  <div className="rounded-xl bg-zinc-50 p-3">
-                    <p className="text-xs text-zinc-500">العائلات</p>
-                    <p className="text-lg font-bold">
+                  <div className="rounded-xl bg-slate-50 p-3">
+                    <p className="text-xs text-slate-500">العائلات</p>
+                    <p className="text-lg font-bold text-slate-900">
                       {dossier.totalFamilies.toLocaleString("ar-DZ")}
                     </p>
                   </div>
                   <div className="col-span-2 rounded-xl bg-red-50 p-3">
-                    <p className="text-xs text-red-600">عائلات متضررة</p>
+                    <p className="text-xs font-medium text-red-600">
+                      عائلات متضررة
+                    </p>
                     <p className="text-lg font-bold text-red-700">
                       {dossier.affectedFamilies.toLocaleString("ar-DZ")} /{" "}
                       {dossier.totalFamilies.toLocaleString("ar-DZ")}
                     </p>
                   </div>
                 </div>
+                <div className="mt-4 text-center">
+                  <DamageRing percent={dossier.damagePercent} />
+                </div>
               </section>
 
-              <section className="text-center">
-                <h3 className="mb-3 text-sm font-semibold text-zinc-800">
-                  نسبة الأضرار
-                </h3>
-                <DamageRing percent={dossier.damagePercent} />
-              </section>
-
-              <section>
-                <h3 className="mb-3 text-sm font-semibold text-zinc-800">
-                  حالة الطرق
-                </h3>
-                <StatusBadge
-                  label={roadLabel.ar}
-                  tone={roadTone(dossier.roadPassability)}
-                />
-                <p className="mt-1 text-xs text-zinc-500">{roadLabel.fr}</p>
-              </section>
-
-              <section>
-                <h3 className="mb-3 text-sm font-semibold text-zinc-800">
+              <section className={cn(premiumCardClass, "space-y-2 p-4")}>
+                <h3 className="text-sm font-semibold text-slate-800">
                   البنية التحتية
                 </h3>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between rounded-xl border border-zinc-200 p-3">
-                    <div className="flex items-center gap-2">
-                      <Droplets className="h-4 w-4 text-blue-600" />
-                      <span className="text-sm">الماء</span>
-                    </div>
-                    <StatusBadge
-                      label={waterLabel.ar}
-                      tone={infrastructureTone(dossier.waterStatus)}
-                    />
+                <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-white p-3">
+                  <div className="flex items-center gap-2">
+                    <Droplets className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm">الماء</span>
                   </div>
-                  <div className="flex items-center justify-between rounded-xl border border-zinc-200 p-3">
-                    <div className="flex items-center gap-2">
-                      <Zap className="h-4 w-4 text-amber-500" />
-                      <span className="text-sm">الكهرباء</span>
-                    </div>
-                    <StatusBadge
-                      label={electricityLabel.ar}
-                      tone={infrastructureTone(dossier.electricityStatus)}
-                    />
+                  <StatusBadge
+                    label={waterLabel.ar}
+                    tone={infrastructureTone(dossier.waterStatus)}
+                  />
+                </div>
+                <div className="flex items-center justify-between rounded-xl border border-slate-200/80 bg-white p-3">
+                  <div className="flex items-center gap-2">
+                    <Zap className="h-4 w-4 text-amber-500" />
+                    <span className="text-sm">الكهرباء</span>
                   </div>
+                  <StatusBadge
+                    label={electricityLabel.ar}
+                    tone={infrastructureTone(dossier.electricityStatus)}
+                  />
                 </div>
               </section>
 
-              <section className="rounded-xl border border-emerald-200 bg-emerald-50 p-4">
+              <section
+                className={cn(
+                  premiumCardClass,
+                  "border-emerald-200/80 bg-emerald-50/80 p-4",
+                )}
+              >
                 <h3 className="mb-2 text-sm font-semibold text-emerald-900">
-                  منسق محلي
+                  جهة التنسيق المباشرة
                   {dossier.coordinator.verified ? " ✓ موثّق" : ""}
                 </h3>
-                <p className="font-medium text-zinc-900">
+                <p className="font-semibold text-slate-900">
                   {dossier.coordinator.name_ar}
                 </p>
-                <p className="text-sm text-zinc-600">
-                  {dossier.coordinator.name}
-                </p>
-                <div className="mt-3 flex gap-2">
-                  <a
-                    href={coordinatorTel}
-                    className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-white py-2 text-sm font-medium text-emerald-800 shadow-sm"
-                  >
-                    <Phone className="h-4 w-4" />
-                    اتصال
-                  </a>
-                  {coordinatorWhatsApp ? (
-                    <a
-                      href={coordinatorWhatsApp}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="flex flex-1 items-center justify-center gap-1 rounded-lg bg-[#25D366] py-2 text-sm font-medium text-white"
-                    >
-                      واتساب
-                    </a>
-                  ) : null}
-                </div>
+                <ContactActionButtons
+                  phone={dossier.coordinator.phone}
+                  whatsappUrl={coordinatorWhatsApp}
+                  className="mt-3"
+                />
               </section>
             </div>
           ) : (
             <div className="space-y-4">
-              <section>
-                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-zinc-800">
+              <section className={cn(premiumCardClass, "p-4")}>
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
                   <Stethoscope className="h-4 w-4" />
                   عيادات بيطرية قريبة
                 </h3>
                 <ul className="space-y-2">
+                  {veterinary.length === 0 ? (
+                    <li className="text-xs text-slate-500">
+                      لا توجد عيادات بيطرية مسجّلة في النطاق القريب.
+                    </li>
+                  ) : null}
                   {veterinary.map((facility) => (
                     <li
                       key={facility.id}
-                      className="rounded-xl border border-zinc-200 p-3"
+                      className="rounded-xl border border-slate-200/80 bg-white p-3"
                     >
-                      <p className="font-medium">{facility.name_ar}</p>
-                      <p className="text-xs text-zinc-500">{facility.name}</p>
-                      <a
-                        href={`tel:${facility.phone}`}
-                        className="mt-2 inline-flex text-sm font-semibold text-emerald-700"
-                      >
-                        📞 {facility.phone}
-                      </a>
+                      <p className="font-medium text-slate-900">
+                        {facility.name_ar}
+                      </p>
+                      <ContactActionButtons
+                        phone={facility.phone}
+                        whatsappUrl={buildWhatsAppUrl(
+                          facility.phone,
+                          `السلام، نحتاج مساعدة بيطرية في ${dossier.name_ar}.`,
+                        )}
+                        className="mt-2"
+                        compact
+                      />
                     </li>
                   ))}
                 </ul>
               </section>
 
-              <section>
-                <h3 className="mb-2 flex items-center gap-2 text-sm font-semibold text-zinc-800">
+              <section className={cn(premiumCardClass, "p-4")}>
+                <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold text-slate-800">
                   <Shield className="h-4 w-4" />
                   الحماية المدنية
                 </h3>
                 <ul className="space-y-2">
+                  {civilProtection.length === 0 ? (
+                    <li className="text-xs text-slate-500">
+                      لا توجد وحدات حماية مدنية قريبة مسجّلة.
+                    </li>
+                  ) : null}
                   {civilProtection.map((facility) => (
                     <li
                       key={facility.id}
-                      className="rounded-xl border border-zinc-200 p-3"
+                      className="rounded-xl border border-slate-200/80 bg-white p-3"
                     >
-                      <p className="font-medium">{facility.name_ar}</p>
-                      <p className="text-xs text-zinc-500">{facility.name}</p>
-                      <a
-                        href={`tel:${facility.phone}`}
-                        className="mt-2 inline-flex text-sm font-bold text-red-700"
-                      >
-                        🚨 {facility.phone}
-                      </a>
+                      <p className="font-medium text-slate-900">
+                        {facility.name_ar}
+                      </p>
+                      <ContactActionButtons
+                        phone={facility.phone}
+                        whatsappUrl={buildWhatsAppUrl(
+                          facility.phone,
+                          `نداء استغاثة — ${dossier.name_ar}`,
+                        )}
+                        className="mt-2"
+                        compact
+                      />
                     </li>
                   ))}
                 </ul>

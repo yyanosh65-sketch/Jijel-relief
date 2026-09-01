@@ -8,7 +8,8 @@
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-cairo), "Segoe UI", Tahoma, sans-serif;
+  --font-sans: var(--font-readex), var(--font-cairo), "Segoe UI", Tahoma, sans-serif;
+  --font-display: var(--font-cairo), var(--font-readex), "Segoe UI", Tahoma, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -37,7 +38,7 @@ body {
 }
 
 .leaflet-popup {
-  z-index: 1100 !important;
+  z-index: 2000 !important;
 }
 
 .leaflet-pane.leaflet-marker-pane {
@@ -45,7 +46,15 @@ body {
 }
 
 .leaflet-pane.leaflet-popup-pane {
-  z-index: 1100;
+  z-index: 2000;
+}
+
+.leaflet-pane.leaflet-map-pane {
+  z-index: 400;
+}
+
+.leaflet-pane.leaflet-tile-pane {
+  z-index: 200;
 }
 
 .sos-floating-button {
