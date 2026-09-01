@@ -1,4 +1,5 @@
 @import "tailwindcss";
+@plugin "@tailwindcss/typography";
 
 :root {
   --background: #ffffff;
@@ -170,4 +171,68 @@ textarea::placeholder {
     box-shadow: 0 0 0 10px rgba(220, 38, 38, 0);
     transform: scale(1.08);
   }
+}
+
+/* Agent copilot markdown (RTL) */
+.copilot-markdown {
+  max-width: none;
+}
+
+.copilot-markdown :where(h1, h2, h3, h4) {
+  color: #0f172a;
+  font-weight: 700;
+  margin-top: 0.75rem;
+  margin-bottom: 0.35rem;
+}
+
+.copilot-markdown :where(p) {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+}
+
+.copilot-markdown :where(ul, ol) {
+  margin-top: 0.35rem;
+  margin-bottom: 0.35rem;
+  padding-right: 1.25rem;
+  padding-left: 0;
+  list-style-position: outside;
+}
+
+.copilot-markdown :where(li) {
+  margin-top: 0.15rem;
+  margin-bottom: 0.15rem;
+}
+
+.copilot-markdown :where(table) {
+  width: 100%;
+  margin: 0.75rem 0;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  background: #f8fafc;
+  border-radius: 0.5rem;
+  overflow: hidden;
+}
+
+.copilot-markdown :where(th, td) {
+  border: 1px solid #e2e8f0;
+  padding: 0.45rem 0.6rem;
+  text-align: right;
+}
+
+.copilot-markdown :where(th) {
+  background: #f1f5f9;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.copilot-markdown :where(strong) {
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.copilot-markdown :where(code) {
+  background: #f1f5f9;
+  border-radius: 0.25rem;
+  padding: 0.1rem 0.35rem;
+  font-size: 0.8em;
 }

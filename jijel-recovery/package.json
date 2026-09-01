@@ -17,6 +17,7 @@
   "dependencies": {
     "@ai-sdk/google": "^4.0.59",
     "@ai-sdk/openai": "^4.0.53",
+    "@tailwindcss/typography": "^0.5.20",
     "@types/leaflet": "^1.9.22",
     "ai": "^7.0.87",
     "clsx": "^2.1.1",
@@ -30,6 +31,8 @@
     "react": "19.2.8",
     "react-dom": "19.2.8",
     "react-leaflet": "^5.0.0",
+    "react-markdown": "^10.1.0",
+    "remark-gfm": "^4.0.1",
     "tailwind-merge": "^3.6.0",
     "zod": "^4.5.4"
   },
