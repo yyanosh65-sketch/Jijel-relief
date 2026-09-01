@@ -2,6 +2,7 @@
 
 import SiteNav from "@/components/SiteNav";
 import FeedImporterButton from "@/components/admin/FeedImporterButton";
+import AgentCopilot from "@/components/admin/AgentCopilot";
 import SosAlertButton from "@/components/emergency/SosAlertButton";
 import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
 import RegisterHelperButton from "@/components/helpers/RegisterHelperButton";
@@ -23,6 +24,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       {children}
+      <AgentCopilot />
       <SosAlertButton />
     </>
   );

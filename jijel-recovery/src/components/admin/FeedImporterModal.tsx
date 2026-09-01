@@ -18,35 +18,31 @@ type AgentToolResult = {
   output: unknown;
 };
 
-type AgentSavedAlert = {
-  success: true;
-  alertId: number;
-  assignedLocation: {
-    commune: string;
-    commune_ar: string;
-    daira: string;
-    daira_ar: string;
-    lat: number;
-    lng: number;
-  };
-  commune: string;
-  villageName: string;
-  phone: string;
-  damageType: string;
-  description: string;
-  requires4x4: boolean;
-};
-
 type AgentDispatch = {
-  alertId: number;
   shareUrl: string;
   whatsappTargets: { name: string; phone: string; whatsappUrl: string }[];
+};
+
+type AgentStructured = {
+  entityType: string | null;
+  title: string | null;
+  commune: string | null;
+  communeAr: string | null;
+  daira: string | null;
+  village: string | null;
+  phone: string | null;
+  urgency: string | null;
+  lat: number | null;
+  lng: number | null;
+  recordId: number | null;
+  recordKind: "aid_need" | "sos_alert" | null;
 };
 
 type AgentApiResponse = {
   text?: string;
   toolResults?: AgentToolResult[];
-  savedAlert?: AgentSavedAlert | null;
+  structured?: AgentStructured;
+  saved?: { kind: "aid_need" | "sos_alert"; id: number } | null;
   dispatch?: AgentDispatch | null;
   error?: string;
 };
@@ -87,7 +83,7 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
     setError(null);
 
     try {
-      const response = await fetch("/api/agent", {
+      const response = await fetch("/api/agent/process-feed", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ postText: trimmed }),
@@ -157,7 +153,8 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
     });
   };
 
-  const savedAlert = agentResponse?.savedAlert ?? null;
+  const structured = agentResponse?.structured ?? null;
+  const savedRecord = agentResponse?.saved ?? null;
   const dispatch = agentResponse?.dispatch ?? null;
   const toolResults = agentResponse?.toolResults ?? [];
 
@@ -253,29 +250,40 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
             </div>
           ) : null}
 
-          {savedAlert ? (
+          {structured?.recordId ? (
             <div className="space-y-3 rounded-xl border border-emerald-200 bg-emerald-50 p-3">
               <p className="text-sm font-semibold text-emerald-900">
-                ✓ تم تثبيت النداء #{savedAlert.alertId} عبر الوكيل الذكي
+                ✓ تم تثبيت{" "}
+                {structured.recordKind === "sos_alert" ? "نداء SOS" : "احتياج"}{" "}
+                #{structured.recordId} عبر الوكيل الذكي
               </p>
               <dl className="grid gap-2 text-sm">
                 <PreviewRow
-                  label="البلدية"
-                  value={`${savedAlert.assignedLocation.commune_ar} (${savedAlert.assignedLocation.commune})`}
+                  label="النوع"
+                  value={
+                    structured.entityType === "sos_alert"
+                      ? "نداء استغاثة"
+                      : "احتياج إغاثة"
+                  }
                 />
-                <PreviewRow label="الدائرة" value={savedAlert.assignedLocation.daira_ar} />
-                <PreviewRow label="الدوار" value={savedAlert.villageName} />
-                <PreviewRow label="الهاتف" value={savedAlert.phone} />
-                <PreviewRow label="نوع الضرر" value={savedAlert.damageType} />
+                <PreviewRow label="العنوان" value={structured.title ?? "—"} />
                 <PreviewRow
-                  label="المسلك"
-                  value={savedAlert.requires4x4 ? "طريق جبلي 4x4" : "سالك"}
+                  label="البلدية"
+                  value={
+                    structured.communeAr
+                      ? `${structured.communeAr} (${structured.commune})`
+                      : structured.commune ?? "—"
+                  }
                 />
+                <PreviewRow label="الدائرة" value={structured.daira ?? "—"} />
+                <PreviewRow label="الدوار" value={structured.village ?? "—"} />
+                <PreviewRow label="الهاتف" value={structured.phone ?? "—"} />
+                <PreviewRow label="الإلحاح" value={structured.urgency ?? "—"} />
               </dl>
             </div>
           ) : null}
 
-          {localPreview && !savedAlert ? (
+          {localPreview && !savedRecord ? (
             <div className="space-y-3 rounded-xl border border-emerald-100 bg-emerald-50/60 p-3">
               <p className="text-xs font-bold uppercase tracking-wide text-emerald-800">
                 تحليل محلي فوري (احتياطي)

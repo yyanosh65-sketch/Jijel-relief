@@ -1,0 +1,278 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import { Bot, Loader2, MessageSquare, X } from "lucide-react";
+
+import { cn } from "@/lib/utils";
+
+type ChatMessage = {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  toolResults?: Array<{ toolName: string; output: unknown }>;
+};
+
+type AgentChatResponse = {
+  text?: string;
+  toolResults?: Array<{ toolName: string; output: unknown }>;
+  error?: string;
+};
+
+const STARTER_PROMPTS = [
+  "ما أكثر المناطق عجزاً في الوقت الحالي؟",
+  "أين نوجّه قافلة عتاد فلاحي قادمة من ميلة؟",
+  "كم عدد نداءات SOS النشطة الآن؟",
+];
+
+export default function AgentCopilot() {
+  const [open, setOpen] = useState(false);
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      id: "welcome",
+      role: "assistant",
+      content:
+        "مرحباً — أنا مساعد إغاثة جيجل. اسألني عن إحصائيات الاحتياجات، توجيه القوافل، أو تحليل نداء ميداني.",
+    },
+  ]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [open]);
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }, [messages, isLoading, open]);
+
+  async function sendMessage(text: string) {
+    const trimmed = text.trim();
+    if (!trimmed || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      id: `user-${Date.now()}`,
+      role: "user",
+      content: trimmed,
+    };
+
+    setMessages((current) => [...current, userMessage]);
+    setInput("");
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/agent/chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: trimmed,
+          messages: messages
+            .filter((message) => message.id !== "welcome")
+            .map((message) => ({
+              role: message.role,
+              content: message.content,
+            })),
+        }),
+      });
+
+      const payload = (await response.json()) as AgentChatResponse;
+
+      if (!response.ok) {
+        throw new Error(payload.error ?? "تعذّر الاتصال بالوكيل.");
+      }
+
+      setMessages((current) => [
+        ...current,
+        {
+          id: `assistant-${Date.now()}`,
+          role: "assistant",
+          content: payload.text?.trim() || "تم تنفيذ الطلب.",
+          toolResults: payload.toolResults,
+        },
+      ]);
+    } catch (chatError) {
+      setError(
+        chatError instanceof Error
+          ? chatError.message
+          : "تعذّر الاتصال بالوكيل.",
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
+  return (
+    <>
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="fixed bottom-24 right-6 z-[3150] inline-flex items-center gap-2 rounded-full bg-violet-700 px-4 py-3 text-sm font-bold text-white shadow-lg shadow-violet-500/30 transition hover:-translate-y-0.5 hover:bg-violet-800 sm:bottom-6 sm:right-24"
+        aria-label="فتح مساعد الإغاثة الذكي"
+      >
+        <Bot className="h-5 w-5" />
+        <span className="hidden sm:inline">مساعد الإغاثة</span>
+      </button>
+
+      {open ? (
+        <div
+          className="fixed inset-0 z-[3600] flex justify-end bg-slate-950/50 backdrop-blur-sm"
+          onClick={() => setOpen(false)}
+        >
+          <aside
+            dir="rtl"
+            className="flex h-full w-full max-w-md flex-col border-l border-slate-200 bg-white shadow-2xl"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <header className="flex items-center justify-between border-b border-slate-100 px-4 py-4">
+              <div>
+                <h2 className="flex items-center gap-2 text-base font-bold text-slate-900">
+                  <Bot className="h-5 w-5 text-violet-700" />
+                  مساعد إغاثة جيجل
+                </h2>
+                <p className="mt-1 text-xs text-slate-500">
+                  إحصائيات، توجيه قوافل، وتحليل ميداني باللغة الطبيعية
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="rounded-full p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-600"
+                aria-label="إغلاق"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </header>
+
+            <div ref={scrollRef} className="flex-1 space-y-3 overflow-y-auto p-4">
+              {messages.map((message) => (
+                <div
+                  key={message.id}
+                  className={cn(
+                    "max-w-[92%] rounded-2xl px-3 py-2.5 text-sm leading-relaxed",
+                    message.role === "user"
+                      ? "mr-auto bg-violet-700 text-white"
+                      : "ml-auto border border-slate-200 bg-slate-50 text-slate-800",
+                  )}
+                >
+                  <p className="whitespace-pre-wrap">{message.content}</p>
+                  {message.toolResults?.map((toolResult, index) => (
+                    <ToolResultCard
+                      key={`${message.id}-${toolResult.toolName}-${index}`}
+                      toolResult={toolResult}
+                    />
+                  ))}
+                </div>
+              ))}
+
+              {isLoading ? (
+                <div className="ml-auto flex max-w-[92%] items-center gap-2 rounded-2xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-600">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  جاري التحليل…
+                </div>
+              ) : null}
+
+              {error ? (
+                <p className="rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">
+                  {error}
+                </p>
+              ) : null}
+            </div>
+
+            <div className="border-t border-slate-100 p-4">
+              <div className="mb-3 flex flex-wrap gap-2">
+                {STARTER_PROMPTS.map((prompt) => (
+                  <button
+                    key={prompt}
+                    type="button"
+                    onClick={() => void sendMessage(prompt)}
+                    className="rounded-full border border-violet-100 bg-violet-50 px-3 py-1 text-[11px] font-medium text-violet-800 hover:bg-violet-100"
+                  >
+                    {prompt}
+                  </button>
+                ))}
+              </div>
+
+              <form
+                className="flex gap-2"
+                onSubmit={(event) => {
+                  event.preventDefault();
+                  void sendMessage(input);
+                }}
+              >
+                <input
+                  value={input}
+                  onChange={(event) => setInput(event.target.value)}
+                  placeholder="اسأل عن عجز المناطق، توجيه قافلة، أو نداء SOS…"
+                  className="min-h-11 flex-1 rounded-xl border border-slate-200 bg-slate-50 px-3 text-sm text-slate-900 focus:border-violet-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-violet-500/20"
+                />
+                <button
+                  type="submit"
+                  disabled={!input.trim() || isLoading}
+                  className="inline-flex items-center justify-center rounded-xl bg-violet-700 px-4 text-white disabled:opacity-50"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                </button>
+              </form>
+            </div>
+          </aside>
+        </div>
+      ) : null}
+    </>
+  );
+}
+
+function ToolResultCard({
+  toolResult,
+}: {
+  toolResult: { toolName: string; output: unknown };
+}) {
+  const output =
+    toolResult.output && typeof toolResult.output === "object"
+      ? (toolResult.output as Record<string, unknown>)
+      : null;
+
+  return (
+    <div className="mt-2 rounded-xl border border-white/60 bg-white/90 p-2 text-[11px] text-slate-700">
+      <p className="font-semibold text-violet-800">{toolResult.toolName}</p>
+      {toolResult.toolName === "getReliefStats" && output ? (
+        <ul className="mt-1 space-y-0.5">
+          <li>احتياجات مفتوحة: {String(output.openNeeds)}</li>
+          <li>نداءات SOS نشطة: {String(output.activeSosAlerts)}</li>
+          <li>قوافل قادمة: {String(output.incomingConvoys)}</li>
+        </ul>
+      ) : null}
+      {toolResult.toolName === "suggestConvoyDestination" &&
+      output?.found === true ? (
+        <ul className="mt-1 space-y-0.5">
+          <li>
+            الوجهة: {String(output.communeAr ?? output.commune)} — دائرة{" "}
+            {String(output.dairaAr ?? output.daira)}
+          </li>
+          <li>العجز: {String(output.deficitUnits)} وحدة</li>
+          <li>المدخل المقترح: {String(output.recommendedEntryPointAr)}</li>
+        </ul>
+      ) : null}
+      {toolResult.toolName === "geoLocateVillage" && output ? (
+        <p className="mt-1">
+          {String(output.matchedLabel)} ({String(output.lat)}, {String(output.lng)})
+        </p>
+      ) : null}
+      {toolResult.toolName === "extractAidNeed" && output ? (
+        <p className="mt-1">
+          {String(output.title)} — {String(output.commune)} —{" "}
+          {String(output.urgency)}
+        </p>
+      ) : null}
+    </div>
+  );
+}
