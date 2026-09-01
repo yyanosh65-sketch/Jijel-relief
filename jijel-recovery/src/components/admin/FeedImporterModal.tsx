@@ -8,6 +8,7 @@ import {
   type ClassifiedFeedPost,
   type FeedFlowBadge,
 } from "@/lib/feed-flow-classifier";
+import MonitoredSourcesList from "@/components/admin/MonitoredSourcesList";
 import { cn } from "@/lib/utils";
 
 const FeedPinPreview = dynamic(
@@ -82,7 +83,15 @@ const RECORD_KIND_LABELS: Record<string, string> = {
   incoming_convoy: "قافلة قادمة",
 };
 
+type FeedImporterTab = "import" | "sources";
+
+const FEED_IMPORTER_TABS: Array<{ id: FeedImporterTab; label: string }> = [
+  { id: "import", label: "⚡ استيراد منشور" },
+  { id: "sources", label: "📡 مصادر المراقبة" },
+];
+
 export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
+  const [activeTab, setActiveTab] = useState<FeedImporterTab>("import");
   const [rawInput, setRawInput] = useState("");
   const [instantPreview, setInstantPreview] = useState<ClassifiedFeedPost | null>(
     null,
@@ -183,6 +192,7 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
     setAgentResponse(null);
     setError(null);
     setIsAgentLoading(false);
+    setActiveTab("import");
     onClose();
   };
 
@@ -227,31 +237,63 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
       onClick={handleClose}
     >
       <div
-        className="max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl"
+        className={cn(
+          "max-h-[92vh] w-full overflow-y-auto rounded-2xl border border-slate-200 bg-white shadow-2xl",
+          activeTab === "sources" ? "max-w-xl" : "max-w-lg",
+        )}
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 z-10 flex items-start justify-between gap-3 border-b border-slate-100 bg-white px-4 py-4">
-          <div>
-            <h2
-              id="feed-importer-title"
-              className="text-lg font-bold text-slate-900"
+        <div className="sticky top-0 z-10 border-b border-slate-100 bg-white px-4 py-4">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2
+                id="feed-importer-title"
+                className="text-lg font-bold text-slate-900"
+              >
+                {activeTab === "import"
+                  ? "⚡ استيراد نداء من فيسبوك"
+                  : "📡 مراقبة المصادر الاجتماعية"}
+              </h2>
+              <p className="mt-1 text-xs text-slate-500">
+                {activeTab === "import"
+                  ? "الصق المنشور — يُصنّف فوراً ويُثبّت تلقائياً في قاعدة البيانات."
+                  : "صفحات ومجموعات فيسبوك المحلية المراقَبة في ولاية جيجل."}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+              aria-label="إغلاق"
             >
-              ⚡ استيراد نداء من فيسبوك
-            </h2>
-            <p className="mt-1 text-xs text-slate-500">
-              الصق المنشور — يُصنّف فوراً ويُثبّت تلقائياً في قاعدة البيانات.
-            </p>
+              ✕
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-lg p-2 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
-            aria-label="إغلاق"
-          >
-            ✕
-          </button>
+
+          <div className="mt-3 flex gap-1 rounded-xl bg-slate-100 p-1">
+            {FEED_IMPORTER_TABS.map((tab) => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "flex-1 rounded-lg px-3 py-2 text-xs font-bold transition",
+                  activeTab === tab.id
+                    ? "bg-white text-slate-900 shadow-sm"
+                    : "text-slate-600 hover:text-slate-900",
+                )}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
         </div>
 
+        {activeTab === "sources" ? (
+          <div className="p-4">
+            <MonitoredSourcesList />
+          </div>
+        ) : (
         <div className="space-y-4 p-4">
           <div>
             <label
@@ -463,6 +505,7 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
             </button>
           </div>
         </div>
+        )}
       </div>
     </div>
   );
