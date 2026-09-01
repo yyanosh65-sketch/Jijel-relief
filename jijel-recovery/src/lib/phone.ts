@@ -25,15 +25,23 @@ export function formatWhatsAppPhone(phone: string): string {
   return digits;
 }
 
+export function buildWhatsAppLink(phone: string): string | null {
+  const formatted = formatWhatsAppPhone(phone);
+  if (formatted.length < 10) {
+    return null;
+  }
+  return `https://wa.me/${formatted}`;
+}
+
 export function buildWhatsAppUrl(
   beneficiaryPhone: string,
   message: string,
 ): string | null {
-  const formattedPhone = formatWhatsAppPhone(beneficiaryPhone);
+  const base = buildWhatsAppLink(beneficiaryPhone);
 
-  if (!formattedPhone) {
+  if (!base) {
     return null;
   }
 
-  return `https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`;
+  return `${base}?text=${encodeURIComponent(message)}`;
 }

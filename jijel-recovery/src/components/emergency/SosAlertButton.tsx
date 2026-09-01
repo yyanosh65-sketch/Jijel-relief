@@ -1,9 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Loader2, LocateFixed, X } from "lucide-react";
 
-import { submitSosAlert } from "@/actions/intelligence";
+import { submitUrgentAlert } from "@/actions/emergency";
+import NearestHelpBox from "@/components/emergency/NearestHelpBox";
+import SosMediaCapture, {
+  type SosMediaPayload,
+} from "@/components/emergency/SosMediaCapture";
 import { getCommuneCoordinates, getCommunesByDaira, getDairas } from "@/lib/locations";
 import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
 import { cn } from "@/lib/utils";
@@ -32,9 +36,16 @@ const INITIAL_FORM: SosFormState = {
   lng: "",
 };
 
+const EMPTY_MEDIA: SosMediaPayload = {
+  mediaUrls: [],
+  voiceNoteData: null,
+};
+
 export default function SosAlertButton() {
   const [isOpen, setIsOpen] = useState(false);
   const [form, setForm] = useState<SosFormState>(INITIAL_FORM);
+  const [mediaPayload, setMediaPayload] = useState<SosMediaPayload>(EMPTY_MEDIA);
+  const [hasGpsFix, setHasGpsFix] = useState(false);
   const [isCapturingGps, setIsCapturingGps] = useState(false);
   const [gpsMessage, setGpsMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -46,6 +57,10 @@ export default function SosAlertButton() {
     () => (form.daira ? getCommunesByDaira(form.daira) : []),
     [form.daira],
   );
+
+  const handleMediaChange = useCallback((payload: SosMediaPayload) => {
+    setMediaPayload(payload);
+  }, []);
 
   useEffect(() => {
     if (!isOpen) {
@@ -72,10 +87,12 @@ export default function SosAlertButton() {
           lat: position.coords.latitude.toFixed(6),
           lng: position.coords.longitude.toFixed(6),
         }));
+        setHasGpsFix(true);
         setGpsMessage("تم تحديد موقعك بدقة عبر GPS.");
         setIsCapturingGps(false);
       },
       () => {
+        setHasGpsFix(false);
         setGpsMessage("تعذر GPS — اختر البلدية والقرية أدناه.");
         setIsCapturingGps(false);
       },
@@ -93,13 +110,9 @@ export default function SosAlertButton() {
       lng: coordinates ? coordinates.lng.toFixed(6) : current.lng,
     }));
 
-    if (coordinates && !currentHasGps()) {
+    if (coordinates && !hasGpsFix) {
       setGpsMessage("تم استخدام إحداثيات البلدية كبديل.");
     }
-  }
-
-  function currentHasGps(): boolean {
-    return Boolean(form.lat && form.lng);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -118,7 +131,7 @@ export default function SosAlertButton() {
 
     setIsSubmitting(true);
 
-    const result = await submitSosAlert({
+    const result = await submitUrgentAlert({
       emergencyType: form.emergencyType,
       description: form.description,
       reporterName: form.reporterName,
@@ -128,6 +141,8 @@ export default function SosAlertButton() {
       village: form.village || undefined,
       lat: Number(form.lat),
       lng: Number(form.lng),
+      mediaUrls: mediaPayload.mediaUrls,
+      voiceNoteData: mediaPayload.voiceNoteData ?? undefined,
     });
 
     setIsSubmitting(false);
@@ -143,6 +158,8 @@ export default function SosAlertButton() {
   function handleClose() {
     setIsOpen(false);
     setForm(INITIAL_FORM);
+    setMediaPayload(EMPTY_MEDIA);
+    setHasGpsFix(false);
     setError(null);
     setGpsMessage(null);
     setIsSuccess(false);
@@ -284,6 +301,13 @@ export default function SosAlertButton() {
                   </select>
                 </div>
 
+                <NearestHelpBox
+                  lat={form.lat}
+                  lng={form.lng}
+                  commune={form.commune}
+                  hasGps={hasGpsFix}
+                />
+
                 <input
                   type="text"
                   placeholder="القرية / الحي (اختياري)"
@@ -310,6 +334,8 @@ export default function SosAlertButton() {
                   }
                   className="w-full rounded-xl border border-zinc-300 px-3 py-2 text-sm"
                 />
+
+                <SosMediaCapture onChange={handleMediaChange} />
 
                 <input
                   required
@@ -348,7 +374,7 @@ export default function SosAlertButton() {
                   {isSubmitting ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
-                    "إرسال النداء فوراً"
+                    "إرسال نداء الاستغاثة فوراً"
                   )}
                 </button>
               </form>

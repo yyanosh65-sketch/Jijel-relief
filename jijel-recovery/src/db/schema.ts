@@ -113,7 +113,7 @@ export const pledges = pgTable("pledges", {
     .notNull(),
 });
 
-export const sosAlerts = pgTable("sos_alerts", {
+export const urgentAlerts = pgTable("urgent_alerts", {
   id: serial("id").primaryKey(),
   emergencyType: sosEmergencyTypeEnum("emergency_type").notNull(),
   description: text("description").notNull(),
@@ -124,10 +124,15 @@ export const sosAlerts = pgTable("sos_alerts", {
   village: text("village"),
   coordinates: geographyPoint("coordinates").notNull(),
   status: sosAlertStatusEnum("status").notNull().default("active"),
+  mediaUrls: text("media_urls").array().notNull().default([]),
+  voiceNoteData: text("voice_note_data"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
 });
+
+/** @deprecated Use urgentAlerts — kept for existing imports */
+export const sosAlerts = urgentAlerts;
 
 export const emergencyFacilities = pgTable("emergency_facilities", {
   id: serial("id").primaryKey(),
@@ -173,3 +178,4 @@ export type SosEmergencyType = (typeof sosEmergencyTypeEnum.enumValues)[number];
 export type SosAlertStatus = (typeof sosAlertStatusEnum.enumValues)[number];
 export type FacilityType = (typeof facilityTypeEnum.enumValues)[number];
 export type EmergencyFacility = typeof emergencyFacilities.$inferSelect;
+export type UrgentAlert = typeof urgentAlerts.$inferSelect;
