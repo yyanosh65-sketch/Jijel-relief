@@ -4,11 +4,7 @@ import type { ReactNode } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 
 import { MapClickHandler } from "@/components/map/MapClickHandler";
-import {
-  DEFAULT_MAP_ZOOM,
-  JIJEL_CENTER,
-  MAP_TILE_LAYER,
-} from "@/lib/map-utils";
+import { DEFAULT_MAP_ZOOM, JIJEL_CENTER } from "@/lib/map-utils";
 
 import "leaflet/dist/leaflet.css";
 
@@ -33,9 +29,9 @@ export default function LeafletMap({
       scrollWheelZoom
     >
       <TileLayer
-        attribution={MAP_TILE_LAYER.attribution}
-        url={MAP_TILE_LAYER.url}
-        subdomains={MAP_TILE_LAYER.subdomains}
+        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        maxZoom={19}
       />
       {onMapClick ? (
         <MapClickHandler enabled={pinDropMode} onMapClick={onMapClick} />

@@ -9,10 +9,10 @@ export const JIJEL_CENTER = {
 export const DEFAULT_MAP_ZOOM = 11;
 
 export const MAP_TILE_LAYER = {
-  url: "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png",
+  url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   attribution:
-    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>',
-  subdomains: "abcd",
+    '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+  maxZoom: 19,
 } as const;
 
 export type MapCategoryId = "olive_trees" | "livestock" | "shelter" | "tools";

@@ -49,7 +49,7 @@ export default function FeedPinPreview({
         <TileLayer
           attribution={MAP_TILE_LAYER.attribution}
           url={MAP_TILE_LAYER.url}
-          subdomains={MAP_TILE_LAYER.subdomains}
+          maxZoom={MAP_TILE_LAYER.maxZoom}
         />
         <CircleMarker
           center={[lat, lng]}
