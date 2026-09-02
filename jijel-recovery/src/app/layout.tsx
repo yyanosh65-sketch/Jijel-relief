@@ -17,9 +17,10 @@ const readexPro = Readex_Pro({
 });
 
 export const metadata: Metadata = {
-  title: "جيجل للتعافي",
+  title: "إغاثة جيجل | المنظومة الميدانية الموحدة (Jijel Relief)",
   description:
-    "منصة مجتمعية لتسجيل احتياجات إعادة الإعمار في ولاية جيجل — عاون وين تقدر.",
+    "منصة إغاثية موحدة لتنسيق القوافل، حصر الاحتياجات الميدانية، وسجل مخزون الجمعيات في ولاية جيجل.",
+  applicationName: "إغاثة جيجل",
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {

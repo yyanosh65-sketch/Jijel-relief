@@ -1,3 +1,5 @@
+import Logo from "@/components/ui/Logo";
+
 export function AppFooter() {
   return (
     <footer
@@ -6,13 +8,22 @@ export function AppFooter() {
     >
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgb(16_185_129_/_0.12),transparent_45%)]" />
       <div className="relative mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
-        <div className="flex flex-col items-center space-y-2 text-center md:items-start md:text-right">
+        <div className="flex flex-col items-center space-y-3 text-center md:items-start md:text-right">
+          <div className="flex items-center gap-3">
+            <Logo size={36} />
+            <div>
+              <p className="text-sm font-extrabold text-slate-200">إغاثة جيجل</p>
+              <p className="text-[11px] font-semibold text-emerald-400/90">
+                Jijel Relief
+              </p>
+            </div>
+          </div>
           <p className="text-sm font-semibold tracking-wide text-emerald-400">
             « وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَىٰ »
           </p>
           <p className="max-w-md text-xs leading-relaxed tracking-normal text-slate-500">
-            منصة الإغاثة والتنسيق الميداني الموحدة لولاية جيجل. مبادرة تقنية
-            تطوعية لتيسير وصول المساعدات ودعم الأهالي المتضررين.
+            منصة إغاثية موحدة لتنسيق القوافل، حصر الاحتياجات الميدانية، وسجل
+            مخزون الجمعيات في ولاية جيجل.
           </p>
         </div>
 
