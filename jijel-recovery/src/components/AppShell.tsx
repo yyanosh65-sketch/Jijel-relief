@@ -7,11 +7,12 @@ import SosAlertButton from "@/components/emergency/SosAlertButton";
 import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
 import CharityInventoryNavButton from "@/components/charity/CharityInventoryNavButton";
 import EmergencyAlertBanner from "@/components/layout/EmergencyAlertBanner";
+import { AppFooter } from "@/components/layout/AppFooter";
 import RegisterHelperButton from "@/components/helpers/RegisterHelperButton";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   return (
-    <>
+    <div className="flex min-h-full flex-1 flex-col">
       <header
         dir="rtl"
         className="sticky top-0 z-[2900] border-b border-slate-200/80 bg-white/90 backdrop-blur-md"
@@ -27,9 +28,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </header>
       <EmergencyAlertBanner />
-      {children}
+      <main className="flex-1">{children}</main>
+      <AppFooter />
       <AgentCopilot />
       <SosAlertButton />
-    </>
+    </div>
   );
 }
