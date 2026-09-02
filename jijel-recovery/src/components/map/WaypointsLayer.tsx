@@ -1,7 +1,8 @@
 "use client";
 
-import { Marker, Popup } from "react-leaflet";
+import { Marker } from "react-leaflet";
 
+import MapPopup from "@/components/map/MapPopup";
 import MapPopupShell from "@/components/map/MapPopupShell";
 import { WAYPOINT_TYPE_LABELS } from "@/lib/convoys";
 import type { ConvoyWaypoint } from "@/lib/convoy-waypoints";
@@ -81,13 +82,13 @@ export default function WaypointsLayer({
           icon={createWaypointMarkerIcon(waypoint.type)}
           zIndexOffset={500}
         >
-          <Popup>
+          <MapPopup>
             <WaypointPopupContent
               waypoint={waypoint}
               lat={waypointLat}
               lng={waypointLng}
             />
-          </Popup>
+          </MapPopup>
         </Marker>
         );
       })}

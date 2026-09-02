@@ -67,6 +67,8 @@ textarea::placeholder {
   border: 1px solid #e2e8f0;
   background: #ffffff;
   color: #0f172a;
+  max-height: 380px;
+  overflow-y: auto;
 }
 
 .leaflet-popup-content {
@@ -91,7 +93,7 @@ textarea::placeholder {
 }
 
 .leaflet-popup {
-  z-index: 1000 !important;
+  z-index: 700 !important;
 }
 
 .leaflet-pane.leaflet-marker-pane {
@@ -99,7 +101,7 @@ textarea::placeholder {
 }
 
 .leaflet-pane.leaflet-popup-pane {
-  z-index: 1000;
+  z-index: 700 !important;
 }
 
 .leaflet-pane.leaflet-map-pane {

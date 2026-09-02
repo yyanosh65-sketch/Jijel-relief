@@ -8,6 +8,13 @@ import { DEFAULT_MAP_ZOOM, JIJEL_CENTER } from "@/lib/map-utils";
 
 import "leaflet/dist/leaflet.css";
 
+/**
+ * Map UI stacking (see globals.css + MAP_UI_Z_INDEX):
+ * - Filter pills: z-[400]
+ * - Leaflet popup pane: z-[700]
+ * - Modals: z-[9999]
+ */
+
 type LeafletMapProps = {
   children?: ReactNode;
   className?: string;

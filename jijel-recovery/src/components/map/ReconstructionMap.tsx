@@ -5,7 +5,6 @@ import L from "leaflet";
 import { Loader2, MapPin } from "lucide-react";
 import {
   Marker,
-  Popup,
 } from "react-leaflet";
 
 import { createPledge } from "@/actions/pledges";
@@ -13,6 +12,7 @@ import type { MapIntelligenceData, SosMapAlert } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
 import LeafletMap from "@/components/map/LeafletMap";
 import MapClickReportModal from "@/components/map/MapClickReportModal";
+import MapPopup from "@/components/map/MapPopup";
 import MapPopupShell from "@/components/map/MapPopupShell";
 import MarkServedControls from "@/components/needs/MarkServedControls";
 import { translateNeedTitle } from "@/lib/need-display";
@@ -382,7 +382,7 @@ export default function ReconstructionMap({
 
   return (
     <div dir="rtl" className="relative h-full w-full">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] p-3 sm:p-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-[400] p-3 sm:p-4">
         <div
           className={cn(
             glassPanelClass,
@@ -506,7 +506,7 @@ export default function ReconstructionMap({
                   click: () => onVillageClick(pin.id),
                 }}
               >
-                <Popup>
+                <MapPopup>
                   <MapPopupShell
                     pointTypeLabel={
                       pin.type === "daira"
@@ -534,7 +534,7 @@ export default function ReconstructionMap({
                       فتح ملف القرية
                     </button>
                   </MapPopupShell>
-                </Popup>
+                </MapPopup>
               </Marker>
             );
             })
@@ -550,7 +550,7 @@ export default function ReconstructionMap({
                 position={[roadLat, roadLng]}
                 icon={createRoadMarkerIcon(road.passability)}
               >
-                <Popup>
+                <MapPopup>
                   <MapPopupShell
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.road}
                     title={road.name_ar}
@@ -563,7 +563,7 @@ export default function ReconstructionMap({
                     lat={roadLat}
                     lng={roadLng}
                   />
-                </Popup>
+                </MapPopup>
               </Marker>
             );
             })
@@ -586,7 +586,7 @@ export default function ReconstructionMap({
                 position={[facilityLat, facilityLng]}
                 icon={createFacilityMarkerIcon(facility.type)}
               >
-                <Popup>
+                <MapPopup>
                   <MapPopupShell
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.facility}
                     title={facility.name_ar}
@@ -600,7 +600,7 @@ export default function ReconstructionMap({
                       `السلام عليكم، نحتاج مساعدة من ${facility.name_ar}`,
                     )}
                   />
-                </Popup>
+                </MapPopup>
               </Marker>
             );
             })
@@ -617,7 +617,7 @@ export default function ReconstructionMap({
                 icon={markerIcons.sos}
                 zIndexOffset={1000}
               >
-                <Popup>
+                <MapPopup>
                   <MapPopupShell
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.sos}
                     title={`🚨 ${getSosLabel(alert.emergencyType)}`}
@@ -634,7 +634,7 @@ export default function ReconstructionMap({
                     lat={alertLat}
                     lng={alertLng}
                   />
-                </Popup>
+                </MapPopup>
               </Marker>
             );
             })
@@ -662,13 +662,13 @@ export default function ReconstructionMap({
                   icon={markerIcons[color]}
                   opacity={isSelected ? 1 : 0.92}
                 >
-                  <Popup>
+                  <MapPopup>
                     <NeedPopupContent
                       need={need}
                       onPledgeClick={onPledgeClick}
                       onPledgeSuccess={onPledgeSuccess}
                     />
-                  </Popup>
+                  </MapPopup>
                 </Marker>
               );
             })

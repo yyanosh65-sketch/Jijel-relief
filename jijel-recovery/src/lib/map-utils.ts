@@ -8,6 +8,12 @@ export const JIJEL_CENTER = {
 
 export const DEFAULT_MAP_ZOOM = 11;
 
+/** Map overlay stacking: filter bar (400) < popups (700) < modals (9999). */
+export const MAP_UI_Z_INDEX = {
+  filterBar: 400,
+  popupPane: 700,
+} as const;
+
 export const MAP_TILE_LAYER = {
   url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   attribution:
