@@ -1,9 +1,11 @@
-const CACHE_NAME = "jijel-relief-v1";
+const CACHE_NAME = "jijel-relief-v2";
 const OFFLINE_ASSETS = [
   "/",
   "/manifest.json",
   "/data/jijel-locations.json",
   "/icons/icon.svg",
+  "/icons/icon-192x192.png",
+  "/icons/badge-72x72.png",
 ];
 
 self.addEventListener("install", (event) => {
@@ -60,10 +62,6 @@ self.addEventListener("push", (event) => {
     title: "تنبيه طوارئ — إغاثة جيجل",
     body: "تم رصد حالة عاجلة في ولاية جيجل",
     url: "/map",
-    tag: "jijel-emergency",
-    needId: null,
-    lat: null,
-    lng: null,
     urgency: "critical",
   };
 
@@ -75,55 +73,26 @@ self.addEventListener("push", (event) => {
     }
   }
 
-  const notificationOptions = {
-    body: payload.body,
-    icon: "/icons/icon.svg",
-    badge: "/icons/icon.svg",
-    tag: payload.tag,
-    vibrate: [180, 80, 180, 80, 240],
-    requireInteraction: payload.urgency === "critical",
-    data: {
-      url: payload.url,
-      needId: payload.needId,
-      lat: payload.lat,
-      lng: payload.lng,
-    },
-    actions: [
-      {
-        action: "open-map",
-        title: "فتح على الخريطة",
-      },
-      {
-        action: "dismiss",
-        title: "لاحقاً",
-      },
-    ],
-    dir: "rtl",
-    lang: "ar",
-  };
-
   event.waitUntil(
-    self.registration.showNotification(payload.title, notificationOptions),
+    self.registration.showNotification(payload.title, {
+      body: payload.body,
+      icon: "/icons/icon-192x192.png",
+      badge: "/icons/badge-72x72.png",
+      tag: payload.url,
+      vibrate: [200, 100, 200],
+      requireInteraction: payload.urgency === "critical",
+      data: { url: payload.url },
+      dir: "rtl",
+      lang: "ar",
+    }),
   );
 });
 
 self.addEventListener("notificationclick", (event) => {
   event.notification.close();
 
-  if (event.action === "dismiss") {
-    return;
-  }
-
   const data = event.notification.data ?? {};
-  let targetUrl = data.url || "/map";
-
-  if (!data.url && data.needId) {
-    targetUrl = `/map?needId=${data.needId}`;
-  } else if (!data.url && data.lat != null && data.lng != null) {
-    targetUrl = `/map?lat=${data.lat}&lng=${data.lng}`;
-  }
-
-  const absoluteUrl = new URL(targetUrl, self.location.origin).href;
+  const targetUrl = new URL(data.url || "/map", self.location.origin).href;
 
   event.waitUntil(
     self.clients
@@ -131,13 +100,13 @@ self.addEventListener("notificationclick", (event) => {
       .then((clientList) => {
         for (const client of clientList) {
           if ("focus" in client) {
-            client.navigate(absoluteUrl);
+            client.navigate(targetUrl);
             return client.focus();
           }
         }
 
         if (self.clients.openWindow) {
-          return self.clients.openWindow(absoluteUrl);
+          return self.clients.openWindow(targetUrl);
         }
 
         return undefined;

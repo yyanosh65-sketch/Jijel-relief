@@ -198,10 +198,10 @@ export default function MapPopupShell({
             rel="noopener noreferrer"
             className={cn(
               mapActionPrimaryClass,
-              "h-auto border border-[#25D366]/40 bg-[#128C7E]/20 py-2 text-xs text-emerald-50 hover:bg-[#128C7E]/35",
+              "h-auto bg-[#25D366] py-2.5 text-xs font-extrabold text-white shadow-md hover:bg-[#20bd5a]",
             )}
           >
-            شارك عبر واتساب (Share to WhatsApp)
+            📢 توجيه النداء عبر واتساب
           </a>
         ) : null}
 

@@ -10,10 +10,6 @@ const broadcastSchema = z.object({
   title: z.string().min(1),
   body: z.string().min(1),
   url: z.string().optional(),
-  tag: z.string().optional(),
-  needId: z.number().int().positive().optional(),
-  lat: z.number().optional(),
-  lng: z.number().optional(),
   urgency: z.string().optional(),
 });
 

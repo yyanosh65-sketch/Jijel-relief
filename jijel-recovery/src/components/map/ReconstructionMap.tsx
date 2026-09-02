@@ -45,10 +45,10 @@ import {
   NeedProgressBar,
 } from "@/lib/ui-labels";
 import { Z_MAP_FLOATING, Z_MAP_HINT, Z_MAP_LEGEND, Z_MAP_PRIMARY_ACTION } from "@/lib/z-index";
-import { buildWhatsAppUrl, buildWhatsAppShareUrl } from "@/lib/phone";
+import { buildWhatsAppDispatchUrl, buildWhatsAppUrl } from "@/lib/phone";
 import {
-  buildMapPinShareMessage,
-  buildNeedIncidentShareMessage,
+  buildMapPinWhatsAppDispatchMessage,
+  buildNeedWhatsAppDispatchMessage,
 } from "@/lib/incident-share";
 import WaypointsLayer from "@/components/map/WaypointsLayer";
 import { cn } from "@/lib/utils";
@@ -141,8 +141,8 @@ function NeedPopupContent({
         buildCoordinatorWhatsAppMessage(need),
       )
     : null;
-  const shareWhatsAppUrl = buildWhatsAppShareUrl(
-    buildNeedIncidentShareMessage(need),
+  const shareWhatsAppUrl = buildWhatsAppDispatchUrl(
+    buildNeedWhatsAppDispatchMessage(need),
   );
   const facebookUrl = need.facebookUrl ?? null;
 
@@ -547,18 +547,15 @@ export default function ReconstructionMap({
                       pin.coordinator.phone,
                       `السلام عليكم، نحتاج معلومات عن ${pin.name_ar}`,
                     )}
-                    shareWhatsAppUrl={buildWhatsAppShareUrl(
-                      buildMapPinShareMessage({
+                    shareWhatsAppUrl={buildWhatsAppDispatchUrl(
+                      buildMapPinWhatsAppDispatchMessage({
                         title: pin.name_ar,
-                        pointTypeLabel:
-                          pin.type === "daira"
-                            ? MAP_POINT_TYPE_LABELS.daira
-                            : MAP_POINT_TYPE_LABELS.village,
                         communeAr: mapDetails.communeAr,
                         villageAr: isDouarPin ? pin.name_ar : undefined,
+                        details: `${pin.name_ar} — ${getRoadPassabilityLabel(pin.roadPassability)}`,
+                        phone: pin.coordinator.phone,
                         lat: pinLat,
                         lng: pinLng,
-                        notes: getRoadPassabilityLabel(pin.roadPassability),
                       }),
                     )}
                     showFieldReportButton={Boolean(onOpenFieldReport)}
@@ -603,11 +600,11 @@ export default function ReconstructionMap({
                     roadLabel={getRoadPassabilityLabel(road.passability)}
                     lat={roadLat}
                     lng={roadLng}
-                    shareWhatsAppUrl={buildWhatsAppShareUrl(
-                      buildMapPinShareMessage({
+                    shareWhatsAppUrl={buildWhatsAppDispatchUrl(
+                      buildMapPinWhatsAppDispatchMessage({
                         title: road.name_ar,
-                        pointTypeLabel: MAP_POINT_TYPE_LABELS.road,
-                        notes: road.notes,
+                        communeAr: "جيجل",
+                        details: `${road.name_ar} — ${road.notes}`,
                         lat: roadLat,
                         lng: roadLng,
                       }),
@@ -698,15 +695,15 @@ export default function ReconstructionMap({
                     lng={alertLng}
                     phone={alert.reporterPhone}
                     facebookUrl={alert.facebookUrl}
-                    shareWhatsAppUrl={buildWhatsAppShareUrl(
-                      buildMapPinShareMessage({
+                    shareWhatsAppUrl={buildWhatsAppDispatchUrl(
+                      buildMapPinWhatsAppDispatchMessage({
                         title: getSosLabel(alert.emergencyType),
-                        pointTypeLabel: MAP_POINT_TYPE_LABELS.sos,
                         communeAr: alertDetails.communeAr,
                         villageAr: alert.village ?? undefined,
+                        details: alert.description,
+                        phone: alert.reporterPhone,
                         lat: alertLat,
                         lng: alertLng,
-                        notes: alert.description,
                       }),
                     )}
                     showFieldReportButton={Boolean(onOpenFieldReport)}

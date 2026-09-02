@@ -47,5 +47,10 @@ export function buildWhatsAppUrl(
 }
 
 export function buildWhatsAppShareUrl(message: string): string {
-  return `https://wa.me/?text=${encodeURIComponent(message)}`;
+  return `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
+}
+
+/** One-tap WhatsApp dispatch for emergency coordination alerts. */
+export function buildWhatsAppDispatchUrl(message: string): string {
+  return buildWhatsAppShareUrl(message);
 }

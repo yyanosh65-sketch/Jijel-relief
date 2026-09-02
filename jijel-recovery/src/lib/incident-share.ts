@@ -1,40 +1,80 @@
 import type { MapNeed } from "@/actions/needs";
-import {
-  formatNeedLocationArabic,
-  getNeedUrgencyBadge,
-  translateNeedTitle,
-} from "@/lib/need-display";
+import { getCommuneArabicName } from "@/lib/locations";
+import { translateNeedTitle } from "@/lib/need-display";
 
+function resolveAppOrigin(origin?: string): string {
+  return (
+    origin ??
+    (typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL ?? "https://jijel-relief.local")
+  );
+}
+
+export function buildNeedWhatsAppDispatchMessage(
+  need: MapNeed,
+  origin?: string,
+): string {
+  const baseUrl = resolveAppOrigin(origin);
+  const commune = getCommuneArabicName(need.location.name);
+  const village =
+    need.location.address?.trim() ||
+    need.location.name ||
+    commune;
+  const title = translateNeedTitle(need.title);
+  const details = need.description?.trim()
+    ? `${title} — ${need.description.trim()}`
+    : title;
+  const phone = need.contactPhone?.trim() || "غير متوفر";
+  const url = `${baseUrl}/map?needId=${need.id}`;
+
+  return [
+    "🚨 *نداء استغاثة عاجل - إغاثة جيجل*",
+    `📍 المكان: ${commune} - ${village}`,
+    `📦 الاحتياج: ${details}`,
+    `📞 هاتف التنسيق: ${phone}`,
+    `🔗 رابط الحالة على المنصة: ${url}`,
+  ].join("\n");
+}
+
+export function buildMapPinWhatsAppDispatchMessage(input: {
+  communeAr?: string;
+  villageAr?: string;
+  title: string;
+  details?: string;
+  phone?: string | null;
+  needId?: number;
+  lat: number;
+  lng: number;
+  origin?: string;
+}): string {
+  const baseUrl = resolveAppOrigin(input.origin);
+  const commune = input.communeAr ?? "جيجل";
+  const village = input.villageAr ?? commune;
+  const details = input.details?.trim() || input.title;
+  const phone = input.phone?.trim() || "غير متوفر";
+  const url = input.needId
+    ? `${baseUrl}/map?needId=${input.needId}`
+    : `${baseUrl}/map?lat=${input.lat}&lng=${input.lng}`;
+
+  return [
+    "🚨 *نداء استغاثة عاجل - إغاثة جيجل*",
+    `📍 المكان: ${commune} - ${village}`,
+    `📦 الاحتياج: ${details}`,
+    `📞 هاتف التنسيق: ${phone}`,
+    `🔗 رابط الحالة على المنصة: ${url}`,
+  ].join("\n");
+}
+
+/** @deprecated Use buildNeedWhatsAppDispatchMessage */
 export function buildNeedIncidentShareMessage(
   need: MapNeed,
   origin?: string,
 ): string {
-  const baseUrl =
-    origin ??
-    (typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL ?? "https://jijel-relief.local");
-
-  const title = translateNeedTitle(need.title);
-  const location = formatNeedLocationArabic(need);
-  const urgency = getNeedUrgencyBadge(need.urgency);
-  const remaining = need.quantityNeeded - need.quantityFulfilled;
-  const mapUrl = `${baseUrl}/map?needId=${need.id}`;
-
-  return [
-    "🚨 نداء إغاثة — إغاثة جيجل",
-    "",
-    `📋 ${title}`,
-    `📍 ${location}`,
-    `⏱️ ${urgency.label}`,
-    `📦 المتبقي: ${remaining} من ${need.quantityNeeded}`,
-    "",
-    `🗺️ عرض على الخريطة:\n${mapUrl}`,
-    "",
-    "ساعد في التنسيق أو شارك مع الجمعيات القريبة.",
-  ].join("\n");
+  return buildNeedWhatsAppDispatchMessage(need, origin);
 }
 
+/** @deprecated Use buildMapPinWhatsAppDispatchMessage */
 export function buildMapPinShareMessage(input: {
   title: string;
   pointTypeLabel: string;
@@ -46,27 +86,16 @@ export function buildMapPinShareMessage(input: {
   needId?: number;
   origin?: string;
 }): string {
-  const baseUrl =
-    input.origin ??
-    (typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL ?? "https://jijel-relief.local");
-
-  const location = [input.villageAr, input.communeAr].filter(Boolean).join(" — ");
-  const mapUrl = input.needId
-    ? `${baseUrl}/map?needId=${input.needId}`
-    : `${baseUrl}/map?lat=${input.lat}&lng=${input.lng}`;
-
-  return [
-    "🚨 تنبيه ميداني — إغاثة جيجل",
-    "",
-    `📋 ${input.title}`,
-    `🏷️ ${input.pointTypeLabel}`,
-    location ? `📍 ${location}` : null,
-    input.notes ? `ℹ️ ${input.notes}` : null,
-    "",
-    `🗺️ عرض على الخريطة:\n${mapUrl}`,
-  ]
-    .filter(Boolean)
-    .join("\n");
+  return buildMapPinWhatsAppDispatchMessage({
+    communeAr: input.communeAr,
+    villageAr: input.villageAr,
+    title: input.title,
+    details: input.notes
+      ? `${input.title} (${input.pointTypeLabel}) — ${input.notes}`
+      : `${input.title} (${input.pointTypeLabel})`,
+    lat: input.lat,
+    lng: input.lng,
+    needId: input.needId,
+    origin: input.origin,
+  });
 }
