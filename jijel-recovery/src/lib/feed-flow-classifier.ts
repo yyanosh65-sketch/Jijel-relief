@@ -97,11 +97,11 @@ const DOUAR_EXTRA_ALIASES: Array<{
   villageLabel: string;
 }> = [
   {
-    aliases: ["مشتى لمنازل", "مشتى", "moshti lmenazel", "moshti"],
+    aliases: ["لمنزل", "Lemnzel", "Menazel", "مشتى لمنازل", "مشتى", "moshti lmenazel", "moshti"],
     commune: "Bouraoui Belhadef",
     communeAr: "بوراوي بلهادف",
     daira: "El Ancer",
-    villageLabel: "دشرة مشتى لمنازل",
+    villageLabel: "دشرة لمنزل",
   },
   {
     aliases: ["بوراوي بلهادف", "بوراوي", "bouraoui belhadef", "bouraoui"],

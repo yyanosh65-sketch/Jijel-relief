@@ -5,6 +5,7 @@ import { resolve } from "node:path";
 import { Pool } from "pg";
 
 import { locations, needs, pledges } from "../src/db/schema";
+import { resolveVerifiedMapCoordinates } from "../src/lib/locations";
 
 const LOCAL_DATABASE_URL =
   "postgresql://jijel:jijel_dev@127.0.0.1:5432/jijel_recovery";
@@ -15,8 +16,6 @@ type SeedLocation = {
   name: string;
   daira: string;
   address: string;
-  lat: number;
-  lng: number;
 };
 
 type SeedNeed = {
@@ -45,8 +44,6 @@ const SEED_NEEDS: SeedNeed[] = [
       name: "El Ancer",
       daira: "El Ancer",
       address: "دوار بني عائشة",
-      lat: 36.668,
-      lng: 5.846,
     },
     title: "1200 شتلة زيتون + 80 لفة أنابيب سقي",
     description:
@@ -72,8 +69,6 @@ const SEED_NEEDS: SeedNeed[] = [
       name: "Djemaa Beni Habibi",
       daira: "El Ancer",
       address: "تابلوط وتاسيفت",
-      lat: 36.6847,
-      lng: 5.8194,
     },
     title: "45 خزان ماء 3000L + 15 مضخة ماء",
     description:
@@ -99,8 +94,6 @@ const SEED_NEEDS: SeedNeed[] = [
       name: "Chahna",
       daira: "Taher",
       address: "بني خطاب وبوشارف",
-      lat: 36.8014,
-      lng: 5.8836,
     },
     title: "60 صندوق نحل + 400 قنطار أعلاف مواشي",
     description:
@@ -126,8 +119,6 @@ const SEED_NEEDS: SeedNeed[] = [
       name: "Boucif Ouled Askeur",
       daira: "Taher",
       address: "سوق السبت وقاع الزان",
-      lat: 36.7667,
-      lng: 5.9167,
     },
     title: "350 لوح زنك عازل + إسمنت لترميم الأسقف",
     description:
@@ -153,8 +144,6 @@ const SEED_NEEDS: SeedNeed[] = [
       name: "Bouraoui Belhadef",
       daira: "El Ancer",
       address: "أولاد رابح",
-      lat: 36.6514,
-      lng: 5.8822,
     },
     title: "800 شتلة زيتون + 2500م خراطيم مياه",
     description:
@@ -172,8 +161,6 @@ const SEED_NEEDS: SeedNeed[] = [
       name: "Texenna",
       daira: "Texenna",
       address: "الحدادة وكعوان",
-      lat: 36.6556,
-      lng: 5.7444,
     },
     title: "أدوية بيطرية + 30 رأس غنم لصغار المربين",
     description:
@@ -199,8 +186,6 @@ const SEED_NEEDS: SeedNeed[] = [
       name: "Djimla",
       daira: "Djimla",
       address: "دوار العرابة",
-      lat: 36.915,
-      lng: 5.752,
     },
     title: "500 شتلة كستناء وأشجار مثمرة + عتاد فلاحي يدوي",
     description:
@@ -226,8 +211,6 @@ const SEED_NEEDS: SeedNeed[] = [
       name: "Ziama Mansouriah",
       daira: "Ziama Mansouriah",
       address: "تيزي نيزنت",
-      lat: 36.528,
-      lng: 5.748,
     },
     title: "20 صهريج ماء + ترميم شبكة المنبع الجبلي",
     description:
@@ -301,14 +284,20 @@ async function seedDatabase(): Promise<void> {
     const { db } = await import("../src/db/index");
 
     for (const seed of SEED_NEEDS) {
+      const coords = resolveVerifiedMapCoordinates({
+        name: seed.location.name,
+        daira: seed.location.daira,
+        address: seed.location.address,
+      });
+
       const [location] = await db
         .insert(locations)
         .values({
           name: seed.location.name,
           daira: seed.location.daira,
           address: seed.location.address,
-          lat: String(seed.location.lat),
-          lng: String(seed.location.lng),
+          lat: String(coords.lat),
+          lng: String(coords.lng),
         })
         .returning();
 

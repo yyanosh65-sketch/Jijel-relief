@@ -85,7 +85,7 @@ export const KNOWN_DOUARS: Array<{
     notes: "نقطة تجمّع محلية — مرافقة 4x4 للحمولة الثقيلة",
   },
   {
-    aliases: ["مشتى لمنازل", "مشتى", "moshti lmenazel", "moshti"],
+    aliases: ["لمنزل", "Lemnzel", "Menazel", "مشتى لمنازل", "مشتى", "moshti lmenazel", "moshti"],
     commune: "Bouraoui Belhadef",
     communeAr: "بوراوي بلهادف",
     daira: "El Ancer",

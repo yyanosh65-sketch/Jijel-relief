@@ -1,5 +1,5 @@
 import jijelLocationsData from "@/data/jijel-locations.json";
-import { haversineKm } from "@/lib/geo";
+import { clampJijelLandCoordinates, haversineKm } from "@/lib/geo";
 
 export type RoadAccessibility =
   | "paved_heavy_truck"
@@ -245,8 +245,29 @@ export function getAllVillages(): Village[] {
   return jijelLocations.villages ?? [];
 }
 
-export function findVillageByName(name: string): Village | null {
+const VILLAGE_NAME_ALIASES: Record<string, string> = {
+  lemnzel: "لمنزل",
+  menazel: "لمنزل",
+  machat: "مشاط",
+  mechatt: "مشاط",
+  mechet: "مشاط",
+  tabellout: "تابلوط",
+  tablout: "تابلوط",
+  "qaa ezzane": "قاع الزان",
+  "kaa ezzane": "قاع الزان",
+  boutias: "بوتياس",
+  boutiass: "بوتياس",
+  "souk essebt": "سوق السبت",
+  "souk es sebt": "سوق السبت",
+};
+
+function resolveVillageAlias(name: string): string {
   const normalized = normalizeName(name);
+  return VILLAGE_NAME_ALIASES[normalized] ?? name;
+}
+
+export function findVillageByName(name: string): Village | null {
+  const normalized = normalizeName(resolveVillageAlias(name));
   if (!normalized) return null;
 
   return (
@@ -256,6 +277,60 @@ export function findVillageByName(name: string): Village | null {
         normalizeName(village.name_ar) === normalized,
     ) ?? null
   );
+}
+
+function tokenizeLocationText(value: string): string[] {
+  return value
+    .split(/[\s,،؛/|+&]+/)
+    .map((token) => token.trim())
+    .filter((token) => token.length >= 2);
+}
+
+export function resolveVerifiedMapCoordinates(input: {
+  name?: string | null;
+  daira?: string | null;
+  address?: string | null;
+  fallbackLat?: number;
+  fallbackLng?: number;
+}): Coordinates {
+  const candidates = [input.name, input.address].filter(
+    (value): value is string => Boolean(value?.trim()),
+  );
+
+  for (const candidate of candidates) {
+    const directMatch = findVillageByName(candidate);
+    if (directMatch) {
+      return { lat: directMatch.lat, lng: directMatch.lng };
+    }
+
+    for (const token of tokenizeLocationText(candidate)) {
+      const villageMatch = findVillageByName(token);
+      if (villageMatch) {
+        return { lat: villageMatch.lat, lng: villageMatch.lng };
+      }
+    }
+  }
+
+  if (input.name?.trim()) {
+    const communeMeta = getCommuneLocationMeta(
+      input.name,
+      input.daira ?? undefined,
+    );
+    if (communeMeta) {
+      return { lat: communeMeta.lat, lng: communeMeta.lng };
+    }
+  }
+
+  if (
+    typeof input.fallbackLat === "number" &&
+    typeof input.fallbackLng === "number" &&
+    !Number.isNaN(input.fallbackLat) &&
+    !Number.isNaN(input.fallbackLng)
+  ) {
+    return clampJijelLandCoordinates(input.fallbackLat, input.fallbackLng);
+  }
+
+  return { lat: 36.75, lng: 6.05 };
 }
 
 export function isKnownDouarName(name: string): boolean {
@@ -342,7 +417,7 @@ export function resolveLocationReference(input: {
   lng: number;
   usedCommuneFallback: boolean;
 } | null {
-  const jijelCenter = input.jijelCenter ?? { lat: 36.8205, lng: 5.7667 };
+  const jijelCenter = input.jijelCenter ?? { lat: 36.75, lng: 6.05 };
   const outsideThresholdKm = input.outsideThresholdKm ?? 100;
 
   const hasGps =

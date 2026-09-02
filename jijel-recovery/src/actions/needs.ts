@@ -18,7 +18,7 @@ import {
   type NeedUrgency,
   type Pledge,
 } from "@/db/schema";
-import { getDairaForCommune } from "@/lib/locations";
+import { getDairaForCommune, resolveVerifiedMapCoordinates } from "@/lib/locations";
 import { haversineKmSql } from "@/lib/geo";
 import { normalizeAlgerianPhone } from "@/lib/phone";
 import type { ActionResult } from "@/lib/types";
@@ -444,10 +444,14 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
     }
 
     const data: MapNeed[] = rows.rows.map((row) => {
-      const clamped = clampJijelLandCoordinates(
-        Number(row.lat),
-        Number(row.lng),
-      );
+      const verified = resolveVerifiedMapCoordinates({
+        name: row.location_name,
+        daira: row.location_daira,
+        address: row.location_address,
+        fallbackLat: Number(row.lat),
+        fallbackLng: Number(row.lng),
+      });
+      const clamped = clampJijelLandCoordinates(verified.lat, verified.lng);
 
       return {
       id: row.id,

@@ -1,12 +1,13 @@
 import type { NeedCategory, NeedUrgency } from "@/db/schema";
 import type { NeedWithRelations } from "@/actions/needs";
 
+/** Centers the relief belt: Ouled Askeur → Djemaa Beni Habibi → El Ancer → El Milia. */
 export const JIJEL_CENTER = {
-  lat: 36.8205,
-  lng: 5.7667,
+  lat: 36.75,
+  lng: 6.05,
 } as const;
 
-export const DEFAULT_MAP_ZOOM = 11;
+export const DEFAULT_MAP_ZOOM = 10;
 
 /** Map overlay stacking: filter bar (400) < popups (700) < modals (9999). */
 export const MAP_UI_Z_INDEX = {

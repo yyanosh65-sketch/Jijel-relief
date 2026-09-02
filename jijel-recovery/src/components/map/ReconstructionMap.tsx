@@ -26,7 +26,6 @@ import {
 } from "@/lib/map-layer-icons";
 import {
   MAP_POINT_TYPE_LABELS,
-  formatAddressHierarchy,
   resolveCommuneMapDetails,
   resolveLocationMapDetails,
   roadPassabilityToAccessibility,
