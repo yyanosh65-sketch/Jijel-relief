@@ -3,6 +3,11 @@ import { desc } from "drizzle-orm";
 import { db } from "@/db";
 import { emergencyNotifications } from "@/db/schema";
 import type { NeedCategory, NeedUrgency } from "@/db/schema";
+import {
+  broadcastPushNotifications,
+  buildEmergencyPushPayload,
+  buildRoadClosurePushPayload,
+} from "@/lib/web-push";
 
 export type EmergencyNotificationPayload = {
   id: number;
@@ -131,7 +136,38 @@ export async function createEmergencyNotification(input: {
   };
 
   publishToBus(payload);
+
+  void broadcastPushNotifications(
+    buildEmergencyPushPayload({
+      title: payload.title,
+      message: payload.message,
+      commune: payload.commune,
+      communeAr: payload.communeAr,
+      village: payload.village,
+      sourceKind: payload.sourceKind,
+      sourceId: payload.sourceId,
+      urgency: payload.urgency,
+    }),
+  ).catch((error) => {
+    console.error("Emergency web push broadcast failed:", error);
+  });
+
   return payload;
+}
+
+export async function notifyRoadClosure(input: {
+  routeLabel: string;
+  communeAr: string;
+  villageAr?: string | null;
+  lat: number;
+  lng: number;
+  notes?: string | null;
+}): Promise<void> {
+  const payload = buildRoadClosurePushPayload(input);
+
+  void broadcastPushNotifications(payload).catch((error) => {
+    console.error("Road closure web push broadcast failed:", error);
+  });
 }
 
 export async function listRecentEmergencyNotifications(

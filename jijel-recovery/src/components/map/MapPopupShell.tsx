@@ -32,6 +32,7 @@ type MapPopupShellProps = {
   lng: number;
   phone?: string | null;
   whatsappUrl?: string | null;
+  shareWhatsAppUrl?: string | null;
   facebookUrl?: string | null;
   showFieldReportButton?: boolean;
   onFieldReportClick?: () => void;
@@ -54,6 +55,7 @@ export default function MapPopupShell({
   lng,
   phone,
   whatsappUrl,
+  shareWhatsAppUrl,
   facebookUrl,
   showFieldReportButton = false,
   onFieldReportClick,
@@ -188,6 +190,20 @@ export default function MapPopupShell({
           <Navigation className="h-4 w-4 shrink-0" aria-hidden />
           فتح في Google Maps للملاحة
         </a>
+
+        {shareWhatsAppUrl ? (
+          <a
+            href={shareWhatsAppUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              mapActionPrimaryClass,
+              "h-auto border border-[#25D366]/40 bg-[#128C7E]/20 py-2 text-xs text-emerald-50 hover:bg-[#128C7E]/35",
+            )}
+          >
+            شارك عبر واتساب (Share to WhatsApp)
+          </a>
+        ) : null}
 
         {whatsappUrl ? (
           <a

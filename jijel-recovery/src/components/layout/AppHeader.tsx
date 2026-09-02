@@ -1,6 +1,7 @@
 "use client";
 
 import HeaderBrand from "@/components/layout/HeaderBrand";
+import PushSubscriptionBtn from "@/components/notifications/PushSubscriptionBtn";
 import SiteNav from "@/components/SiteNav";
 import FeedImporterButton from "@/components/admin/FeedImporterButton";
 import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
@@ -15,7 +16,10 @@ export default function AppHeader() {
     >
       <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-          <HeaderBrand />
+          <div className="flex min-w-0 flex-1 flex-wrap items-center gap-2">
+            <HeaderBrand />
+            <PushSubscriptionBtn />
+          </div>
           <div className="flex flex-wrap items-center gap-2">
             <FeedImporterButton variant="navbar" />
             <RegisterConvoyButton variant="navbar" />

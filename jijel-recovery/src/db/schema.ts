@@ -235,6 +235,16 @@ export const emergencyNotifications = pgTable("emergency_notifications", {
     .notNull(),
 });
 
+export const pushSubscriptions = pgTable("push_subscriptions", {
+  id: serial("id").primaryKey(),
+  endpoint: text("endpoint").notNull().unique(),
+  p256dh: text("p256dh").notNull(),
+  auth: text("auth").notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const emergencyFacilities = pgTable("emergency_facilities", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -403,3 +413,4 @@ export type CharityAvailability =
   (typeof charityAvailabilityEnum.enumValues)[number];
 export type CharityInventoryStatus =
   (typeof charityInventoryStatusEnum.enumValues)[number];
+export type PushSubscription = typeof pushSubscriptions.$inferSelect;

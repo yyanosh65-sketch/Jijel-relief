@@ -14,6 +14,7 @@ import {
   type VillageFieldReport,
 } from "@/db/schema";
 import { normalizeAlgerianPhone } from "@/lib/phone";
+import { notifyRoadClosure } from "@/lib/emergency-notifications";
 import type { ActionResult } from "@/lib/types";
 
 const createFieldReportSchema = z.object({
@@ -157,6 +158,17 @@ export async function createVillageFieldReport(
 
     revalidatePath("/map");
     revalidatePath("/");
+
+    if (data.roadPassability === "closed") {
+      await notifyRoadClosure({
+        routeLabel: "مسلك مقطوع — تقرير ميداني",
+        communeAr: data.communeAr,
+        villageAr: data.villageAr,
+        lat: data.lat,
+        lng: data.lng,
+        notes: data.notes ?? undefined,
+      });
+    }
 
     return {
       success: true,

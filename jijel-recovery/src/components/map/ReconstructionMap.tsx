@@ -45,7 +45,11 @@ import {
   NeedProgressBar,
 } from "@/lib/ui-labels";
 import { Z_MAP_FLOATING, Z_MAP_LEGEND } from "@/lib/z-index";
-import { buildWhatsAppUrl } from "@/lib/phone";
+import { buildWhatsAppUrl, buildWhatsAppShareUrl } from "@/lib/phone";
+import {
+  buildMapPinShareMessage,
+  buildNeedIncidentShareMessage,
+} from "@/lib/incident-share";
 import WaypointsLayer from "@/components/map/WaypointsLayer";
 import { cn } from "@/lib/utils";
 
@@ -137,6 +141,9 @@ function NeedPopupContent({
         buildCoordinatorWhatsAppMessage(need),
       )
     : null;
+  const shareWhatsAppUrl = buildWhatsAppShareUrl(
+    buildNeedIncidentShareMessage(need),
+  );
   const facebookUrl = need.facebookUrl ?? null;
 
   const fieldReportTarget: VillageFieldReportTarget = {
@@ -191,6 +198,7 @@ function NeedPopupContent({
         lng={lng}
         phone={need.contactPhone}
         whatsappUrl={whatsappUrl}
+        shareWhatsAppUrl={shareWhatsAppUrl}
         facebookUrl={facebookUrl}
         showFieldReportButton={Boolean(onOpenFieldReport)}
         onFieldReportClick={() => onOpenFieldReport?.(fieldReportTarget)}
@@ -215,6 +223,7 @@ function NeedPopupContent({
       lng={lng}
       phone={need.contactPhone}
       whatsappUrl={whatsappUrl}
+      shareWhatsAppUrl={shareWhatsAppUrl}
       facebookUrl={facebookUrl}
       showFieldReportButton={Boolean(onOpenFieldReport)}
       onFieldReportClick={() => onOpenFieldReport?.(fieldReportTarget)}
@@ -538,6 +547,20 @@ export default function ReconstructionMap({
                       pin.coordinator.phone,
                       `السلام عليكم، نحتاج معلومات عن ${pin.name_ar}`,
                     )}
+                    shareWhatsAppUrl={buildWhatsAppShareUrl(
+                      buildMapPinShareMessage({
+                        title: pin.name_ar,
+                        pointTypeLabel:
+                          pin.type === "daira"
+                            ? MAP_POINT_TYPE_LABELS.daira
+                            : MAP_POINT_TYPE_LABELS.village,
+                        communeAr: mapDetails.communeAr,
+                        villageAr: isDouarPin ? pin.name_ar : undefined,
+                        lat: pinLat,
+                        lng: pinLng,
+                        notes: getRoadPassabilityLabel(pin.roadPassability),
+                      }),
+                    )}
                     showFieldReportButton={Boolean(onOpenFieldReport)}
                     onFieldReportClick={() =>
                       onOpenFieldReport?.(fieldReportTarget)
@@ -580,6 +603,15 @@ export default function ReconstructionMap({
                     roadLabel={getRoadPassabilityLabel(road.passability)}
                     lat={roadLat}
                     lng={roadLng}
+                    shareWhatsAppUrl={buildWhatsAppShareUrl(
+                      buildMapPinShareMessage({
+                        title: road.name_ar,
+                        pointTypeLabel: MAP_POINT_TYPE_LABELS.road,
+                        notes: road.notes,
+                        lat: roadLat,
+                        lng: roadLng,
+                      }),
+                    )}
                   />
                 </MapPopup>
               </Marker>
@@ -666,6 +698,17 @@ export default function ReconstructionMap({
                     lng={alertLng}
                     phone={alert.reporterPhone}
                     facebookUrl={alert.facebookUrl}
+                    shareWhatsAppUrl={buildWhatsAppShareUrl(
+                      buildMapPinShareMessage({
+                        title: getSosLabel(alert.emergencyType),
+                        pointTypeLabel: MAP_POINT_TYPE_LABELS.sos,
+                        communeAr: alertDetails.communeAr,
+                        villageAr: alert.village ?? undefined,
+                        lat: alertLat,
+                        lng: alertLng,
+                        notes: alert.description,
+                      }),
+                    )}
                     showFieldReportButton={Boolean(onOpenFieldReport)}
                     onFieldReportClick={() =>
                       onOpenFieldReport?.(sosFieldTarget)

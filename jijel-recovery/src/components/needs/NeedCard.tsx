@@ -8,7 +8,8 @@ import {
   getNeedUrgencyBadge,
   translateNeedTitle,
 } from "@/lib/need-display";
-import { buildWhatsAppLink } from "@/lib/phone";
+import { buildWhatsAppLink, buildWhatsAppShareUrl } from "@/lib/phone";
+import { buildNeedIncidentShareMessage } from "@/lib/incident-share";
 import { NeedProgressBar } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 import MarkServedControls from "@/components/needs/MarkServedControls";
@@ -38,6 +39,9 @@ export default function NeedCard({
   const whatsappUrl = coordinatorPhone
     ? buildWhatsAppLink(need.contactWhatsapp ?? coordinatorPhone)
     : null;
+  const shareWhatsAppUrl = buildWhatsAppShareUrl(
+    buildNeedIncidentShareMessage(need),
+  );
 
   return (
     <article
@@ -124,6 +128,15 @@ export default function NeedCard({
             )}
           </div>
         ) : null}
+
+        <a
+          href={shareWhatsAppUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex w-full items-center justify-center gap-1.5 rounded-xl border border-[#25D366]/40 bg-[#128C7E]/15 px-3 py-2 text-xs font-bold text-emerald-100 transition hover:bg-[#128C7E]/25"
+        >
+          شارك عبر واتساب (Share to WhatsApp)
+        </a>
 
         <button
           type="button"
