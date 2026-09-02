@@ -5,6 +5,7 @@ import { Marker, Popup } from "react-leaflet";
 import MapPopupShell from "@/components/map/MapPopupShell";
 import { WAYPOINT_TYPE_LABELS } from "@/lib/convoys";
 import type { ConvoyWaypoint } from "@/lib/convoy-waypoints";
+import { clampJijelLandPosition } from "@/lib/geo";
 import { createWaypointMarkerIcon } from "@/lib/map-layer-icons";
 import {
   getWaypointPointTypeLabel,
@@ -17,7 +18,15 @@ type WaypointsLayerProps = {
   visible: boolean;
 };
 
-function WaypointPopupContent({ waypoint }: { waypoint: ConvoyWaypoint }) {
+function WaypointPopupContent({
+  waypoint,
+  lat,
+  lng,
+}: {
+  waypoint: ConvoyWaypoint;
+  lat: number;
+  lng: number;
+}) {
   const typeMeta = WAYPOINT_TYPE_LABELS[waypoint.type];
   const whatsappPhone = waypoint.whatsapp ?? waypoint.phone;
   const whatsappUrl = buildWhatsAppUrl(
@@ -32,8 +41,8 @@ function WaypointPopupContent({ waypoint }: { waypoint: ConvoyWaypoint }) {
       addressHierarchy={`ولاية جيجل > ${typeMeta.labelAr} > ${waypoint.name_ar}`}
       exactAddressAr={waypoint.notes || undefined}
       roadAccessibility="paved_heavy_truck"
-      lat={waypoint.lat}
-      lng={waypoint.lng}
+      lat={lat}
+      lng={lng}
       phone={waypoint.phone}
       whatsappUrl={whatsappUrl}
     >
@@ -59,18 +68,29 @@ export default function WaypointsLayer({
 
   return (
     <>
-      {waypoints.map((waypoint) => (
+      {waypoints.map((waypoint) => {
+        const [waypointLat, waypointLng] = clampJijelLandPosition(
+          waypoint.lat,
+          waypoint.lng,
+        );
+
+        return (
         <Marker
           key={waypoint.id}
-          position={[waypoint.lat, waypoint.lng]}
+          position={[waypointLat, waypointLng]}
           icon={createWaypointMarkerIcon(waypoint.type)}
           zIndexOffset={500}
         >
           <Popup>
-            <WaypointPopupContent waypoint={waypoint} />
+            <WaypointPopupContent
+              waypoint={waypoint}
+              lat={waypointLat}
+              lng={waypointLng}
+            />
           </Popup>
         </Marker>
-      ))}
+        );
+      })}
     </>
   );
 }

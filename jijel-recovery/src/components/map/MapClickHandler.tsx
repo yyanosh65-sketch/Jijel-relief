@@ -3,6 +3,8 @@
 import { useEffect } from "react";
 import { useMapEvents } from "react-leaflet";
 
+import { clampJijelLandCoordinates } from "@/lib/geo";
+
 type MapClickHandlerProps = {
   enabled: boolean;
   onMapClick: (lat: number, lng: number) => void;
@@ -12,7 +14,11 @@ export function MapClickHandler({ enabled, onMapClick }: MapClickHandlerProps) {
   const map = useMapEvents({
     click(event) {
       if (!enabled) return;
-      onMapClick(event.latlng.lat, event.latlng.lng);
+      const { lat, lng } = clampJijelLandCoordinates(
+        event.latlng.lat,
+        event.latlng.lng,
+      );
+      onMapClick(lat, lng);
     },
   });
 

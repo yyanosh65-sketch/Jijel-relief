@@ -16,7 +16,8 @@ import MapClickReportModal from "@/components/map/MapClickReportModal";
 import MapPopupShell from "@/components/map/MapPopupShell";
 import MarkServedControls from "@/components/needs/MarkServedControls";
 import { translateNeedTitle } from "@/lib/need-display";
-import { formatLocationHeader } from "@/lib/locations";
+import { findVillageByName } from "@/lib/locations";
+import { clampJijelLandCoordinates, clampJijelLandPosition } from "@/lib/geo";
 import {
   createFacilityMarkerIcon,
   createRoadMarkerIcon,
@@ -130,17 +131,16 @@ function NeedPopupContent({
 
   const remaining = need.quantityNeeded - need.quantityFulfilled;
 
-  const locationHeader = formatLocationHeader(
-    need.location.address,
-    need.location.name,
-    need.location.daira,
-  );
-
+  const villageRecord = findVillageByName(need.location.name);
+  const communeKey = villageRecord
+    ? villageRecord.commune
+    : (need.location.address ?? need.location.name);
   const mapDetails = resolveLocationMapDetails(
-    need.location.address ?? need.location.name,
-    need.location.daira ?? "",
-    need.location.name,
+    communeKey,
+    villageRecord?.daira ?? need.location.daira ?? "",
+    villageRecord?.name_ar,
   );
+  const { lat, lng } = clampJijelLandCoordinates(need.lat, need.lng);
 
   const whatsappUrl = need.contactPhone
     ? buildWhatsAppUrl(
@@ -178,10 +178,9 @@ function NeedPopupContent({
         pointTypeLabel={MAP_POINT_TYPE_LABELS.need}
         title={translateNeedTitle(need.title)}
         addressHierarchy={mapDetails.addressHierarchy}
-        exactAddressAr={mapDetails.exactAddressAr ?? locationHeader}
         roadAccessibility={mapDetails.roadAccessibility}
-        lat={need.lat}
-        lng={need.lng}
+        lat={lat}
+        lng={lng}
         phone={need.contactPhone}
         whatsappUrl={whatsappUrl}
       >
@@ -197,10 +196,9 @@ function NeedPopupContent({
       pointTypeLabel={MAP_POINT_TYPE_LABELS.need}
       title={translateNeedTitle(need.title)}
       addressHierarchy={mapDetails.addressHierarchy}
-      exactAddressAr={mapDetails.exactAddressAr ?? locationHeader}
       roadAccessibility={mapDetails.roadAccessibility}
-      lat={need.lat}
-      lng={need.lng}
+      lat={lat}
+      lng={lng}
       phone={need.contactPhone}
       whatsappUrl={whatsappUrl}
     >
@@ -358,7 +356,8 @@ export default function ReconstructionMap({
   );
 
   function handleMapPinClick(lat: number, lng: number) {
-    setClickPin({ lat, lng });
+    const clamped = clampJijelLandCoordinates(lat, lng);
+    setClickPin({ lat: clamped.lat, lng: clamped.lng });
     setIsReportModalOpen(true);
     setPinDropMode(false);
   }
@@ -383,11 +382,11 @@ export default function ReconstructionMap({
 
   return (
     <div dir="rtl" className="relative h-full w-full">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[850] p-3 sm:p-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 z-[500] p-3 sm:p-4">
         <div
           className={cn(
             glassPanelClass,
-            "pointer-events-auto mx-auto max-w-5xl overflow-hidden p-2 sm:p-3",
+            "relative pointer-events-auto mx-auto max-w-5xl overflow-hidden p-2 sm:p-3",
           )}
         >
           <div className="space-y-2">
@@ -447,7 +446,7 @@ export default function ReconstructionMap({
       <div
         className={cn(
           glassPanelClass,
-          "pointer-events-none absolute bottom-6 left-4 z-[850] hidden max-w-[200px] p-3 text-xs sm:block",
+          "pointer-events-none absolute bottom-6 left-4 z-[500] hidden max-w-[200px] p-3 text-xs sm:block",
         )}
       >
         <p className="mb-2 font-semibold text-slate-800">دليل الألوان</p>
@@ -467,7 +466,7 @@ export default function ReconstructionMap({
         </ul>
       </div>
 
-      <div className="pointer-events-none absolute bottom-24 right-4 z-[860] sm:bottom-8">
+      <div className="pointer-events-none absolute bottom-24 right-4 z-[500] sm:bottom-8">
         <button
           type="button"
           onClick={() => setPinDropMode((current) => !current)}
@@ -494,11 +493,12 @@ export default function ReconstructionMap({
                 pin.daira,
                 isDouarPin ? pin.name_ar : undefined,
               );
+              const [pinLat, pinLng] = clampJijelLandPosition(pin.lat, pin.lng);
 
               return (
               <Marker
                 key={pin.id}
-                position={[pin.lat, pin.lng]}
+                position={[pinLat, pinLng]}
                 icon={
                   pin.type === "daira" ? villageIcons.daira : villageIcons.commune
                 }
@@ -515,12 +515,11 @@ export default function ReconstructionMap({
                     }
                     title={pin.name_ar}
                     addressHierarchy={mapDetails.addressHierarchy}
-                    exactAddressAr={mapDetails.exactAddressAr}
                     roadAccessibility={
                       roadPassabilityToAccessibility(pin.roadPassability)
                     }
-                    lat={pin.lat}
-                    lng={pin.lng}
+                    lat={pinLat}
+                    lng={pinLng}
                     phone={pin.coordinator.phone}
                     whatsappUrl={buildWhatsAppUrl(
                       pin.coordinator.phone,
@@ -542,10 +541,13 @@ export default function ReconstructionMap({
           : null}
 
         {layers.roads
-          ? intelligence.roads.map((road) => (
+          ? intelligence.roads.map((road) => {
+              const [roadLat, roadLng] = clampJijelLandPosition(road.lat, road.lng);
+
+              return (
               <Marker
                 key={road.id}
-                position={[road.lat, road.lng]}
+                position={[roadLat, roadLng]}
                 icon={createRoadMarkerIcon(road.passability)}
               >
                 <Popup>
@@ -558,36 +560,40 @@ export default function ReconstructionMap({
                       road.passability,
                     )}
                     roadLabel={getRoadPassabilityLabel(road.passability)}
-                    lat={road.lat}
-                    lng={road.lng}
+                    lat={roadLat}
+                    lng={roadLng}
                   />
                 </Popup>
               </Marker>
-            ))
+            );
+            })
           : null}
 
         {layers.facilities
-          ? intelligence.facilities.map((facility) => (
+          ? intelligence.facilities.map((facility) => {
+              const [facilityLat, facilityLng] = clampJijelLandPosition(
+                facility.lat,
+                facility.lng,
+              );
+              const facilityDetails = resolveCommuneMapDetails(
+                facility.commune,
+                facility.daira,
+              );
+
+              return (
               <Marker
                 key={facility.id}
-                position={[facility.lat, facility.lng]}
+                position={[facilityLat, facilityLng]}
                 icon={createFacilityMarkerIcon(facility.type)}
               >
                 <Popup>
                   <MapPopupShell
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.facility}
                     title={facility.name_ar}
-                    addressHierarchy={resolveCommuneMapDetails(
-                      facility.commune,
-                      facility.daira,
-                    ).addressHierarchy}
-                    exactAddressAr={facility.name_ar}
-                    roadAccessibility={
-                      resolveCommuneMapDetails(facility.commune, facility.daira)
-                        .roadAccessibility
-                    }
-                    lat={facility.lat}
-                    lng={facility.lng}
+                    addressHierarchy={facilityDetails.addressHierarchy}
+                    roadAccessibility={facilityDetails.roadAccessibility}
+                    lat={facilityLat}
+                    lng={facilityLng}
                     phone={facility.phone}
                     whatsappUrl={buildWhatsAppUrl(
                       facility.phone,
@@ -596,14 +602,18 @@ export default function ReconstructionMap({
                   />
                 </Popup>
               </Marker>
-            ))
+            );
+            })
           : null}
 
         {layers.sos
-          ? intelligence.sosAlerts.map((alert) => (
+          ? intelligence.sosAlerts.map((alert) => {
+              const [alertLat, alertLng] = clampJijelLandPosition(alert.lat, alert.lng);
+
+              return (
               <Marker
                 key={`sos-${alert.id}`}
-                position={[alert.lat, alert.lng]}
+                position={[alertLat, alertLng]}
                 icon={markerIcons.sos}
                 zIndexOffset={1000}
               >
@@ -621,12 +631,13 @@ export default function ReconstructionMap({
                       resolveCommuneMapDetails(alert.commune, alert.daira)
                         .roadAccessibility
                     }
-                    lat={alert.lat}
-                    lng={alert.lng}
+                    lat={alertLat}
+                    lng={alertLng}
                   />
                 </Popup>
               </Marker>
-            ))
+            );
+            })
           : null}
 
         <WaypointsLayer
@@ -642,11 +653,12 @@ export default function ReconstructionMap({
           ? visibleNeeds.map((need) => {
               const color = getMarkerColor(need);
               const isSelected = selectedNeedId === need.id;
+              const [needLat, needLng] = clampJijelLandPosition(need.lat, need.lng);
 
               return (
                 <Marker
                   key={need.id}
-                  position={[need.lat, need.lng]}
+                  position={[needLat, needLng]}
                   icon={markerIcons[color]}
                   opacity={isSelected ? 1 : 0.92}
                 >
@@ -672,7 +684,7 @@ export default function ReconstructionMap({
       />
 
       {layers.needs && visibleNeeds.length === 0 ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-28 z-[880] flex justify-center px-4 sm:bottom-8">
+        <div className="pointer-events-none absolute inset-x-0 bottom-28 z-[500] flex justify-center px-4 sm:bottom-8">
           <div
             className={cn(
               glassPanelClass,

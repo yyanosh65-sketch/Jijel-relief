@@ -91,7 +91,7 @@ textarea::placeholder {
 }
 
 .leaflet-popup {
-  z-index: 2000 !important;
+  z-index: 1000 !important;
 }
 
 .leaflet-pane.leaflet-marker-pane {
@@ -99,7 +99,7 @@ textarea::placeholder {
 }
 
 .leaflet-pane.leaflet-popup-pane {
-  z-index: 2000;
+  z-index: 1000;
 }
 
 .leaflet-pane.leaflet-map-pane {

@@ -446,7 +446,7 @@ export function formatLocationHeader(
       "ولاية جيجل",
       `دائرة ${villageRecord.daira_ar}`,
       `بلدية ${villageRecord.commune_ar}`,
-      `دشرة/قرية ${villageRecord.name_ar}`,
+      `مشتى/دوار ${villageRecord.name_ar}`,
     ].join(" > ");
   }
 
@@ -455,7 +455,7 @@ export function formatLocationHeader(
       "ولاية جيجل",
       `دائرة ${communeAsDouar.daira_ar}`,
       `بلدية ${communeAsDouar.commune_ar}`,
-      `دشرة/قرية ${communeAsDouar.name_ar}`,
+      `مشتى/دوار ${communeAsDouar.name_ar}`,
     ].join(" > ");
   }
 
@@ -468,7 +468,7 @@ export function formatLocationHeader(
     "ولاية جيجل",
     dairaAr ? `دائرة ${dairaAr}` : null,
     communeAr ? `بلدية ${communeAr}` : null,
-    villageName && villageName !== communeAr ? `دشرة/قرية ${villageName}` : null,
+    villageName && villageName !== communeAr ? `مشتى/دوار ${villageName}` : null,
   ].filter(Boolean);
 
   return segments.join(" > ");

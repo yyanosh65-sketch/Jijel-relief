@@ -5,6 +5,7 @@ import { Navigation } from "lucide-react";
 import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import {
   buildGoogleMapsDirectionsUrl,
+  isRedundantExactAddress,
   type RoadAccessibility,
   ROAD_ACCESSIBILITY_LABELS,
 } from "@/lib/map-location-display";
@@ -48,6 +49,9 @@ export default function MapPopupShell({
         : null);
 
   const mapsUrl = buildGoogleMapsDirectionsUrl(lat, lng);
+  const showExactAddress =
+    exactAddressAr &&
+    !isRedundantExactAddress(exactAddressAr, addressHierarchy);
 
   return (
     <div
@@ -63,20 +67,17 @@ export default function MapPopupShell({
       </div>
 
       <div className="space-y-1.5 rounded-xl border border-slate-200 bg-slate-50/80 p-2.5 text-xs leading-relaxed">
-        <p className="font-bold text-slate-900">
-          <span className="font-bold text-slate-900">📍 العنوان الدقيق:</span>{" "}
-          <span className="font-semibold text-slate-800">{addressHierarchy}</span>
-        </p>
-        {exactAddressAr ? (
-          <p className="font-semibold text-slate-800">{exactAddressAr}</p>
+        <p className="text-sm font-bold text-slate-900">📍 {addressHierarchy}</p>
+        {showExactAddress ? (
+          <p className="text-slate-700">{exactAddressAr}</p>
         ) : null}
         {resolvedRoadLabel ? (
-          <p className="font-semibold text-slate-700">
+          <p className="text-slate-700">
             <span className="font-bold text-slate-900">🛣️ حالة المسلك:</span>{" "}
             {resolvedRoadLabel}
           </p>
         ) : null}
-        <p className="font-mono text-[10px] font-semibold text-slate-700" dir="ltr">
+        <p className="font-mono text-[10px] text-slate-700" dir="ltr">
           {lat.toFixed(4)}, {lng.toFixed(4)}
         </p>
       </div>

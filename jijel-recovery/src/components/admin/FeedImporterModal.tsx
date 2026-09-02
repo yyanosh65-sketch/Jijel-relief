@@ -366,7 +366,7 @@ export function FeedImporterModal({ open, onClose }: FeedImporterModalProps) {
                   value={instantPreview.location.dairaAr}
                 />
                 <PreviewRow
-                  label="الدشرة/القرية"
+                  label="مشتى/الدوار"
                   value={instantPreview.location.village ?? "—"}
                 />
                 <PreviewRow

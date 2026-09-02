@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { z } from "zod";
 
 import { db } from "@/db";
+import { clampJijelLandCoordinates } from "@/lib/geo";
 import {
   locations,
   needCategoryEnum,
@@ -442,7 +443,13 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
       pledgesByNeedId.set(pledge.needId, existing);
     }
 
-    const data: MapNeed[] = rows.rows.map((row) => ({
+    const data: MapNeed[] = rows.rows.map((row) => {
+      const clamped = clampJijelLandCoordinates(
+        Number(row.lat),
+        Number(row.lng),
+      );
+
+      return {
       id: row.id,
       locationId: row.location_id,
       title: row.title,
@@ -469,9 +476,10 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
         createdAt: row.location_created_at,
       },
       pledges: pledgesByNeedId.get(row.id) ?? [],
-      lat: Number(row.lat),
-      lng: Number(row.lng),
-    }));
+      lat: clamped.lat,
+      lng: clamped.lng,
+    };
+    });
 
     return { success: true, data };
   } catch (error) {

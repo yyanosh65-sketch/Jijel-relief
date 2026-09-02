@@ -43,15 +43,77 @@ export function formatAddressHierarchy(input: {
 }): string {
   const segments = [
     "ولاية جيجل",
-    `دائرة ${input.dairaAr}`,
-    `بلدية ${input.communeAr}`,
+    `دائرة ${input.dairaAr.trim()}`,
+    `بلدية ${input.communeAr.trim()}`,
   ];
 
-  if (input.douarOrVillage?.trim()) {
-    segments.push(`دشرة/قرية ${input.douarOrVillage.trim()}`);
+  const douarLabel = sanitizeDouarLabel(
+    input.douarOrVillage,
+    input.communeAr,
+  );
+
+  if (douarLabel) {
+    segments.push(`مشتى/دوار ${douarLabel}`);
   }
 
   return segments.join(" > ");
+}
+
+function normalizeArabicLabel(value: string): string {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/[إأآا]/g, "ا")
+    .replace(/ة/g, "ه")
+    .replace(/ى/g, "ي")
+    .replace(/\s+/g, " ");
+}
+
+export function sanitizeDouarLabel(
+  label?: string | null,
+  communeAr?: string,
+): string | undefined {
+  if (!label?.trim()) return undefined;
+
+  let cleaned = label
+    .trim()
+    .replace(/^(?:دشرة|قرية|دوار|مشتى|مشرة)\s+/u, "")
+    .replace(/\s*،\s*بلدية\s+.+$/u, "")
+    .replace(/\s*بلدية\s+.+$/u, "")
+    .trim();
+
+  if (!cleaned) return undefined;
+
+  const communeNorm = communeAr ? normalizeArabicLabel(communeAr) : null;
+  if (communeNorm && normalizeArabicLabel(cleaned) === communeNorm) {
+    return undefined;
+  }
+
+  if (
+    communeNorm &&
+    normalizeArabicLabel(cleaned).includes(communeNorm) &&
+    cleaned.length <= communeAr!.length + 8
+  ) {
+    return undefined;
+  }
+
+  return cleaned;
+}
+
+export function isRedundantExactAddress(
+  exactAddressAr: string | undefined,
+  addressHierarchy: string,
+): boolean {
+  if (!exactAddressAr?.trim()) return true;
+
+  const exactNorm = normalizeArabicLabel(exactAddressAr);
+  const hierarchyNorm = normalizeArabicLabel(addressHierarchy);
+
+  if (hierarchyNorm.includes(exactNorm) || exactNorm.includes(hierarchyNorm)) {
+    return true;
+  }
+
+  return false;
 }
 
 function buildMapDetailsFromVillage(
@@ -100,7 +162,7 @@ export function resolveLocationMapDetails(
         addressHierarchy: formatAddressHierarchy({
           dairaAr,
           communeAr,
-          douarOrVillage: douarOrVillage.trim(),
+          douarOrVillage: sanitizeDouarLabel(douarOrVillage.trim(), communeAr),
         }),
         roadLabel: ROAD_ACCESSIBILITY_LABELS[meta.road_accessibility],
       };
@@ -123,13 +185,13 @@ export function resolveCommuneMapDetails(
   const meta = getCommuneLocationMeta(commune, daira);
   const communeAr = getCommuneArabicName(commune);
   const dairaAr = getDairaArabicName(daira);
-  const douarLabel = fallbackDouar?.trim() || undefined;
+  const douarLabel = sanitizeDouarLabel(fallbackDouar, communeAr);
 
   return {
     communeAr,
     dairaAr,
     exactAddressAr: meta?.exact_address_ar,
-    landmark: meta?.landmark ?? fallbackDouar,
+    landmark: meta?.landmark ?? douarLabel,
     roadAccessibility: meta?.road_accessibility ?? "paved_heavy_truck",
     lat: meta?.lat,
     lng: meta?.lng,
