@@ -12,6 +12,7 @@ type MarkServedControlsProps = {
   quantityFulfilled: number;
   onSuccess?: () => void;
   compact?: boolean;
+  variant?: "popup" | "card";
 };
 
 export default function MarkServedControls({
@@ -20,6 +21,7 @@ export default function MarkServedControls({
   quantityFulfilled,
   onSuccess,
   compact = false,
+  variant = "popup",
 }: MarkServedControlsProps) {
   const [quantity, setQuantity] = useState("1");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,10 +29,16 @@ export default function MarkServedControls({
   const [success, setSuccess] = useState(false);
 
   const remaining = quantityNeeded - quantityFulfilled;
+  const isCard = variant === "card";
 
   if (remaining <= 0 || success) {
     return success ? (
-      <p className="text-xs font-semibold text-emerald-300">
+      <p
+        className={cn(
+          "text-xs font-semibold",
+          isCard ? "text-emerald-700" : "text-emerald-300",
+        )}
+      >
         ✅ تم التكفل بالحالة بنجاح
       </p>
     ) : null;
@@ -75,11 +83,21 @@ export default function MarkServedControls({
   return (
     <div
       className={cn(
-        "space-y-2 rounded-xl border border-slate-700/80 bg-slate-900/60 p-2.5",
+        "space-y-2",
+        isCard
+          ? "rounded-xl border border-slate-700/80 bg-slate-900/60 p-3"
+          : "rounded-xl border border-slate-700/80 bg-slate-900/60 p-2.5",
         compact ? "text-xs" : "text-sm",
       )}
     >
-      <p className="font-bold text-emerald-200">تم التكفل بالحالة</p>
+      <p
+        className={cn(
+          "font-bold",
+          isCard ? "text-emerald-200" : "text-emerald-200",
+        )}
+      >
+        تم التكفل بالحالة
+      </p>
       <div className="flex gap-2">
         <input
           type="number"
@@ -87,13 +105,23 @@ export default function MarkServedControls({
           max={remaining}
           value={quantity}
           onChange={(e) => setQuantity(e.target.value)}
-          className="w-20 rounded-lg border border-slate-600 bg-slate-950 px-2 py-1.5 text-slate-100"
+          className={cn(
+            "w-20 rounded-lg border px-2 py-1.5",
+            isCard
+              ? "border-slate-600 bg-slate-950 text-slate-100"
+              : "border-slate-600 bg-slate-950 text-slate-100",
+          )}
         />
         <button
           type="button"
           disabled={isSubmitting}
           onClick={() => void handleAddQuantity()}
-          className="flex-1 rounded-lg border border-emerald-600/50 bg-emerald-600/20 px-2 py-1.5 font-bold text-emerald-200 hover:bg-emerald-600/30 disabled:opacity-50"
+          className={cn(
+            "flex-1 rounded-lg border px-2 py-1.5 font-bold disabled:opacity-50",
+            isCard
+              ? "border-emerald-600/50 bg-emerald-600/20 text-emerald-200 hover:bg-emerald-600/30"
+              : "border-emerald-600/50 bg-emerald-600/20 text-emerald-200 hover:bg-emerald-600/30",
+          )}
         >
           {isSubmitting ? <Loader2 className="mx-auto h-4 w-4 animate-spin" /> : "+ كمية"}
         </button>
@@ -106,7 +134,11 @@ export default function MarkServedControls({
       >
         تم التكفل بالحالة (مغطى بالكامل)
       </button>
-      {error ? <p className="text-xs text-rose-300">{error}</p> : null}
+      {error ? (
+        <p className={cn("text-xs", isCard ? "text-rose-300" : "text-rose-300")}>
+          {error}
+        </p>
+      ) : null}
     </div>
   );
 }

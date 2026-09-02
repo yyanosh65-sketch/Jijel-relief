@@ -6,6 +6,7 @@ import { Loader2, MapPin, X } from "lucide-react";
 import { submitDamageReport } from "@/actions/needs";
 import { submitUrgentAlert } from "@/actions/emergency";
 import { resolveNearestLocation } from "@/lib/locations";
+import { MODAL_BACKDROP_CLASS } from "@/lib/z-index";
 import { formInputClass, selectFieldClass } from "@/lib/ui-labels";
 import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
 import { cn } from "@/lib/utils";
@@ -102,7 +103,7 @@ export default function MapClickReportModal({
 
   return (
     <div
-      className="fixed inset-0 z-[3700] flex items-end justify-center bg-black/55 p-3 backdrop-blur-sm sm:items-center"
+      className={cn(MODAL_BACKDROP_CLASS, "items-end sm:items-center")}
       onClick={onClose}
     >
       <div

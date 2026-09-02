@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import L from "leaflet";
 import { Loader2, MapPin } from "lucide-react";
 import {
@@ -37,19 +37,14 @@ import {
   getRoadPassabilityLabel,
   ROAD_ACCESSIBILITY_LABELS,
 } from "@/lib/map-location-display";
-import {
-  getMarkerColor,
-  MAP_CATEGORIES,
-  matchesMapCategories,
-  type MapCategoryId,
-} from "@/lib/map-utils";
 import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
+import { getMarkerColor } from "@/lib/map-utils";
 import {
-  glassPanelClass,
   MAP_LAYER_LABELS,
   MAP_LEGEND_LABELS,
   NeedProgressBar,
 } from "@/lib/ui-labels";
+import { Z_MAP_FLOATING, Z_MAP_LEGEND } from "@/lib/z-index";
 import { buildWhatsAppUrl } from "@/lib/phone";
 import WaypointsLayer from "@/components/map/WaypointsLayer";
 import { cn } from "@/lib/utils";
@@ -65,6 +60,8 @@ type ReconstructionMapProps = {
   onPledgeSuccess?: () => void;
   onVillageClick: (dossierId: string) => void;
   onOpenFieldReport?: (target: VillageFieldReportTarget) => void;
+  forceRoadTrackerCollapsed?: boolean;
+  onModalOpenChange?: (open: boolean) => void;
 };
 
 type MapLayerKey = keyof typeof MAP_LAYER_LABELS;
@@ -319,10 +316,9 @@ export default function ReconstructionMap({
   onPledgeSuccess,
   onVillageClick,
   onOpenFieldReport,
+  forceRoadTrackerCollapsed = false,
+  onModalOpenChange,
 }: ReconstructionMapProps) {
-  const [activeCategories, setActiveCategories] = useState<Set<MapCategoryId>>(
-    () => new Set(MAP_CATEGORIES.map((category) => category.id)),
-  );
   const [layers, setLayers] = useState<Record<MapLayerKey, boolean>>({
     needs: true,
     sos: true,
@@ -338,6 +334,13 @@ export default function ReconstructionMap({
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isCommunityReportOpen, setIsCommunityReportOpen] = useState(false);
 
+  const mapModalOpen =
+    isReportModalOpen || isCommunityReportOpen;
+
+  useEffect(() => {
+    onModalOpenChange?.(mapModalOpen);
+  }, [mapModalOpen, onModalOpenChange]);
+
   const sosMarkerIcon = useMemo(() => createSosMarkerIcon(), []);
 
   const villageIcons = useMemo(
@@ -349,13 +352,8 @@ export default function ReconstructionMap({
   );
 
   const visibleNeeds = useMemo(
-    () =>
-      needs.filter(
-        (need) =>
-          need.status !== "closed" &&
-          matchesMapCategories(need, activeCategories),
-      ),
-    [needs, activeCategories],
+    () => needs.filter((need) => need.status !== "closed"),
+    [needs],
   );
 
   const tempPinIcon = useMemo(
@@ -376,91 +374,18 @@ export default function ReconstructionMap({
     setPinDropMode(false);
   }
 
-  function toggleCategory(categoryId: MapCategoryId) {
-    setActiveCategories((current) => {
-      const next = new Set(current);
-
-      if (next.has(categoryId)) {
-        next.delete(categoryId);
-      } else {
-        next.add(categoryId);
-      }
-
-      return next;
-    });
-  }
-
   function toggleLayer(layer: MapLayerKey) {
     setLayers((current) => ({ ...current, [layer]: !current[layer] }));
   }
 
+  const collapseRoadTracker = forceRoadTrackerCollapsed || mapModalOpen;
+
   return (
-    <div dir="rtl" className="relative h-full w-full">
-      <div className="pointer-events-none absolute inset-x-0 top-0 z-[400] p-3 sm:p-4">
-        <div
-          className={cn(
-            glassPanelClass,
-            "relative pointer-events-auto mx-auto max-w-5xl overflow-hidden p-2 sm:p-3",
-          )}
-        >
-          <div className="space-y-2">
-            <div className="flex flex-wrap items-center justify-center gap-1.5 border-b border-slate-700/80 pb-2">
-              <span className="w-full shrink-0 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:w-auto sm:text-xs">
-                نوع الاحتياج
-              </span>
-              {MAP_CATEGORIES.map((category) => {
-                const isActive = activeCategories.has(category.id);
-
-                return (
-                  <button
-                    key={category.id}
-                    type="button"
-                    onClick={() => toggleCategory(category.id)}
-                    className={cn(
-                      "rounded-full px-3 py-1.5 text-xs font-medium transition",
-                      isActive
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "bg-slate-800/90 text-slate-300 hover:bg-slate-700",
-                    )}
-                  >
-                    {category.labelAr}
-                  </button>
-                );
-              })}
-            </div>
-
-            <div className="flex flex-wrap items-center justify-center gap-1.5">
-              <span className="w-full shrink-0 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:w-auto sm:text-xs">
-                طبقات الخريطة
-              </span>
-              {LAYER_TOGGLES.map((layer) => {
-                const isActive = layers[layer.key];
-
-                return (
-                  <button
-                    key={layer.key}
-                    type="button"
-                    onClick={() => toggleLayer(layer.key)}
-                    className={cn(
-                      "rounded-full px-3 py-1.5 text-xs font-medium transition",
-                      isActive
-                        ? "bg-emerald-600 text-white shadow-sm"
-                        : "bg-slate-800/90 text-slate-300 hover:bg-slate-700",
-                    )}
-                  >
-                    {layer.labelAr}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </div>
-
+    <div dir="rtl" className="relative z-10 h-full w-full">
       <div
         className={cn(
-          glassPanelClass,
-          "pointer-events-none absolute bottom-6 left-4 z-[500] hidden max-w-[200px] p-3 text-xs sm:block",
+          "pointer-events-none absolute bottom-6 left-4 hidden max-w-[200px] rounded-2xl border border-slate-800/80 bg-slate-900/90 p-3 text-xs shadow-xl backdrop-blur-md sm:block",
+          Z_MAP_LEGEND,
         )}
       >
         <p className="mb-2 font-semibold text-slate-100">دليل الألوان</p>
@@ -480,9 +405,50 @@ export default function ReconstructionMap({
         </ul>
       </div>
 
-      <RoadTracker className="pointer-events-auto absolute bottom-6 right-4 z-[500] hidden w-[min(100%,300px)] sm:block" />
+      <div
+        className={cn(
+          "pointer-events-none absolute bottom-6 left-4 hidden sm:block",
+          Z_MAP_FLOATING,
+          "sm:bottom-[11.5rem]",
+        )}
+      >
+        <div className="pointer-events-auto flex max-w-[min(100vw-2rem,360px)] flex-wrap gap-1 rounded-2xl border border-slate-800/80 bg-slate-900/90 p-2 shadow-xl backdrop-blur-md">
+          {LAYER_TOGGLES.map((layer) => {
+            const isActive = layers[layer.key];
 
-      <div className="pointer-events-none absolute bottom-44 right-4 z-[500] sm:bottom-28">
+            return (
+              <button
+                key={layer.key}
+                type="button"
+                onClick={() => toggleLayer(layer.key)}
+                className={cn(
+                  "rounded-full px-2 py-1 text-[10px] font-semibold transition",
+                  isActive
+                    ? "bg-emerald-600 text-white"
+                    : "bg-slate-800 text-slate-400 hover:bg-slate-700",
+                )}
+              >
+                {layer.labelAr}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <RoadTracker
+        forceCollapsed={collapseRoadTracker}
+        className={cn(
+          "pointer-events-auto absolute bottom-6 right-4 hidden w-[min(100%,300px)] sm:block",
+          Z_MAP_FLOATING,
+        )}
+      />
+
+      <div
+        className={cn(
+          "pointer-events-none absolute bottom-44 right-4 sm:bottom-28",
+          Z_MAP_FLOATING,
+        )}
+      >
         <button
           type="button"
           onClick={() => setIsCommunityReportOpen(true)}
@@ -492,7 +458,12 @@ export default function ReconstructionMap({
         </button>
       </div>
 
-      <div className="pointer-events-none absolute bottom-24 right-4 z-[500] sm:bottom-8">
+      <div
+        className={cn(
+          "pointer-events-none absolute bottom-24 right-4 sm:bottom-8",
+          Z_MAP_FLOATING,
+        )}
+      >
         <button
           type="button"
           onClick={() => setPinDropMode((current) => !current)}
@@ -768,13 +739,13 @@ export default function ReconstructionMap({
       />
 
       {layers.needs && visibleNeeds.length === 0 ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-28 z-[500] flex justify-center px-4 sm:bottom-8">
-          <div
-            className={cn(
-              glassPanelClass,
-              "flex max-w-md items-center gap-2 px-4 py-2.5 text-sm text-slate-300",
-            )}
-          >
+        <div
+          className={cn(
+            "pointer-events-none absolute inset-x-0 bottom-28 flex justify-center px-4 sm:bottom-8",
+            Z_MAP_LEGEND,
+          )}
+        >
+          <div className="flex max-w-md items-center gap-2 rounded-2xl border border-slate-800/80 bg-slate-900/90 px-4 py-2.5 text-sm text-slate-300 shadow-xl backdrop-blur-md">
             <MapPin className="h-4 w-4 shrink-0" />
             <span>
               {needs.length === 0

@@ -8,18 +8,20 @@ export const JIJEL_CENTER = {
 } as const;
 
 export const DEFAULT_MAP_ZOOM = 10;
+export const JIJEL_MIN_ZOOM = 9;
+export const JIJEL_MAX_ZOOM = 18;
 
-/** Map overlay stacking: filter bar (400) < popups (700) < modals (9999). */
-export const MAP_UI_Z_INDEX = {
-  filterBar: 400,
-  popupPane: 700,
-} as const;
+/** SW then NE — locks viewport to Jijel wilaya (blocks sea & neighboring wilayas). */
+export const JIJEL_MAX_BOUNDS: [[number, number], [number, number]] = [
+  [36.55, 5.5],
+  [36.95, 6.45],
+];
 
 export const MAP_TILE_LAYER = {
   url: "https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",
   attribution:
     '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
-  maxZoom: 19,
+  maxZoom: JIJEL_MAX_ZOOM,
 } as const;
 
 export type MapCategoryId = "olive_trees" | "livestock" | "shelter" | "tools";

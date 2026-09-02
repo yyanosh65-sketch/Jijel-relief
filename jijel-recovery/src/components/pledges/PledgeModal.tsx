@@ -10,6 +10,7 @@ import {
   formatAlgerianPhoneHint,
   isValidAlgerianPhone,
 } from "@/lib/phone";
+import { MODAL_BACKDROP_CLASS } from "@/lib/z-index";
 import { NeedProgressBar, formInputClass, glassPanelClass, selectFieldClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
@@ -155,7 +156,7 @@ export default function PledgeModal({
   return (
     <div
       dir="rtl"
-      className="fixed inset-0 z-[2000] flex items-end justify-center bg-black/50 p-4 backdrop-blur-sm sm:items-center"
+      className={cn(MODAL_BACKDROP_CLASS, "items-end sm:items-center")}
     >
       <div
         role="dialog"

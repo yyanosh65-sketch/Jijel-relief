@@ -9,6 +9,7 @@ import type { HelperSkill } from "@/db/schema";
 import { HELPER_SKILL_OPTIONS } from "@/lib/helpers";
 import { getCommunesByDaira, getDairas } from "@/lib/locations";
 import { formatAlgerianPhoneHint } from "@/lib/phone";
+import { MODAL_BACKDROP_CLASS } from "@/lib/z-index";
 import { formInputClass, selectFieldClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
@@ -39,8 +40,7 @@ const INITIAL_FORM: FormState = {
   availabilityNotes: "",
 };
 
-const OVERLAY_CLASS =
-  "fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-sm overflow-y-auto";
+const OVERLAY_CLASS = cn(MODAL_BACKDROP_CLASS, "overflow-y-auto");
 
 const CARD_CLASS =
   "relative w-full max-w-lg max-h-[85vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6 border border-slate-200";

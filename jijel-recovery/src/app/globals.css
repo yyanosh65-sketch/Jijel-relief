@@ -75,6 +75,16 @@ textarea::placeholder {
 
 .leaflet-container {
   font-family: inherit;
+  z-index: 10;
+}
+
+.leaflet-pane {
+  z-index: 10;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 20;
 }
 
 .leaflet-popup-content-wrapper {
@@ -147,7 +157,7 @@ textarea::placeholder {
 }
 
 .leaflet-popup {
-  z-index: 700 !important;
+  z-index: 40 !important;
 }
 
 @keyframes marquee {

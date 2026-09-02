@@ -4,16 +4,16 @@ import type { ReactNode } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 
 import { MapClickHandler } from "@/components/map/MapClickHandler";
-import { DEFAULT_MAP_ZOOM, JIJEL_CENTER } from "@/lib/map-utils";
+import {
+  DEFAULT_MAP_ZOOM,
+  JIJEL_CENTER,
+  JIJEL_MAX_BOUNDS,
+  JIJEL_MAX_ZOOM,
+  JIJEL_MIN_ZOOM,
+  MAP_TILE_LAYER,
+} from "@/lib/map-utils";
 
 import "leaflet/dist/leaflet.css";
-
-/**
- * Map UI stacking (see globals.css + MAP_UI_Z_INDEX):
- * - Filter pills: z-[400]
- * - Leaflet popup pane: z-[700] (custom-jijel-popup via MapPopup)
- * - Modals: z-[9999]
- */
 
 type LeafletMapProps = {
   children?: ReactNode;
@@ -24,7 +24,7 @@ type LeafletMapProps = {
 
 export default function LeafletMap({
   children,
-  className = "h-full w-full",
+  className = "relative z-10 h-full w-full",
   pinDropMode = false,
   onMapClick,
 }: LeafletMapProps) {
@@ -32,13 +32,17 @@ export default function LeafletMap({
     <MapContainer
       center={[JIJEL_CENTER.lat, JIJEL_CENTER.lng]}
       zoom={DEFAULT_MAP_ZOOM}
+      minZoom={JIJEL_MIN_ZOOM}
+      maxZoom={JIJEL_MAX_ZOOM}
+      maxBounds={JIJEL_MAX_BOUNDS}
+      maxBoundsViscosity={1.0}
       className={className}
       scrollWheelZoom
     >
       <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        maxZoom={19}
+        attribution={MAP_TILE_LAYER.attribution}
+        url={MAP_TILE_LAYER.url}
+        maxZoom={JIJEL_MAX_ZOOM}
       />
       {onMapClick ? (
         <MapClickHandler enabled={pinDropMode} onMapClick={onMapClick} />

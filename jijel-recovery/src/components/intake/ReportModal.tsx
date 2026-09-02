@@ -9,6 +9,7 @@ import {
   getCommuneArabicName,
   getDairas,
 } from "@/lib/locations";
+import { MODAL_BACKDROP_CLASS } from "@/lib/z-index";
 import { darkFormInputClass, darkSelectClass, primaryNextButtonClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
@@ -161,12 +162,12 @@ export default function ReportModal({
 
   return createPortal(
     <div
-      className="fixed inset-0 z-[9998] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md"
+      className={cn(MODAL_BACKDROP_CLASS, "items-center")}
       dir="rtl"
       onClick={onClose}
     >
       <div
-        className="relative z-[9999] max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-800/80 bg-slate-900/95 p-6 shadow-2xl"
+        className="relative max-h-[92vh] w-full max-w-lg overflow-y-auto rounded-2xl border border-slate-800/80 bg-slate-900/95 p-6 shadow-2xl"
         onClick={(event) => event.stopPropagation()}
       >
         <button

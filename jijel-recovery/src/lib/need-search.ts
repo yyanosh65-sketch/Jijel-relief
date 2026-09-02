@@ -27,6 +27,7 @@ export type NeedSortOption = "closest" | "urgent" | "fulfillment";
 
 export type NeedSearchFilters = {
   query: string;
+  commune: string;
   categories: NeedSearchCategoryId[];
   urgencyGroups: UrgencyFilterGroup[];
   roadAccess: RoadPassability[];
@@ -75,6 +76,7 @@ export const SORT_OPTIONS: Array<{
 
 const DEFAULT_FILTERS: NeedSearchFilters = {
   query: "",
+  commune: "",
   categories: SEARCH_CATEGORY_OPTIONS.map((option) => option.id),
   urgencyGroups: URGENCY_FILTER_OPTIONS.map((option) => option.id),
   roadAccess: ROAD_ACCESS_OPTIONS.map((option) => option.id),
@@ -139,6 +141,7 @@ export function parseNeedSearchParams(
 
   return {
     query: searchParams.get("q") ?? "",
+    commune: searchParams.get("commune") ?? "",
     categories: parseListParam(
       searchParams.get("categories"),
       categoryIds,
@@ -173,6 +176,10 @@ export function buildNeedSearchParams(
 
   if (filters.query.trim()) {
     params.set("q", filters.query.trim());
+  }
+
+  if (filters.commune.trim()) {
+    params.set("commune", filters.commune.trim());
   }
 
   if (filters.categories.length !== SEARCH_CATEGORY_OPTIONS.length) {
@@ -295,6 +302,14 @@ export function filterAndSortNeeds(
 
   let results = needs.filter((need) => {
     if (!matchesTextQuery(need, filters.query)) {
+      return false;
+    }
+
+    if (
+      filters.commune &&
+      need.location.name !== filters.commune &&
+      need.location.address !== filters.commune
+    ) {
       return false;
     }
 

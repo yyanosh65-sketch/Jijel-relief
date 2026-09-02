@@ -29,6 +29,7 @@ import {
   type VillageFieldReportTarget,
 } from "@/lib/field-reports";
 import { premiumCardClass } from "@/lib/ui-labels";
+import { Z_DRAWER } from "@/lib/z-index";
 import { cn } from "@/lib/utils";
 
 type VillageDetailDrawerProps = {
@@ -229,7 +230,7 @@ export default function VillageDetailDrawer({
     null;
 
   return (
-    <div className="fixed inset-0 z-[3600] flex justify-start">
+    <div className={cn("fixed inset-0 flex justify-start bg-slate-950/50 backdrop-blur-sm", Z_DRAWER)}>
       <button
         type="button"
         aria-label="إغلاق"

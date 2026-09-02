@@ -21,12 +21,13 @@ import { getDossierById, getDossierByLocation, getNearbyFacilities } from "@/lib
 import { filterAndSortNeeds } from "@/lib/need-search";
 import type { VillageFieldReportTarget } from "@/lib/field-reports";
 import { glassPanelClass } from "@/lib/ui-labels";
+import { Z_MAP_FLOATING } from "@/lib/z-index";
 import { cn } from "@/lib/utils";
 
 const ReconstructionMap = dynamic(() => import("./ReconstructionMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-slate-950 text-sm text-slate-400">
+    <div className="relative z-10 flex h-full w-full items-center justify-center bg-slate-950 text-sm text-slate-400">
       جاري تحميل الخريطة...
     </div>
   ),
@@ -61,6 +62,11 @@ export default function ReconstructionMapLoader({
   const [fieldReportTarget, setFieldReportTarget] =
     useState<VillageFieldReportTarget | null>(null);
   const [isFieldReportOpen, setIsFieldReportOpen] = useState(false);
+  const [helperModalOpen, setHelperModalOpen] = useState(false);
+  const [mapModalOpen, setMapModalOpen] = useState(false);
+
+  const forceRoadTrackerCollapsed =
+    helperModalOpen || mapModalOpen || isPledgeModalOpen;
 
   function openPledgeModal(need: MapNeed) {
     setSelectedNeed(need);
@@ -172,31 +178,42 @@ export default function ReconstructionMapLoader({
     </div>
   );
 
+  const mapSection = (
+    <div className="relative h-full min-h-[320px] w-full">
+      <AdvancedNeedSearch variant="floating" />
+      <RegisterHelperButton
+        variant="floating"
+        className={cn("!bottom-20 !left-4 sm:!bottom-6", Z_MAP_FLOATING)}
+        onOpenChange={setHelperModalOpen}
+      />
+      <ReconstructionMap
+        needs={needs}
+        intelligence={intelligence}
+        selectedNeedId={selectedNeed?.id ?? null}
+        onPledgeClick={openPledgeModal}
+        onPledgeSuccess={() => router.refresh()}
+        onVillageClick={openVillageDossier}
+        onOpenFieldReport={openFieldReportDrawer}
+        forceRoadTrackerCollapsed={forceRoadTrackerCollapsed}
+        onModalOpenChange={setMapModalOpen}
+      />
+    </div>
+  );
+
   return (
     <>
       <div className="flex h-full min-h-0 flex-col">
-        <AdvancedNeedSearch />
-
         {layout === "stacked" ? (
           <>
             <div className="relative h-[min(52vh,520px)] min-h-[320px] w-full">
-              <RegisterHelperButton
-                variant="floating"
-                className="!bottom-20 !left-4 !z-[1200] sm:!bottom-6 sm:hidden"
-              />
               <RegisterConvoyButton
                 variant="floating"
-                className="!bottom-36 !left-4 !z-[1200] sm:!bottom-20 sm:hidden"
+                className={cn(
+                  "!bottom-36 !left-4 sm:!bottom-20 sm:hidden",
+                  Z_MAP_FLOATING,
+                )}
               />
-              <ReconstructionMap
-                needs={needs}
-                intelligence={intelligence}
-                selectedNeedId={selectedNeed?.id ?? null}
-                onPledgeClick={openPledgeModal}
-                onPledgeSuccess={() => router.refresh()}
-                onVillageClick={openVillageDossier}
-                onOpenFieldReport={openFieldReportDrawer}
-              />
+              {mapSection}
             </div>
 
             <section
@@ -209,21 +226,7 @@ export default function ReconstructionMapLoader({
           </>
         ) : (
           <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
-            <div className="relative h-[55vh] flex-1 lg:h-full">
-              <RegisterHelperButton
-                variant="floating"
-                className="!bottom-20 !left-4 !z-[1200] sm:!bottom-6 sm:hidden"
-              />
-              <ReconstructionMap
-                needs={needs}
-                intelligence={intelligence}
-                selectedNeedId={selectedNeed?.id ?? null}
-                onPledgeClick={openPledgeModal}
-                onPledgeSuccess={() => router.refresh()}
-                onVillageClick={openVillageDossier}
-                onOpenFieldReport={openFieldReportDrawer}
-              />
-            </div>
+            <div className="relative h-[55vh] flex-1 lg:h-full">{mapSection}</div>
 
             <aside
               dir="rtl"

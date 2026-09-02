@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ChevronDown, ChevronUp, Route } from "lucide-react";
 
 import {
@@ -12,10 +12,22 @@ import { cn } from "@/lib/utils";
 
 type RoadTrackerProps = {
   className?: string;
+  forceCollapsed?: boolean;
 };
 
-export default function RoadTracker({ className }: RoadTrackerProps) {
+export default function RoadTracker({
+  className,
+  forceCollapsed = false,
+}: RoadTrackerProps) {
   const [expanded, setExpanded] = useState(true);
+
+  useEffect(() => {
+    if (forceCollapsed) {
+      setExpanded(false);
+    }
+  }, [forceCollapsed]);
+
+  const isOpen = forceCollapsed ? false : expanded;
 
   return (
     <div
@@ -36,14 +48,14 @@ export default function RoadTracker({ className }: RoadTrackerProps) {
             حالة محاور دخول جيجل
           </span>
         </div>
-        {expanded ? (
+        {isOpen ? (
           <ChevronUp className="h-4 w-4 text-slate-400" />
         ) : (
           <ChevronDown className="h-4 w-4 text-slate-400" />
         )}
       </button>
 
-      {expanded ? (
+      {isOpen ? (
         <div className="space-y-2 border-t border-slate-800/80 px-3 pb-3 pt-2">
           {JIJEL_ENTRY_CORRIDORS.map((corridor) => {
             const styles = ROAD_STATUS_STYLES[corridor.status];

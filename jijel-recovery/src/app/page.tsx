@@ -44,13 +44,13 @@ export default async function HomePage() {
       dir="rtl"
       className="dashboard-page min-h-full"
     >
-      <div className="mx-auto max-w-6xl border-b border-slate-200/80 px-4 py-5">
+      <div className="mx-auto max-w-6xl border-b border-slate-800/80 px-4 py-5">
         <h1
-          className={`${displayHeadingClass} text-2xl font-bold tracking-tight text-slate-900 sm:text-3xl`}
+          className={`${displayHeadingClass} text-2xl font-bold tracking-tight text-white sm:text-3xl`}
         >
           خريطة إعادة الإعمار بجيجل
         </h1>
-        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600 sm:text-base">
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-400 sm:text-base">
           احتياجات موثقة عبر بلديات ودواوير الولاية — ابحث، صفّي، وعاون وين
           تقدر.
         </p>

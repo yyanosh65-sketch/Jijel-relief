@@ -34,12 +34,12 @@ export default async function MapPage() {
 
   return (
     <main dir="rtl" className="dashboard-page flex flex-1 flex-col">
-      <header className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur-md">
+      <header className="border-b border-slate-800/80 bg-slate-950/90 px-4 py-4 backdrop-blur-md">
         <div className="mx-auto max-w-6xl">
-          <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">
+          <h1 className="text-lg font-semibold text-white sm:text-xl">
             خريطة إعادة الإعمار بجيجل
           </h1>
-          <p className="text-sm text-slate-600">
+          <p className="text-sm text-slate-400">
             احتياجات موثقة عبر بلديات ودواوير ولاية جيجل — عاون وين تقدر
           </p>
         </div>
