@@ -35,7 +35,16 @@ export type QueuedMonitoredSourceInput = {
 
 const QUEUE_STORAGE_KEY = "jijel-monitored-sources-queue";
 
-const bundledSources = monitoredSourcesData.sources as MonitoredSource[];
+export type MonitoredSourcesFile = {
+  keywords: string[];
+  sources: MonitoredSource[];
+};
+
+const monitoredSourcesFile =
+  monitoredSourcesData as MonitoredSourcesFile;
+
+const bundledSources = monitoredSourcesFile.sources;
+const searchKeywords = monitoredSourcesFile.keywords ?? [];
 
 function slugify(value: string): string {
   return value
@@ -84,6 +93,10 @@ function writeQueuedSources(sources: MonitoredSource[]): void {
 
 export function getBundledMonitoredSources(): MonitoredSource[] {
   return bundledSources;
+}
+
+export function getMonitoredSearchKeywords(): string[] {
+  return [...searchKeywords];
 }
 
 export function getQueuedMonitoredSources(): MonitoredSource[] {
