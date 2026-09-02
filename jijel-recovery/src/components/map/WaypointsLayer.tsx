@@ -37,6 +37,7 @@ function WaypointPopupContent({
 
   return (
     <MapPopupShell
+      className="waypoint-popup-shell"
       pointTypeLabel={getWaypointPointTypeLabel(waypoint.type)}
       title={`${getWaypointTypeIcon(waypoint.type)} ${waypoint.name_ar}`}
       addressHierarchy={`ولاية جيجل > ${typeMeta.labelAr} > ${waypoint.name_ar}`}

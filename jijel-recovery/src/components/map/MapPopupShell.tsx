@@ -71,9 +71,15 @@ export default function MapPopupShell({
     !isRedundantExactAddress(exactAddressAr, hierarchyTag);
 
   return (
-    <div dir="rtl" className={cn("map-popup-content text-right text-slate-900", className)}>
+    <div
+      dir="rtl"
+      className={cn(
+        "map-popup-content w-[320px] overflow-hidden text-right text-slate-900",
+        className,
+      )}
+    >
       <div className="sticky top-0 z-10 bg-white">
-        <div className="border-b border-slate-100 bg-slate-50 p-3 text-base font-bold text-slate-900">
+        <div className="border-b border-slate-100 bg-slate-50 p-3 text-sm font-extrabold text-slate-900">
           {title}
         </div>
         {hierarchyTag ? (
@@ -83,56 +89,58 @@ export default function MapPopupShell({
         ) : null}
       </div>
 
-      <div className="space-y-3 p-3">
-        <p className="text-xs font-bold text-emerald-800">🏷️ {pointTypeLabel}</p>
+      <div className="max-h-[340px] overflow-y-auto overflow-x-hidden">
+        <div className="space-y-3 p-3">
+          <p className="text-xs font-bold text-emerald-800">🏷️ {pointTypeLabel}</p>
 
-        <div className="space-y-1.5 text-xs leading-relaxed">
-          {showExactAddress ? (
-            <p className="font-bold text-slate-700">{exactAddressAr}</p>
-          ) : null}
-          {resolvedRoadLabel ? (
-            <p className="font-bold text-slate-700">
-              <span className="text-slate-900">🛣️ حالة المسلك:</span>{" "}
-              {resolvedRoadLabel}
+          <div className="space-y-1.5 text-xs leading-relaxed">
+            {showExactAddress ? (
+              <p className="font-bold text-slate-700">{exactAddressAr}</p>
+            ) : null}
+            {resolvedRoadLabel ? (
+              <p className="font-bold text-slate-700">
+                <span className="text-slate-900">🛣️ حالة المسلك:</span>{" "}
+                {resolvedRoadLabel}
+              </p>
+            ) : null}
+            <p className="font-mono text-xs font-bold text-slate-700" dir="ltr">
+              {lat}, {lng}
             </p>
-          ) : null}
-          <p className="font-mono text-xs font-bold text-slate-700" dir="ltr">
-            {lat}, {lng}
-          </p>
+          </div>
+
+          {children}
         </div>
+      </div>
 
-        {children}
-
-        <div className="space-y-2 pt-1">
-          {showFieldReportButton && onFieldReportClick ? (
-            <button
-              type="button"
-              onClick={onFieldReportClick}
-              className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100"
-            >
-              📝 إضافة تقرير ميداني / صور توثيقية
-            </button>
-          ) : null}
-
-          <a
-            href={mapsUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+      <div className="space-y-2 border-t border-slate-100 bg-white p-3 pb-3">
+        {showFieldReportButton && onFieldReportClick ? (
+          <button
+            type="button"
+            onClick={onFieldReportClick}
+            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100"
           >
-            <Navigation className="h-4 w-4 shrink-0" aria-hidden />
-            فتح في Google Maps للملاحة
-          </a>
+            📝 إضافة تقرير ميداني / صور توثيقية
+          </button>
+        ) : null}
 
-          {phone ? (
-            <ContactActionButtons
-              phone={phone}
-              whatsappUrl={whatsappUrl}
-              variant="map"
-              className="w-full flex-col"
-            />
-          ) : null}
-        </div>
+        <a
+          href={mapsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+        >
+          <Navigation className="h-4 w-4 shrink-0" aria-hidden />
+          فتح في Google Maps للملاحة
+        </a>
+
+        {phone ? (
+          <ContactActionButtons
+            phone={phone}
+            whatsappUrl={whatsappUrl}
+            variant="map"
+            className="w-full flex-col"
+          />
+        ) : null}
       </div>
     </div>
   );

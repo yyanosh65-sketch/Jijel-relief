@@ -7,7 +7,7 @@ export const MAP_POPUP_PROPS = {
   offset: [0, -25] as [number, number],
   autoPan: true,
   autoPanPaddingTopLeft: [30, 90] as [number, number],
-  autoPanPaddingBottomRight: [30, 30] as [number, number],
+  autoPanPaddingBottomRight: [30, 80] as [number, number],
   className: "custom-jijel-popup",
 } as const;
 

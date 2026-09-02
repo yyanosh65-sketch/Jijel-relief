@@ -82,8 +82,7 @@ textarea::placeholder {
 .custom-jijel-popup .leaflet-popup-content {
   margin: 0 !important;
   line-height: normal;
-  max-height: 380px;
-  overflow-y: auto;
+  overflow: hidden;
   width: 320px !important;
 }
 
