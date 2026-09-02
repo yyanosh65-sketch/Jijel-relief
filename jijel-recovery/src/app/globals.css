@@ -108,6 +108,19 @@ textarea::placeholder {
   z-index: 20;
 }
 
+.map-viewport-shell .leaflet-bottom.leaflet-left {
+  bottom: 7.5rem;
+  left: 0.75rem;
+}
+
+.map-viewport-shell .leaflet-control-attribution {
+  font-size: 10px;
+  background: rgb(15 23 42 / 0.75) !important;
+  color: rgb(148 163 184) !important;
+  border-radius: 0.5rem;
+  padding: 2px 6px;
+}
+
 .leaflet-popup-content-wrapper {
   background: #0f172a !important;
   color: #f8fafc !important;

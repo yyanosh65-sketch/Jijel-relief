@@ -393,7 +393,7 @@ export default function ReconstructionMap({
     <div dir="rtl" className="relative z-10 h-full w-full">
       <div
         className={cn(
-          "pointer-events-none absolute bottom-6 left-6 hidden max-w-[200px] rounded-2xl border border-slate-800/80 bg-slate-900/90 p-3 text-xs shadow-xl backdrop-blur-md sm:block",
+          "pointer-events-none absolute bottom-6 left-6 z-[25] hidden max-w-[200px] rounded-2xl border border-slate-800/80 bg-slate-900/90 p-3 text-xs shadow-xl backdrop-blur-md sm:block",
           Z_MAP_LEGEND,
         )}
       >
@@ -416,11 +416,11 @@ export default function ReconstructionMap({
 
       <div
         className={cn(
-          "pointer-events-none absolute top-4 left-4 hidden sm:block",
+          "pointer-events-none absolute top-4 right-4 hidden sm:block",
           Z_MAP_FLOATING,
         )}
       >
-        <div className="pointer-events-auto flex max-w-xs flex-wrap gap-1.5 rounded-2xl border border-slate-800 bg-slate-900/90 p-2 backdrop-blur-md md:max-w-md">
+        <div className="pointer-events-auto flex max-w-xs flex-wrap gap-1.5 rounded-2xl border border-slate-800 bg-slate-900/90 p-2 md:max-w-md">
           {LAYER_TOGGLES.map((layer) => {
             const isActive = layers[layer.key];
 
@@ -453,7 +453,7 @@ export default function ReconstructionMap({
 
       <div
         className={cn(
-          "pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2",
+          "pointer-events-none absolute bottom-6 left-1/2 z-[35] -translate-x-1/2",
           Z_MAP_CTA,
         )}
       >
@@ -468,8 +468,7 @@ export default function ReconstructionMap({
 
       <div
         className={cn(
-          "pointer-events-none absolute bottom-[4.75rem] left-1/2 -translate-x-1/2",
-          Z_MAP_FLOATING,
+          "pointer-events-none absolute bottom-[5.5rem] left-1/2 z-30 -translate-x-1/2",
         )}
       >
         <button
