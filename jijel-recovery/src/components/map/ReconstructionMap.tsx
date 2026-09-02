@@ -44,7 +44,7 @@ import {
   MAP_LEGEND_LABELS,
   NeedProgressBar,
 } from "@/lib/ui-labels";
-import { Z_MAP_CTA, Z_MAP_FLOATING, Z_MAP_HINT, Z_MAP_LEGEND } from "@/lib/z-index";
+import { Z_MAP_CTA, Z_MAP_FLOATING, Z_MAP_LEGEND } from "@/lib/z-index";
 import { buildWhatsAppDispatchUrl, buildWhatsAppUrl } from "@/lib/phone";
 import {
   buildMapPinWhatsAppDispatchMessage,
