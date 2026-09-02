@@ -1,7 +1,6 @@
 "use client";
 
 import dynamic from "next/dynamic";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 
@@ -9,8 +8,6 @@ import type { MapIntelligenceData } from "@/actions/intelligence";
 import { getVillageDossier } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
 import AdvancedNeedSearch from "@/components/search/AdvancedNeedSearch";
-import RegisterHelperButton from "@/components/helpers/RegisterHelperButton";
-import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
 import NeedCard from "@/components/needs/NeedCard";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import VillageDetailDrawer from "@/components/map/VillageDetailDrawer";
@@ -21,7 +18,6 @@ import { getDossierById, getDossierByLocation, getNearbyFacilities } from "@/lib
 import { filterAndSortNeeds } from "@/lib/need-search";
 import type { VillageFieldReportTarget } from "@/lib/field-reports";
 import { glassPanelClass } from "@/lib/ui-labels";
-import { Z_MAP_FLOATING } from "@/lib/z-index";
 import { cn } from "@/lib/utils";
 
 const ReconstructionMap = dynamic(() => import("./ReconstructionMap"), {
@@ -37,12 +33,14 @@ type ReconstructionMapLoaderProps = {
   needs: MapNeed[];
   intelligence: MapIntelligenceData;
   layout?: "sidebar" | "stacked";
+  fullViewportMap?: boolean;
 };
 
 export default function ReconstructionMapLoader({
   needs,
   intelligence,
   layout = "sidebar",
+  fullViewportMap = false,
 }: ReconstructionMapLoaderProps) {
   const router = useRouter();
   const filters = useNeedSearchFilters();
@@ -62,11 +60,9 @@ export default function ReconstructionMapLoader({
   const [fieldReportTarget, setFieldReportTarget] =
     useState<VillageFieldReportTarget | null>(null);
   const [isFieldReportOpen, setIsFieldReportOpen] = useState(false);
-  const [helperModalOpen, setHelperModalOpen] = useState(false);
   const [mapModalOpen, setMapModalOpen] = useState(false);
 
-  const forceRoadTrackerCollapsed =
-    helperModalOpen || mapModalOpen || isPledgeModalOpen;
+  const forceRoadTrackerCollapsed = mapModalOpen || isPledgeModalOpen;
 
   function openPledgeModal(need: MapNeed) {
     setSelectedNeed(need);
@@ -128,27 +124,15 @@ export default function ReconstructionMapLoader({
   }
 
   const needsListHeader = (
-    <div className="space-y-3 border-b border-slate-800/80 px-4 py-3">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="text-sm font-semibold text-slate-100">
-            حاجيات موثقة
-          </h2>
-          <p className="text-xs text-slate-400">
-            {filteredNeeds.length} من {needs.length} احتياج
-          </p>
-        </div>
-        <Link
-          href="/report"
-          className="inline-flex items-center gap-1.5 rounded-full bg-emerald-700 px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-800"
-        >
-          <span aria-hidden>+</span>
-          تسجيل ضرر أو احتياج جديد
-        </Link>
+    <div className="space-y-2 border-b border-slate-800/80 px-4 py-3">
+      <div>
+        <h2 className="text-sm font-semibold text-slate-100">حاجيات موثقة</h2>
+        <p className="text-xs text-slate-400">
+          {filteredNeeds.length} من {needs.length} احتياج
+        </p>
       </div>
       <p className="text-[11px] leading-relaxed text-slate-500">
-        أي مواطن أو رئيس جمعية محلية يمكنه إضافة احتياج موثّق يظهر مباشرة على
-        الخريطة والقائمة.
+        استخدم زر «تسجيل نداء أو استغاثة» على الخريطة لإضافة نداء ميداني جديد.
       </p>
     </div>
   );
@@ -178,14 +162,15 @@ export default function ReconstructionMapLoader({
     </div>
   );
 
+  const mapHeightClass = fullViewportMap
+    ? "h-full min-h-0"
+    : layout === "stacked"
+      ? "h-[min(52vh,520px)] min-h-[320px]"
+      : "h-[55vh] lg:h-full";
+
   const mapSection = (
-    <div className="relative h-full min-h-[320px] w-full">
+    <div className={cn("relative w-full", mapHeightClass)}>
       <AdvancedNeedSearch variant="floating" />
-      <RegisterHelperButton
-        variant="floating"
-        className={cn("!bottom-20 !left-4 sm:!bottom-6", Z_MAP_FLOATING)}
-        onOpenChange={setHelperModalOpen}
-      />
       <ReconstructionMap
         needs={needs}
         intelligence={intelligence}
@@ -202,19 +187,10 @@ export default function ReconstructionMapLoader({
 
   return (
     <>
-      <div className="flex h-full min-h-0 flex-col">
+      <div className={cn("flex min-h-0 flex-col", fullViewportMap && "h-full")}>
         {layout === "stacked" ? (
           <>
-            <div className="relative h-[min(52vh,520px)] min-h-[320px] w-full">
-              <RegisterConvoyButton
-                variant="floating"
-                className={cn(
-                  "!bottom-36 !left-4 sm:!bottom-20 sm:hidden",
-                  Z_MAP_FLOATING,
-                )}
-              />
-              {mapSection}
-            </div>
+            {mapSection}
 
             <section
               dir="rtl"
@@ -226,7 +202,7 @@ export default function ReconstructionMapLoader({
           </>
         ) : (
           <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
-            <div className="relative h-[55vh] flex-1 lg:h-full">{mapSection}</div>
+            {mapSection}
 
             <aside
               dir="rtl"

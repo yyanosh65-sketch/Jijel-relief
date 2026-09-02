@@ -392,21 +392,22 @@ export default function AdvancedNeedSearch({
     <div
       dir="rtl"
       className={cn(
-        "pointer-events-none absolute inset-x-0 top-3 px-3 sm:top-4 sm:px-4",
-        Z_MAP_FLOATING,
+        "pointer-events-none absolute top-4 left-1/2 z-[500] w-[92%] max-w-4xl -translate-x-1/2",
         className,
       )}
       aria-label="بحث وتصفية الاحتياجات"
     >
-      <div className="pointer-events-auto mx-auto w-full max-w-5xl">
-        <div className={pillClass}>{renderToolbar()}</div>
-        {expandedPanel}
-        {outsideJijel ? (
-          <p className="mt-1 text-center text-[10px] text-amber-300/90">
-            موقعك خارج جيجل — العرض على كامل الولاية
-          </p>
-        ) : null}
+      <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/90 p-2 shadow-2xl backdrop-blur-md">
+        {renderToolbar()}
       </div>
+      {expandedPanel ? (
+        <div className="pointer-events-auto mt-2">{expandedPanel}</div>
+      ) : null}
+      {outsideJijel ? (
+        <p className="mt-1 text-center text-[10px] text-amber-300/90">
+          موقعك خارج جيجل — العرض على كامل الولاية
+        </p>
+      ) : null}
     </div>
   );
 }
