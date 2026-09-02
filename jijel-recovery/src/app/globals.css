@@ -106,6 +106,13 @@ textarea::placeholder {
   z-index: 400;
 }
 
+.leaflet-pane.leaflet-control-pane,
+.leaflet-top,
+.leaflet-bottom,
+.leaflet-control {
+  z-index: 400;
+}
+
 .leaflet-pane.leaflet-tile-pane {
   z-index: 200;
 }
