@@ -13,7 +13,8 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:seed:needs": "tsx scripts/seed.ts",
     "db:seed:facilities": "tsx src/db/seed.ts",
-    "scraper:run": "tsx scripts/run-scraper.ts"
+    "scraper:run": "tsx scripts/run-scraper.ts",
+    "locations:fetch-osm": "tsx scripts/fetch-jijel-settlements.ts"
   },
   "dependencies": {
     "@ai-sdk/google": "^4.0.59",
