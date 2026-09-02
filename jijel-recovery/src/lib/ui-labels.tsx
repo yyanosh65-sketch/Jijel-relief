@@ -32,6 +32,9 @@ export const navQuickActionAmberClass =
 export const navQuickActionBlueClass =
   "rounded-full border border-blue-200 bg-blue-50 px-4 py-2 text-xs font-semibold text-blue-900 shadow-sm transition hover:bg-blue-100";
 
+export const navQuickActionEmeraldClass =
+  "rounded-full border border-emerald-300 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-900 shadow-sm transition hover:bg-emerald-100";
+
 export const MAP_LAYER_LABELS = {
   needs: "حاجيات المداشر",
   sos: "نداءات الفزعة 🚨",

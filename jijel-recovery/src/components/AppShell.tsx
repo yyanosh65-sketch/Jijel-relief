@@ -5,6 +5,7 @@ import FeedImporterButton from "@/components/admin/FeedImporterButton";
 import AgentCopilot from "@/components/admin/AgentCopilot";
 import SosAlertButton from "@/components/emergency/SosAlertButton";
 import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
+import CharityInventoryNavButton from "@/components/charity/CharityInventoryNavButton";
 import RegisterHelperButton from "@/components/helpers/RegisterHelperButton";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -19,6 +20,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           <div className="flex flex-wrap items-center gap-2 border-t border-slate-100 pt-2 sm:border-t-0 sm:pt-0">
             <FeedImporterButton variant="navbar" />
             <RegisterConvoyButton variant="navbar" />
+            <CharityInventoryNavButton />
             <RegisterHelperButton variant="navbar" />
           </div>
         </div>

@@ -1,5 +1,6 @@
 import { relations } from "drizzle-orm";
 import {
+  boolean,
   integer,
   numeric,
   pgEnum,
@@ -117,6 +118,26 @@ export const fieldInfrastructureStatusEnum = pgEnum("field_infrastructure_status
   "intermittent",
   "cut_off",
   "unknown",
+]);
+
+export const charityItemCategoryEnum = pgEnum("charity_item_category", [
+  "water_equipment",
+  "fodder",
+  "building_materials",
+  "food",
+]);
+
+export const charityAvailabilityEnum = pgEnum("charity_availability", [
+  "available",
+  "limited",
+  "reserved",
+  "depleted",
+]);
+
+export const charityInventoryStatusEnum = pgEnum("charity_inventory_status", [
+  "pending",
+  "approved",
+  "rejected",
 ]);
 
 export const locations = pgTable("locations", {
@@ -278,6 +299,36 @@ export const villageFieldReports = pgTable("village_field_reports", {
     .notNull(),
 });
 
+export const charityInventories = pgTable("charity_inventories", {
+  id: serial("id").primaryKey(),
+  charityName: text("charity_name").notNull(),
+  charityNameAr: text("charity_name_ar"),
+  representativeName: text("representative_name").notNull(),
+  representativePhone: text("representative_phone").notNull(),
+  representativeWhatsapp: text("representative_whatsapp"),
+  daira: text("daira").notNull(),
+  commune: text("commune").notNull(),
+  communeAr: text("commune_ar").notNull(),
+  category: charityItemCategoryEnum("category").notNull(),
+  itemTitle: text("item_title").notNull(),
+  availableQuantity: integer("available_quantity").notNull(),
+  unit: text("unit").notNull(),
+  coverageRadiusKm: integer("coverage_radius_km"),
+  targetDouars: text("target_douars").array().notNull().default([]),
+  availability: charityAvailabilityEnum("availability")
+    .notNull()
+    .default("available"),
+  verified: boolean("verified").notNull().default(false),
+  status: charityInventoryStatusEnum("status").notNull().default("approved"),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const locationsRelations = relations(locations, ({ many }) => ({
   needs: many(needs),
 }));
@@ -324,3 +375,10 @@ export type FieldRoadPassability =
 export type FieldInfrastructureStatus =
   (typeof fieldInfrastructureStatusEnum.enumValues)[number];
 export type VillageFieldReport = typeof villageFieldReports.$inferSelect;
+export type CharityInventory = typeof charityInventories.$inferSelect;
+export type CharityItemCategory =
+  (typeof charityItemCategoryEnum.enumValues)[number];
+export type CharityAvailability =
+  (typeof charityAvailabilityEnum.enumValues)[number];
+export type CharityInventoryStatus =
+  (typeof charityInventoryStatusEnum.enumValues)[number];
