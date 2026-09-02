@@ -1,6 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="%:'+) ,J,D">
-  <rect width="512" height="512" rx="96" fill="#020617"/>
-  <path d="M256 96 L384 160 V288 C384 360 328 416 256 432 C184 416 128 360 128 288 V160 Z" fill="#10b981" stroke="#34d399" stroke-width="8"/>
-  <circle cx="256" cy="224" r="28" fill="#34d399"/>
-  <circle cx="256" cy="224" r="44" fill="none" stroke="#6ee7b7" stroke-width="6" opacity="0.55"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="إغاثة جيجل">
+  <rect width="512" height="512" rx="112" fill="#022c22"/>
+  <rect x="32" y="32" width="448" height="448" rx="96" fill="url(#bg)" stroke="#34d399" stroke-width="8" opacity="0.95"/>
+  <defs>
+    <linearGradient id="bg" x1="64" y1="64" x2="448" y2="448">
+      <stop offset="0%" stop-color="#10b981"/>
+      <stop offset="55%" stop-color="#047857"/>
+      <stop offset="100%" stop-color="#022c22"/>
+    </linearGradient>
+    <linearGradient id="mountain" x1="96" y1="300" x2="416" y2="420">
+      <stop offset="0%" stop-color="#ecfdf5" stop-opacity="0.95"/>
+      <stop offset="100%" stop-color="#a7f3d0" stop-opacity="0.55"/>
+    </linearGradient>
+  </defs>
+  <path d="M338 108C278 88 218 140 202 204C186 268 224 328 284 348C252 336 232 296 232 252C232 192 284 148 338 148C314 112 322 84 338 108Z" fill="#ffffff"/>
+  <path d="M64 404L176 248L256 312L352 184L448 280V404H64Z" fill="url(#mountain)"/>
+  <path d="M256 312V220" stroke="#ffffff" stroke-width="22" stroke-linecap="round"/>
+  <path d="M256 248C214 228 186 196 194 160C228 180 244 216 256 248Z" fill="#ffffff"/>
+  <path d="M256 248C298 228 326 196 318 160C284 180 268 216 256 248Z" fill="#d1fae5"/>
+  <ellipse cx="256" cy="372" rx="52" ry="22" fill="#34d399"/>
 </svg>

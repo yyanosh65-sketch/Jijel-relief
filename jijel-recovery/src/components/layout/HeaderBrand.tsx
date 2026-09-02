@@ -9,7 +9,10 @@ export default function HeaderBrand() {
       className="group flex min-w-0 items-center gap-3 rounded-xl border border-transparent px-1 py-1 transition hover:border-emerald-800/40 hover:bg-slate-900/40"
       aria-label="إغاثة جيجل — الصفحة الرئيسية"
     >
-      <Logo size={44} className="transition group-hover:scale-[1.02]" />
+      <Logo
+        size={48}
+        className="shrink-0 transition-transform duration-200 group-hover:scale-[1.02]"
+      />
       <div className="min-w-0 text-right leading-tight">
         <p className="truncate font-[family-name:var(--font-display)] text-base font-extrabold tracking-tight text-white sm:text-lg">
           إغاثة جيجل{" "}
