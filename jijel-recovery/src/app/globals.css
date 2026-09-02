@@ -79,10 +79,10 @@ textarea::placeholder {
 
 .leaflet-popup-content-wrapper {
   border-radius: 1rem;
-  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.1);
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  color: #0f172a;
+  box-shadow: 0 20px 25px -5px rgb(0 0 0 / 0.45);
+  border: 1px solid rgb(51 65 85 / 0.8);
+  background: #0f172a;
+  color: #f1f5f9;
 }
 
 .custom-jijel-popup .leaflet-popup-content-wrapper {

@@ -1,10 +1,10 @@
 import { cn } from "@/lib/utils";
 
 export const glassPanelClass =
-  "backdrop-blur-md bg-white/90 border border-slate-200/80 shadow-lg rounded-2xl";
+  "backdrop-blur-md bg-slate-900/80 border border-slate-800/80 shadow-lg shadow-black/20 rounded-2xl";
 
 export const premiumCardClass =
-  "rounded-2xl border border-slate-200/80 bg-white/95 shadow-md backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl";
+  "rounded-2xl border border-slate-800/80 bg-slate-900/80 shadow-md shadow-black/15 backdrop-blur-md transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl hover:shadow-black/25";
 
 export const dashboardPanelClass =
   "rounded-2xl border border-slate-800/60 bg-slate-900/80 shadow-xl shadow-black/20 backdrop-blur-md";
@@ -14,12 +14,12 @@ export const dashboardCanvasClass =
 
 export const statusBadgeClass = {
   emerald:
-    "inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800",
-  rose: "inline-flex items-center rounded-full border border-rose-500/30 bg-rose-500/15 px-2.5 py-0.5 text-[11px] font-bold text-rose-800",
+    "inline-flex items-center rounded-full border border-emerald-500/40 bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-200",
+  rose: "inline-flex items-center rounded-full border border-rose-500/40 bg-rose-500/15 px-2.5 py-0.5 text-[11px] font-bold text-rose-200",
   amber:
-    "inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-bold text-amber-900",
+    "inline-flex items-center rounded-full border border-amber-500/40 bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-bold text-amber-200",
   slate:
-    "inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-700",
+    "inline-flex items-center rounded-full border border-slate-700 bg-slate-800/80 px-2.5 py-0.5 text-[11px] font-bold text-slate-300",
 } as const;
 
 export type StatusBadgeTone = keyof typeof statusBadgeClass;
@@ -42,6 +42,12 @@ export const formInputClass =
 
 export const formTextareaClass =
   "form-text-field w-full rounded-xl border-2 border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 placeholder:text-slate-400 font-semibold focus:border-emerald-500 focus:ring-2 focus:ring-emerald-200 focus:outline-none";
+
+export const darkFormInputClass =
+  "form-text-field min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm font-semibold text-slate-100 placeholder:text-slate-500 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none";
+
+export const darkSelectClass =
+  "form-select-field min-h-11 w-full rounded-xl border border-slate-700 bg-slate-950/80 px-3 text-sm font-semibold text-slate-100 focus:border-emerald-500/60 focus:ring-2 focus:ring-emerald-500/20 focus:outline-none";
 
 export const primaryNextButtonClass =
   "rounded-xl bg-emerald-600 py-3.5 text-sm font-bold text-white shadow-lg shadow-emerald-700/20 transition-all hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50";

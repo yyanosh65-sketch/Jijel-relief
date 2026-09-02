@@ -1,8 +1,7 @@
 "use client";
 
-import { Navigation } from "lucide-react";
+import { Navigation, Phone } from "lucide-react";
 
-import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import {
   buildGoogleMapsDirectionsUrl,
   formatPopupHierarchyTag,
@@ -84,35 +83,49 @@ export default function MapPopupShell({
     <div
       dir="rtl"
       className={cn(
-        "map-popup-content w-[320px] overflow-hidden text-right font-sans text-slate-900",
+        "map-popup-content w-[320px] overflow-hidden rounded-xl text-right font-sans text-slate-100",
         className,
       )}
     >
-      <div className="border-b border-slate-100 bg-white">
-        <div className="bg-slate-50/90 p-3">
+      <div className="border-b border-slate-800/80 bg-slate-900/95">
+        <div className="p-3">
           <div className="mb-2 flex items-start justify-between gap-2">
-            <h3 className="flex-1 text-sm font-extrabold leading-snug tracking-tight text-slate-900">
+            <h3 className="flex-1 text-sm font-extrabold leading-snug tracking-tight text-white">
               {title}
             </h3>
             <span className={statusBadgeClass[badgeTone]}>{pointTypeLabel}</span>
           </div>
-          {hierarchyTag ? (
-            <p className="rounded-lg border border-emerald-200/80 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold leading-relaxed text-emerald-950">
+          {(communeAr || villageAr) && (
+            <div className="flex flex-wrap gap-1.5">
+              {communeAr ? (
+                <span className="inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2 py-0.5 text-[10px] font-bold text-emerald-200">
+                  {communeAr}
+                </span>
+              ) : null}
+              {villageAr ? (
+                <span className="inline-flex items-center rounded-full border border-slate-600 bg-slate-800/80 px-2 py-0.5 text-[10px] font-bold text-slate-200">
+                  {villageAr}
+                </span>
+              ) : null}
+            </div>
+          )}
+          {hierarchyTag && !communeAr ? (
+            <p className="mt-2 rounded-lg border border-emerald-500/25 bg-emerald-500/10 px-2.5 py-1.5 text-xs font-semibold leading-relaxed text-emerald-100">
               {hierarchyTag}
             </p>
           ) : null}
         </div>
       </div>
 
-      <div className="map-popup-scroll">
+      <div className="map-popup-scroll bg-slate-950/90">
         <div className="space-y-3 p-3">
           <div className="space-y-1.5 text-xs leading-relaxed tracking-normal">
             {showExactAddress ? (
-              <p className="font-bold text-slate-700">{exactAddressAr}</p>
+              <p className="font-bold text-slate-200">{exactAddressAr}</p>
             ) : null}
             {resolvedRoadLabel ? (
-              <p className="font-bold text-slate-700">
-                <span className="text-slate-900">🛣️ حالة المسلك:</span>{" "}
+              <p className="font-bold text-slate-300">
+                <span className="text-slate-100">🛣️ حالة المسلك:</span>{" "}
                 {resolvedRoadLabel}
               </p>
             ) : null}
@@ -125,7 +138,20 @@ export default function MapPopupShell({
         </div>
       </div>
 
-      <div className="space-y-2 border-t border-slate-100 bg-white p-3 pb-3">
+      <div className="space-y-2 border-t border-slate-800/80 bg-slate-900/95 p-3 pb-3">
+        {phone ? (
+          <a
+            href={`tel:${phone}`}
+            className={cn(
+              mapActionPrimaryClass,
+              "h-auto bg-emerald-600 py-2 text-xs hover:bg-emerald-700",
+            )}
+          >
+            <Phone className="h-4 w-4 shrink-0" aria-hidden />
+            اتصال مباشر
+          </a>
+        ) : null}
+
         {facebookUrl ? (
           <a
             href={facebookUrl}
@@ -136,7 +162,7 @@ export default function MapPopupShell({
               "h-auto py-2 text-xs hover:bg-blue-700",
             )}
           >
-            فتح المنشور على فيسبوك ↗
+            فتح المنشور الأصلي على فيسبوك ↗
           </a>
         ) : null}
 
@@ -144,7 +170,10 @@ export default function MapPopupShell({
           <button
             type="button"
             onClick={onFieldReportClick}
-            className={mapActionSecondaryClass}
+            className={cn(
+              mapActionSecondaryClass,
+              "border-slate-600 bg-slate-800 text-slate-100 hover:bg-slate-700",
+            )}
           >
             📝 إضافة تقرير ميداني / صور توثيقية
           </button>
@@ -160,13 +189,18 @@ export default function MapPopupShell({
           فتح في Google Maps للملاحة
         </a>
 
-        {phone ? (
-          <ContactActionButtons
-            phone={phone}
-            whatsappUrl={whatsappUrl}
-            variant="map"
-            className="w-full flex-col"
-          />
+        {whatsappUrl ? (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className={cn(
+              mapActionPrimaryClass,
+              "h-auto bg-[#25D366] py-2 text-xs hover:bg-[#20bd5a]",
+            )}
+          >
+            واتساب
+          </a>
         ) : null}
       </div>
     </div>

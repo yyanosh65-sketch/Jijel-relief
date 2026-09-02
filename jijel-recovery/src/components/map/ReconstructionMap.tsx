@@ -15,15 +15,19 @@ import MapClickReportModal from "@/components/map/MapClickReportModal";
 import MapPopup from "@/components/map/MapPopup";
 import MapPopupShell from "@/components/map/MapPopupShell";
 import MarkServedControls from "@/components/needs/MarkServedControls";
+import ReportModal from "@/components/intake/ReportModal";
+import RoadTracker from "@/components/logistics/RoadTracker";
 import { translateNeedTitle } from "@/lib/need-display";
 import { findVillageByName } from "@/lib/locations";
 import type { VillageFieldReportTarget } from "@/lib/field-reports";
 import { clampJijelLandCoordinates, clampJijelLandPosition } from "@/lib/geo";
 import {
   createFacilityMarkerIcon,
+  createNeedMarkerIcon,
   createRoadMarkerIcon,
   createSosMarkerIcon,
   createVillageMarkerIcon,
+  resolveNeedMarkerVariant,
 } from "@/lib/map-layer-icons";
 import {
   MAP_POINT_TYPE_LABELS,
@@ -38,7 +42,6 @@ import {
   MAP_CATEGORIES,
   matchesMapCategories,
   type MapCategoryId,
-  type MarkerColor,
 } from "@/lib/map-utils";
 import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
 import {
@@ -53,21 +56,6 @@ import { cn } from "@/lib/utils";
 
 import "leaflet/dist/leaflet.css";
 
-const MARKER_COLORS: Record<MarkerColor, string> = {
-  red: "#dc2626",
-  orange: "#ea580c",
-  green: "#16a34a",
-};
-
-function createMarkerIcon(color: MarkerColor): L.DivIcon {
-  return L.divIcon({
-    className: "",
-    html: `<span style="display:block;width:18px;height:18px;border-radius:9999px;background:${MARKER_COLORS[color]};border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35)"></span>`,
-    iconSize: [18, 18],
-    iconAnchor: [9, 9],
-    popupAnchor: [0, -10],
-  });
-}
 
 type ReconstructionMapProps = {
   needs: MapNeed[];
@@ -348,16 +336,9 @@ export default function ReconstructionMap({
     null,
   );
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [isCommunityReportOpen, setIsCommunityReportOpen] = useState(false);
 
-  const markerIcons = useMemo(
-    () => ({
-      red: createMarkerIcon("red"),
-      orange: createMarkerIcon("orange"),
-      green: createMarkerIcon("green"),
-      sos: createSosMarkerIcon(),
-    }),
-    [],
-  );
+  const sosMarkerIcon = useMemo(() => createSosMarkerIcon(), []);
 
   const villageIcons = useMemo(
     () => ({
@@ -423,8 +404,8 @@ export default function ReconstructionMap({
           )}
         >
           <div className="space-y-2">
-            <div className="flex flex-wrap items-center justify-center gap-1.5 border-b border-slate-200/70 pb-2">
-              <span className="w-full shrink-0 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:w-auto sm:text-xs">
+            <div className="flex flex-wrap items-center justify-center gap-1.5 border-b border-slate-700/80 pb-2">
+              <span className="w-full shrink-0 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:w-auto sm:text-xs">
                 نوع الاحتياج
               </span>
               {MAP_CATEGORIES.map((category) => {
@@ -438,8 +419,8 @@ export default function ReconstructionMap({
                     className={cn(
                       "rounded-full px-3 py-1.5 text-xs font-medium transition",
                       isActive
-                        ? "bg-emerald-700 text-white shadow-sm"
-                        : "bg-slate-100/90 text-slate-600 hover:bg-slate-200",
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "bg-slate-800/90 text-slate-300 hover:bg-slate-700",
                     )}
                   >
                     {category.labelAr}
@@ -449,7 +430,7 @@ export default function ReconstructionMap({
             </div>
 
             <div className="flex flex-wrap items-center justify-center gap-1.5">
-              <span className="w-full shrink-0 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-500 sm:w-auto sm:text-xs">
+              <span className="w-full shrink-0 text-center text-[10px] font-semibold uppercase tracking-wide text-slate-400 sm:w-auto sm:text-xs">
                 طبقات الخريطة
               </span>
               {LAYER_TOGGLES.map((layer) => {
@@ -463,8 +444,8 @@ export default function ReconstructionMap({
                     className={cn(
                       "rounded-full px-3 py-1.5 text-xs font-medium transition",
                       isActive
-                        ? "bg-slate-800 text-white shadow-sm"
-                        : "bg-slate-100/90 text-slate-600 hover:bg-slate-200",
+                        ? "bg-emerald-600 text-white shadow-sm"
+                        : "bg-slate-800/90 text-slate-300 hover:bg-slate-700",
                     )}
                   >
                     {layer.labelAr}
@@ -482,21 +463,33 @@ export default function ReconstructionMap({
           "pointer-events-none absolute bottom-6 left-4 z-[500] hidden max-w-[200px] p-3 text-xs sm:block",
         )}
       >
-        <p className="mb-2 font-semibold text-slate-800">دليل الألوان</p>
-        <ul className="space-y-1 text-slate-600">
+        <p className="mb-2 font-semibold text-slate-100">دليل الألوان</p>
+        <ul className="space-y-1 text-slate-300">
           <li className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-red-600" />
+            <span className="h-3 w-3 rounded-full bg-rose-500" />
             {MAP_LEGEND_LABELS.red}
           </li>
           <li className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-orange-600" />
+            <span className="h-3 w-3 rounded-full bg-amber-500" />
             {MAP_LEGEND_LABELS.orange}
           </li>
           <li className="flex items-center gap-2">
-            <span className="h-3 w-3 rounded-full bg-green-600" />
+            <span className="h-3 w-3 rounded-full bg-emerald-500" />
             {MAP_LEGEND_LABELS.green}
           </li>
         </ul>
+      </div>
+
+      <RoadTracker className="pointer-events-auto absolute bottom-6 right-4 z-[500] hidden w-[min(100%,300px)] sm:block" />
+
+      <div className="pointer-events-none absolute bottom-44 right-4 z-[500] sm:bottom-28">
+        <button
+          type="button"
+          onClick={() => setIsCommunityReportOpen(true)}
+          className="pointer-events-auto rounded-2xl border border-emerald-500/40 bg-emerald-600 px-4 py-2.5 text-right text-xs font-extrabold text-white shadow-lg shadow-emerald-900/30 transition hover:bg-emerald-500"
+        >
+          + تسجيل نداء أو استغاثة
+        </button>
       </div>
 
       <div className="pointer-events-none absolute bottom-24 right-4 z-[500] sm:bottom-8">
@@ -506,8 +499,8 @@ export default function ReconstructionMap({
           className={cn(
             "pointer-events-auto max-w-[220px] rounded-2xl border px-3 py-2.5 text-right text-xs font-bold shadow-lg transition",
             pinDropMode
-              ? "border-emerald-600 bg-emerald-700 text-white"
-              : "border-slate-200 bg-white text-slate-800 hover:bg-slate-50",
+              ? "border-emerald-500 bg-emerald-600 text-white"
+              : "border-slate-700 bg-slate-900/90 text-slate-100 hover:bg-slate-800",
           )}
         >
           📍 انقر على الخريطة لتسجيل ضرر في هذا الموقع
@@ -685,7 +678,7 @@ export default function ReconstructionMap({
               <Marker
                 key={`sos-${alert.id}`}
                 position={[alertLat, alertLng]}
-                icon={markerIcons.sos}
+                icon={sosMarkerIcon}
                 zIndexOffset={1000}
               >
                 <MapPopup>
@@ -727,12 +720,21 @@ export default function ReconstructionMap({
               const color = getMarkerColor(need);
               const isSelected = selectedNeedId === need.id;
               const [needLat, needLng] = clampJijelLandPosition(need.lat, need.lng);
+              const markerVariant = resolveNeedMarkerVariant({
+                category: need.category,
+                urgency: need.urgency,
+                title: need.title,
+              });
+              const needIcon =
+                color === "green"
+                  ? createNeedMarkerIcon("hub")
+                  : createNeedMarkerIcon(markerVariant);
 
               return (
                 <Marker
                   key={need.id}
                   position={[needLat, needLng]}
-                  icon={markerIcons[color]}
+                  icon={needIcon}
                   opacity={isSelected ? 1 : 0.92}
                 >
                   <MapPopup>
@@ -757,12 +759,20 @@ export default function ReconstructionMap({
         onSuccess={onPledgeSuccess}
       />
 
+      <ReportModal
+        open={isCommunityReportOpen}
+        onClose={() => setIsCommunityReportOpen(false)}
+        onSuccess={onPledgeSuccess}
+        initialLat={clickPin?.lat}
+        initialLng={clickPin?.lng}
+      />
+
       {layers.needs && visibleNeeds.length === 0 ? (
         <div className="pointer-events-none absolute inset-x-0 bottom-28 z-[500] flex justify-center px-4 sm:bottom-8">
           <div
             className={cn(
               glassPanelClass,
-              "flex max-w-md items-center gap-2 px-4 py-2.5 text-sm text-slate-600",
+              "flex max-w-md items-center gap-2 px-4 py-2.5 text-sm text-slate-300",
             )}
           >
             <MapPin className="h-4 w-4 shrink-0" />

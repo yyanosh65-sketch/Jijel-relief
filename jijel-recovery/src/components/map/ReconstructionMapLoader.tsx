@@ -26,7 +26,7 @@ import { cn } from "@/lib/utils";
 const ReconstructionMap = dynamic(() => import("./ReconstructionMap"), {
   ssr: false,
   loading: () => (
-    <div className="flex h-full w-full items-center justify-center bg-zinc-100 text-sm text-zinc-600">
+    <div className="flex h-full w-full items-center justify-center bg-slate-950 text-sm text-slate-400">
       جاري تحميل الخريطة...
     </div>
   ),
@@ -122,13 +122,13 @@ export default function ReconstructionMapLoader({
   }
 
   const needsListHeader = (
-    <div className="space-y-3 border-b border-slate-200/80 px-4 py-3">
+    <div className="space-y-3 border-b border-slate-800/80 px-4 py-3">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-sm font-semibold text-slate-900">
+          <h2 className="text-sm font-semibold text-slate-100">
             حاجيات موثقة
           </h2>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             {filteredNeeds.length} من {needs.length} احتياج
           </p>
         </div>
@@ -153,7 +153,7 @@ export default function ReconstructionMapLoader({
         <p
           className={cn(
             glassPanelClass,
-            "px-4 py-6 text-center text-sm text-slate-500",
+            "px-4 py-6 text-center text-sm text-slate-400",
           )}
         >
           لا توجد نتائج مطابقة — جرّب توسيع نطاق البحث أو تعديل الفلاتر.
@@ -201,7 +201,7 @@ export default function ReconstructionMapLoader({
 
             <section
               dir="rtl"
-              className="border-t border-slate-200/80 bg-slate-50/80 backdrop-blur-sm"
+              className="border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-sm"
             >
               {needsListHeader}
               {needsListBody}
@@ -227,7 +227,7 @@ export default function ReconstructionMapLoader({
 
             <aside
               dir="rtl"
-              className="flex h-[45vh] flex-col border-t border-slate-200/80 bg-slate-50/80 backdrop-blur-sm lg:h-full lg:w-96 lg:border-t-0 lg:border-l"
+              className="flex h-[45vh] flex-col border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-sm lg:h-full lg:w-96 lg:border-t-0 lg:border-l lg:border-slate-800/80"
             >
               {needsListHeader}
               <div className="flex-1 overflow-y-auto">{needsListBody}</div>
