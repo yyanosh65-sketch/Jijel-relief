@@ -57,11 +57,5 @@
     "tsx": "^4.23.13",
     "typescript": "^5"
   }
-{
-  "name": "jijel-recovery",
-  "version": "0.1.0",
-  "engines": {
-    "node": ">=20.9.0"
-  },
-  ...
 }
+
