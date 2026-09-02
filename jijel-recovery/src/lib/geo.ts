@@ -11,6 +11,42 @@ export const JIJEL_LAND_BOUNDS = {
   coastalSafeLat: 36.81,
 } as const;
 
+export const JIJEL_INTAKE_GPS_BOUNDS = {
+  latMin: 36.5,
+  latMax: 37.0,
+  lngMin: 5.4,
+  lngMax: 6.5,
+} as const;
+
+export const JIJEL_INTAKE_DEFAULT_CENTER = {
+  lat: 36.8,
+  lng: 5.76,
+} as const;
+
+export function isWithinJijelIntakeGpsBounds(lat: number, lng: number): boolean {
+  return (
+    lat >= JIJEL_INTAKE_GPS_BOUNDS.latMin &&
+    lat <= JIJEL_INTAKE_GPS_BOUNDS.latMax &&
+    lng >= JIJEL_INTAKE_GPS_BOUNDS.lngMin &&
+    lng <= JIJEL_INTAKE_GPS_BOUNDS.lngMax
+  );
+}
+
+export function resolveIntakeGpsCoordinates(
+  lat: number,
+  lng: number,
+): { lat: number; lng: number; isOutsideWilaya: boolean } {
+  if (isWithinJijelIntakeGpsBounds(lat, lng)) {
+    return { lat, lng, isOutsideWilaya: false };
+  }
+
+  return {
+    lat: JIJEL_INTAKE_DEFAULT_CENTER.lat,
+    lng: JIJEL_INTAKE_DEFAULT_CENTER.lng,
+    isOutsideWilaya: true,
+  };
+}
+
 export type JijelLandCoordinates = {
   lat: number;
   lng: number;

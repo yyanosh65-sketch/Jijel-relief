@@ -18,15 +18,14 @@ import {
   getCommunesByDaira,
   getDairas,
 } from "@/lib/locations";
+import { resolveIntakeGpsCoordinates } from "@/lib/geo";
 import { buildWhatsAppShareUrl } from "@/lib/phone";
 import {
   categoryButtonSelectedClass,
-  categoryButtonUnselectedClass,
-  formInputClass,
-  formTextareaClass,
+  darkFormInputClass,
+  darkSelectClass,
   glassPanelClass,
   primaryNextButtonClass,
-  selectFieldClass,
 } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
@@ -70,6 +69,7 @@ export default function ReportDamageForm() {
   const [contactWhatsapp, setContactWhatsapp] = useState("");
   const [isCapturingGps, setIsCapturingGps] = useState(false);
   const [gpsMessage, setGpsMessage] = useState<string | null>(null);
+  const [isOutsideWilaya, setIsOutsideWilaya] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [successId, setSuccessId] = useState<number | null>(null);
@@ -282,10 +282,24 @@ export default function ReportDamageForm() {
 
     navigator.geolocation.getCurrentPosition(
       (position) => {
-        setLat(position.coords.latitude.toFixed(6));
-        setLng(position.coords.longitude.toFixed(6));
+        const resolved = resolveIntakeGpsCoordinates(
+          position.coords.latitude,
+          position.coords.longitude,
+        );
+
+        setLat(resolved.lat.toFixed(6));
+        setLng(resolved.lng.toFixed(6));
         setHasGpsFix(true);
-        setGpsMessage("تم تحديد موقعك بدقة عبر GPS.");
+        setIsOutsideWilaya(resolved.isOutsideWilaya);
+
+        if (resolved.isOutsideWilaya) {
+          setGpsMessage(
+            "تم رصد إحداثيات تجريبية (خارج الولاية) — سيتم التوجيه لمركز جيجل تلقائياً",
+          );
+        } else {
+          setGpsMessage("تم تحديد موقعك بدقة عبر GPS.");
+        }
+
         setIsCapturingGps(false);
       },
       () => {
@@ -380,19 +394,19 @@ export default function ReportDamageForm() {
   if (successId) {
     return (
       <div className={cn(glassPanelClass, "space-y-5 p-6 text-center")}>
-        <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-600" />
+        <CheckCircle2 className="mx-auto h-12 w-12 text-emerald-400" />
         <div className="space-y-2">
-          <h2 className="text-xl font-semibold text-slate-900">
+          <h2 className="text-xl font-bold text-white">
             تم تسجيل طلبك بنجاح!
           </h2>
-          <p className="text-sm leading-relaxed text-slate-600">
+          <p className="text-sm leading-relaxed text-slate-300">
             انسخ هذا الرابط لمشاركته مع المتبرعين أو الجمعيات لتتبع نسبة
             التكفل به
           </p>
         </div>
 
         <div
-          className="rounded-xl border border-slate-200 bg-slate-50 p-3 text-left text-sm break-all text-slate-800"
+          className="rounded-xl border border-slate-700 bg-slate-950/80 p-3 text-left text-sm break-all text-slate-200"
           dir="ltr"
         >
           {trackingUrl}
@@ -402,7 +416,7 @@ export default function ReportDamageForm() {
           <button
             type="button"
             onClick={copyLink}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-300 bg-white px-4 py-3 text-sm font-semibold text-slate-800"
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-700"
           >
             <Copy className="h-4 w-4" />
             {copied ? "تم النسخ" : "نسخ الرابط"}
@@ -420,7 +434,7 @@ export default function ReportDamageForm() {
 
         <a
           href="/map"
-          className="block w-full rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-800"
+          className="block w-full rounded-xl border border-emerald-500/40 bg-emerald-600/15 px-4 py-3 text-sm font-semibold text-emerald-200"
         >
           عرض على الخريطة
         </a>
@@ -437,10 +451,10 @@ export default function ReportDamageForm() {
             className={cn(
               "rounded-full px-3 py-1 text-xs font-semibold",
               step === stepNumber
-                ? "bg-emerald-700 text-white"
+                ? "bg-emerald-600 text-white"
                 : step > stepNumber
-                  ? "bg-emerald-100 text-emerald-800"
-                  : "bg-slate-100 text-slate-600",
+                  ? "bg-emerald-600/20 text-emerald-200"
+                  : "bg-slate-800 text-slate-400",
             )}
           >
             الخطوة {stepNumber}: {STEP_LABELS[stepNumber]}
@@ -451,10 +465,10 @@ export default function ReportDamageForm() {
       {step === 1 ? (
         <section className={cn(glassPanelClass, "space-y-4 p-5")}>
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-bold text-white">
               الخطوة 1: تحديد البلدية والدشرة بدقة
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-300">
               حدّد موقعك عبر GPS ثم أكّد البلدية والدشرة
             </p>
           </div>
@@ -463,7 +477,7 @@ export default function ReportDamageForm() {
             type="button"
             onClick={captureGps}
             disabled={isCapturingGps}
-            className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 py-3 text-sm font-medium text-emerald-800"
+            className="flex w-full items-center justify-center gap-2 rounded-xl border border-emerald-500/40 bg-emerald-600/15 py-3 text-sm font-medium text-emerald-200"
           >
             {isCapturingGps ? (
               <Loader2 className="h-4 w-4 animate-spin" />
@@ -473,12 +487,19 @@ export default function ReportDamageForm() {
             تحديد موقعي (GPS)
           </button>
 
-          {gpsMessage ? (
-            <p className="text-xs text-slate-600">{gpsMessage}</p>
+          {isOutsideWilaya ? (
+            <p className="rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs font-semibold text-amber-200">
+              تم رصد إحداثيات تجريبية (خارج الولاية) — سيتم التوجيه لمركز جيجل
+              تلقائياً
+            </p>
+          ) : null}
+
+          {gpsMessage && !isOutsideWilaya ? (
+            <p className="text-xs text-slate-300">{gpsMessage}</p>
           ) : null}
 
           {lat && lng ? (
-            <p className="text-xs text-emerald-700" dir="ltr">
+            <p className="text-xs text-emerald-300" dir="ltr">
               {lat}, {lng}
             </p>
           ) : null}
@@ -491,7 +512,7 @@ export default function ReportDamageForm() {
                 setDaira(event.target.value);
                 setCommune("");
               }}
-              className={selectFieldClass}
+              className={darkSelectClass}
             >
               <option value="">الدائرة</option>
               {dairas.map((entry) => (
@@ -506,7 +527,7 @@ export default function ReportDamageForm() {
               value={commune}
               disabled={!daira}
               onChange={(event) => handleCommuneChange(event.target.value)}
-              className={cn(selectFieldClass, "disabled:opacity-50")}
+              className={cn(darkSelectClass, "disabled:opacity-50")}
             >
               <option value="">البلدية</option>
               {communes.map((entry) => (
@@ -521,7 +542,7 @@ export default function ReportDamageForm() {
             value={village}
             onChange={(event) => setVillage(event.target.value)}
             placeholder="الدشرة / الحي (مثال: بومرساس، تاقريت...)"
-            className={formInputClass}
+            className={darkFormInputClass}
           />
 
           <button
@@ -538,10 +559,10 @@ export default function ReportDamageForm() {
       {step === 2 ? (
         <section className={cn(glassPanelClass, "space-y-4 p-5")}>
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-bold text-white">
               الخطوة 2: نوع الاحتياج والكمية
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-300">
               زيتون، مواشي، سقف، أو دوزان ماء
             </p>
           </div>
@@ -559,7 +580,7 @@ export default function ReportDamageForm() {
                   "px-2 text-sm transition-all",
                   intakeCategory === category.value
                     ? categoryButtonSelectedClass
-                    : categoryButtonUnselectedClass,
+                    : "rounded-xl border-2 border-slate-700 bg-slate-800 py-3 text-sm font-bold text-slate-200 transition-all hover:bg-slate-700",
                 )}
               >
                 {category.label}
@@ -575,13 +596,13 @@ export default function ReportDamageForm() {
               value={quantity}
               onChange={(event) => setQuantity(event.target.value)}
               placeholder="الكمية"
-              className={formInputClass}
+              className={darkFormInputClass}
             />
             <input
               value={unit}
               onChange={(event) => setUnit(event.target.value)}
               placeholder="الوحدة"
-              className={formInputClass}
+              className={darkFormInputClass}
             />
           </div>
 
@@ -590,14 +611,14 @@ export default function ReportDamageForm() {
             onChange={(event) => setDescription(event.target.value)}
             placeholder="تفاصيل إضافية (اختياري) — اشرح حالتك باختصار..."
             rows={3}
-            className={formTextareaClass}
+            className={darkFormInputClass}
           />
 
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setStep(1)}
-              className="rounded-xl border-2 border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-800"
+              className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-3 text-sm font-bold text-slate-200 hover:bg-slate-700"
             >
               رجوع
             </button>
@@ -616,10 +637,10 @@ export default function ReportDamageForm() {
       {step === 3 ? (
         <section className={cn(glassPanelClass, "space-y-4 p-5")}>
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-bold text-white">
               الخطوة 3: إرفاق الأدلة
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-300">
               صور الخسائر، فيديو، أو تسجيل صوتي يشرح حالتك
             </p>
           </div>
@@ -675,7 +696,7 @@ export default function ReportDamageForm() {
             <button
               type="button"
               onClick={() => setStep(2)}
-              className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700"
+              className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-slate-800"
             >
               رجوع
             </button>
@@ -694,10 +715,10 @@ export default function ReportDamageForm() {
       {step === 4 ? (
         <section className={cn(glassPanelClass, "space-y-4 p-5")}>
           <div>
-            <h2 className="text-lg font-semibold text-slate-900">
+            <h2 className="text-lg font-bold text-white">
               الخطوة 4: معلومات الاتصال بالمستفيد
             </h2>
-            <p className="mt-1 text-sm text-slate-600">
+            <p className="mt-1 text-sm text-slate-300">
               الاسم، الهاتف، ورقم الواتساب
             </p>
           </div>
@@ -707,7 +728,7 @@ export default function ReportDamageForm() {
             value={contactName}
             onChange={(event) => setContactName(event.target.value)}
             placeholder="الاسم الكامل"
-            className={formInputClass}
+            className={darkFormInputClass}
           />
 
           <input
@@ -717,7 +738,7 @@ export default function ReportDamageForm() {
             value={contactPhone}
             onChange={(event) => setContactPhone(event.target.value)}
             placeholder="05XX XX XX XX"
-            className={cn(formInputClass, "text-left")}
+            className={cn(darkFormInputClass, "text-left")}
           />
 
           <input
@@ -726,16 +747,16 @@ export default function ReportDamageForm() {
             value={contactWhatsapp}
             onChange={(event) => setContactWhatsapp(event.target.value)}
             placeholder="رقم الواتساب (نفس الهاتف أو آخر)"
-            className={cn(formInputClass, "text-left")}
+            className={cn(darkFormInputClass, "text-left")}
           />
 
-          {error ? <p className="text-sm text-red-600">{error}</p> : null}
+          {error ? <p className="text-sm text-rose-300">{error}</p> : null}
 
           <div className="flex gap-2">
             <button
               type="button"
               onClick={() => setStep(3)}
-              className="rounded-xl border border-slate-300 px-4 py-3 text-sm font-semibold text-slate-700"
+              className="rounded-xl border border-slate-700 px-4 py-3 text-sm font-semibold text-slate-300 hover:bg-slate-800"
             >
               رجوع
             </button>

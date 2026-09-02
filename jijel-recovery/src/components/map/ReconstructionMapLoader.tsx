@@ -34,6 +34,7 @@ type ReconstructionMapLoaderProps = {
   intelligence: MapIntelligenceData;
   layout?: "sidebar" | "stacked";
   fullViewportMap?: boolean;
+  showSearchBar?: boolean;
 };
 
 export default function ReconstructionMapLoader({
@@ -41,6 +42,7 @@ export default function ReconstructionMapLoader({
   intelligence,
   layout = "sidebar",
   fullViewportMap = false,
+  showSearchBar = true,
 }: ReconstructionMapLoaderProps) {
   const router = useRouter();
   const filters = useNeedSearchFilters();
@@ -170,7 +172,7 @@ export default function ReconstructionMapLoader({
 
   const mapSection = (
     <div className={cn("relative w-full", mapHeightClass)}>
-      <AdvancedNeedSearch variant="floating" />
+      {showSearchBar ? <AdvancedNeedSearch variant="floating" /> : null}
       <ReconstructionMap
         needs={needs}
         intelligence={intelligence}

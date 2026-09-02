@@ -30,11 +30,11 @@ import {
 import { buildWhatsAppUrl } from "@/lib/phone";
 import SpiritualCallout from "@/components/layout/SpiritualCallout";
 import {
-  formInputClass,
+  darkFormInputClass,
+  darkSelectClass,
   glassPanelClass,
   premiumCardClass,
   primaryNextButtonClass,
-  selectFieldClass,
 } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
@@ -145,7 +145,7 @@ function CharityInventoryCard({
       <div className="mb-3 flex items-start justify-between gap-2">
         <div className="min-w-0">
           <div className="flex flex-wrap items-center gap-2">
-            <h3 className="text-base font-bold text-slate-900">
+            <h3 className="text-base font-bold text-white">
               {item.charityName}
             </h3>
             {item.verified ? (
@@ -155,7 +155,7 @@ function CharityInventoryCard({
               </span>
             ) : null}
           </div>
-          <p className="mt-1 text-xs font-medium text-slate-600">
+          <p className="mt-1 text-xs font-medium text-slate-300">
             بلدية {item.communeAr} · دائرة {item.daira}
           </p>
         </div>
@@ -172,17 +172,17 @@ function CharityInventoryCard({
         </span>
       </div>
 
-      <div className="mb-4 rounded-xl border border-slate-200 bg-slate-50 p-3">
-        <p className="text-xs font-semibold text-slate-500">
+      <div className="mb-4 rounded-xl border border-slate-700 bg-slate-950/60 p-3">
+        <p className="text-xs font-semibold text-slate-400">
           {getCharityCategoryIcon(item.category)}{" "}
           {getCharityCategoryLabel(item.category)}
         </p>
-        <p className="mt-1 text-sm font-bold text-slate-900">{item.itemTitle}</p>
-        <p className="mt-2 text-lg font-extrabold text-emerald-800">
+        <p className="mt-1 text-sm font-bold text-white">{item.itemTitle}</p>
+        <p className="mt-2 text-lg font-extrabold text-emerald-300">
           {item.availableQuantity.toLocaleString("ar-DZ")}{" "}
-          <span className="text-sm font-bold text-slate-700">{item.unit}</span>
+          <span className="text-sm font-bold text-slate-300">{item.unit}</span>
         </p>
-        <p className="mt-2 text-xs text-slate-600">
+        <p className="mt-2 text-xs text-slate-300">
           نطاق التغطية:{" "}
           {item.coverageRadiusKm
             ? `${item.coverageRadiusKm} كم`
@@ -228,7 +228,7 @@ function CharityInventoryCard({
         {showCoordination ? (
           <form
             onSubmit={handleCoordinationSubmit}
-            className="space-y-2 rounded-xl border border-slate-200 bg-white p-3"
+            className="space-y-2 rounded-xl border border-slate-700 bg-slate-950/60 p-3"
           >
             <input
               required
@@ -236,7 +236,7 @@ function CharityInventoryCard({
               placeholder="اسمك"
               value={requesterName}
               onChange={(event) => setRequesterName(event.target.value)}
-              className={formInputClass}
+              className={darkFormInputClass}
             />
             <input
               required
@@ -244,14 +244,14 @@ function CharityInventoryCard({
               placeholder="رقم الهاتف"
               value={requesterPhone}
               onChange={(event) => setRequesterPhone(event.target.value)}
-              className={formInputClass}
+              className={darkFormInputClass}
             />
             <textarea
               rows={2}
               placeholder="تفاصيل الطلب (كمية، موعد، دوار...)"
               value={coordinationMessage}
               onChange={(event) => setCoordinationMessage(event.target.value)}
-              className={formInputClass}
+              className={darkFormInputClass}
             />
             <button
               type="submit"
@@ -423,10 +423,10 @@ export default function CharityInventoryView({
       <section className={cn(glassPanelClass, "border-slate-800/20 p-5 shadow-xl")}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
-            <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-slate-900">
+            <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-white">
               سجل مساعدات ومخزون الجمعيات الخيرية
             </h1>
-            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-600">
+            <p className="mt-2 max-w-2xl text-sm leading-relaxed text-slate-300">
               دليل مباشر للفائض المتاح لدى الجمعيات: عتاد مائي، أعلاف، مواد بناء،
               وأغذية — مع تنسيق الاستلام للمداشر المتضررة.
             </p>
@@ -439,7 +439,7 @@ export default function CharityInventoryView({
       </section>
 
       <section className={cn(premiumCardClass, "p-5")}>
-        <h2 className="mb-4 text-lg font-bold text-slate-900">
+        <h2 className="mb-4 text-lg font-bold text-white">
           تسجيل فائض / عتاد متاح لدى الجمعية
         </h2>
 
@@ -456,7 +456,7 @@ export default function CharityInventoryView({
                   charityName: event.target.value,
                 }))
               }
-              className={formInputClass}
+              className={darkFormInputClass}
             />
             <input
               required
@@ -469,7 +469,7 @@ export default function CharityInventoryView({
                   representativeName: event.target.value,
                 }))
               }
-              className={formInputClass}
+              className={darkFormInputClass}
             />
             <input
               required
@@ -482,9 +482,9 @@ export default function CharityInventoryView({
                   representativePhone: event.target.value,
                 }))
               }
-              className={formInputClass}
+              className={darkFormInputClass}
             />
-            <label className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-semibold text-slate-700">
+            <label className="flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-950/80 px-3 py-2 text-sm font-semibold text-slate-300">
               <input
                 type="checkbox"
                 checked={registerForm.whatsappSameAsPhone}
@@ -509,7 +509,7 @@ export default function CharityInventoryView({
                     representativeWhatsapp: event.target.value,
                   }))
                 }
-                className={formInputClass}
+                className={darkFormInputClass}
               />
             ) : null}
           </div>
@@ -525,7 +525,7 @@ export default function CharityInventoryView({
                   commune: "",
                 }))
               }
-              className={selectFieldClass}
+              className={darkSelectClass}
             >
               <option value="">اختر الدائرة</option>
               {dairas.map((daira) => (
@@ -543,7 +543,7 @@ export default function CharityInventoryView({
                   commune: event.target.value,
                 }))
               }
-              className={selectFieldClass}
+              className={darkSelectClass}
               disabled={!registerForm.daira}
             >
               <option value="">اختر البلدية</option>
@@ -565,7 +565,7 @@ export default function CharityInventoryView({
                   category: event.target.value as CharityItemCategory,
                 }))
               }
-              className={selectFieldClass}
+              className={darkSelectClass}
             >
               {CHARITY_CATEGORY_OPTIONS.map((option) => (
                 <option key={option.value} value={option.value}>
@@ -584,7 +584,7 @@ export default function CharityInventoryView({
                   itemTitle: event.target.value,
                 }))
               }
-              className={formInputClass}
+              className={darkFormInputClass}
             />
           </div>
 
@@ -601,7 +601,7 @@ export default function CharityInventoryView({
                   availableQuantity: event.target.value,
                 }))
               }
-              className={formInputClass}
+              className={darkFormInputClass}
             />
             <select
               required
@@ -612,7 +612,7 @@ export default function CharityInventoryView({
                   unit: event.target.value,
                 }))
               }
-              className={selectFieldClass}
+              className={darkSelectClass}
             >
               {CHARITY_UNIT_OPTIONS.map((unit) => (
                 <option key={unit} value={unit}>
@@ -632,7 +632,7 @@ export default function CharityInventoryView({
                   coverageRadiusKm: event.target.value,
                 }))
               }
-              className={formInputClass}
+              className={darkFormInputClass}
             />
           </div>
 
@@ -646,7 +646,7 @@ export default function CharityInventoryView({
                 targetDouarsText: event.target.value,
               }))
             }
-            className={formInputClass}
+            className={darkFormInputClass}
           />
 
           <textarea
@@ -659,11 +659,11 @@ export default function CharityInventoryView({
                 notes: event.target.value,
               }))
             }
-            className={formInputClass}
+            className={darkFormInputClass}
           />
 
           {registerError ? (
-            <p className="text-sm text-red-600">{registerError}</p>
+            <p className="text-sm text-rose-300">{registerError}</p>
           ) : null}
           {registerSuccess ? (
             <p className="text-sm font-semibold text-emerald-700">
@@ -694,14 +694,14 @@ export default function CharityInventoryView({
               placeholder="بحث باسم الجمعية أو الصنف..."
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              className={cn(formInputClass, "pr-10")}
+              className={cn(darkFormInputClass, "pr-10")}
             />
           </label>
 
           <select
             value={communeFilter}
             onChange={(event) => setCommuneFilter(event.target.value)}
-            className={selectFieldClass}
+            className={darkSelectClass}
           >
             <option value="">كل البلديات</option>
             {communeOptions.map(([value, label]) => (
@@ -716,7 +716,7 @@ export default function CharityInventoryView({
             onChange={(event) =>
               setCategoryFilter(event.target.value as CharityItemCategory | "")
             }
-            className={selectFieldClass}
+            className={darkSelectClass}
           >
             <option value="">كل التصنيفات</option>
             {CHARITY_CATEGORY_OPTIONS.map((option) => (
@@ -733,7 +733,7 @@ export default function CharityInventoryView({
                 event.target.value as CharityAvailability | "in_stock" | "",
               )
             }
-            className={selectFieldClass}
+            className={darkSelectClass}
           >
             {CHARITY_AVAILABILITY_OPTIONS.map((option) => (
               <option key={option.value} value={option.value}>
@@ -746,7 +746,7 @@ export default function CharityInventoryView({
             type="button"
             onClick={reloadItems}
             disabled={isPending}
-            className="rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-bold text-slate-800 hover:bg-slate-50"
+            className="rounded-xl border border-slate-700 bg-slate-800 px-4 py-2.5 text-sm font-bold text-slate-200 hover:bg-slate-700"
           >
             {isPending ? "جاري التحديث..." : "تحديث"}
           </button>
@@ -759,11 +759,11 @@ export default function CharityInventoryView({
         ) : null}
 
         {filteredItems.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-slate-300 bg-white px-6 py-12 text-center">
-            <p className="text-sm font-semibold text-slate-700">
+          <div className="rounded-2xl border border-dashed border-slate-700 bg-slate-900/60 px-6 py-12 text-center">
+            <p className="text-sm font-semibold text-slate-200">
               لا توجد أصناف مطابقة للفلاتر الحالية.
             </p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-1 text-xs text-slate-400">
               سجّل فائض جمعيتك في الاستمارة أعلاه ليظهر هنا فوراً.
             </p>
           </div>

@@ -106,17 +106,17 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
         ) : null}
 
         <section className={cn(glassPanelClass, "space-y-4 p-5 sm:p-6")}>
-          <h2 className="text-lg font-semibold text-slate-900">
+          <h2 className="text-xl font-extrabold tracking-tight text-slate-100">
             نصائح السياقة والمسالك
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {DRIVING_TIPS.map((tip) => (
               <article
                 key={tip.title}
-                className="rounded-xl border border-slate-200 bg-white/70 p-4"
+                className="rounded-xl border border-slate-700/80 bg-slate-900/60 p-4"
               >
-                <h3 className="font-semibold text-slate-900">{tip.title}</h3>
-                <p className="mt-2 text-sm leading-relaxed text-slate-600">
+                <h3 className="font-semibold text-slate-100">{tip.title}</h3>
+                <p className="mt-2 text-sm leading-relaxed text-slate-300">
                   {tip.body}
                 </p>
               </article>
@@ -125,8 +125,8 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
         </section>
 
         <section className={cn(glassPanelClass, "space-y-4 p-5 sm:p-6")}>
-          <h2 className="text-lg font-semibold text-slate-900">
-            منسقو الاستقبال عند المداخل
+          <h2 className="text-xl font-extrabold tracking-tight text-slate-100">
+            نقاط الاستقبال والتوجيه
           </h2>
           <div className="grid gap-3 sm:grid-cols-2">
             {CONVOY_ENTRY_OPTIONS.map((entry) => {
@@ -143,17 +143,17 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
               return (
                 <article
                   key={entry.value}
-                  className="rounded-xl border border-amber-200 bg-amber-50/50 p-4"
+                  className="rounded-xl border border-amber-500/40 bg-amber-500/5 p-4"
                 >
-                  <h3 className="font-semibold text-amber-900">
+                  <h3 className="font-semibold text-amber-100">
                     🚩 {entry.labelAr}
                   </h3>
                   {coordinator ? (
                     <>
-                      <p className="mt-1 text-sm text-slate-700">
+                      <p className="mt-1 text-sm text-slate-200">
                         المنسق: {coordinator.name_ar}
                       </p>
-                      <p className="mt-1 text-xs leading-relaxed text-slate-500">
+                      <p className="mt-1 text-xs leading-relaxed text-slate-300">
                         {coordinator.notes}
                       </p>
                       <ContactActionButtons
@@ -179,7 +179,7 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
               key={type}
               className={cn(glassPanelClass, "space-y-4 p-5 sm:p-6")}
             >
-              <h2 className="text-lg font-semibold text-slate-900">
+              <h2 className="text-xl font-extrabold tracking-tight text-slate-100">
                 {meta.icon} {meta.labelAr}
               </h2>
               <ul className="grid gap-3 sm:grid-cols-2">
@@ -192,15 +192,15 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
                   return (
                     <li
                       key={waypoint.id}
-                      className="rounded-xl border border-slate-200 bg-white/70 p-4"
+                      className="rounded-xl border border-amber-500/40 bg-slate-900/60 p-4"
                     >
-                      <p className="font-semibold text-slate-900">
+                      <p className="font-semibold text-slate-100">
                         {waypoint.name_ar}
                       </p>
-                      <p className="mt-1 text-xs text-slate-600">
+                      <p className="mt-1 text-xs text-slate-300">
                         {waypoint.opening_hours} — {waypoint.capacity}
                       </p>
-                      <p className="mt-1 text-sm leading-relaxed text-slate-600">
+                      <p className="mt-1 text-sm leading-relaxed text-slate-300">
                         {waypoint.notes}
                       </p>
                       <ContactActionButtons

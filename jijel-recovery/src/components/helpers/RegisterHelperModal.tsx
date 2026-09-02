@@ -2,15 +2,20 @@
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
-import { Loader2 } from "lucide-react";
+import { Loader2, X } from "lucide-react";
 
 import { registerCommunityHelper } from "@/actions/helpers";
 import type { HelperSkill } from "@/db/schema";
 import { HELPER_SKILL_OPTIONS } from "@/lib/helpers";
 import { getCommunesByDaira, getDairas } from "@/lib/locations";
 import { formatAlgerianPhoneHint } from "@/lib/phone";
-import { MODAL_BACKDROP_CLASS } from "@/lib/z-index";
-import { formInputClass, selectFieldClass } from "@/lib/ui-labels";
+import { darkFormInputClass, darkSelectClass, primaryNextButtonClass } from "@/lib/ui-labels";
+import {
+  MODAL_BACKDROP_CLASS,
+  MODAL_BODY_SCROLL_CLASS,
+  MODAL_HEADER_CLASS,
+  MODAL_SHELL_CLASS,
+} from "@/lib/z-index";
 import { cn } from "@/lib/utils";
 
 type RegisterHelperModalProps = {
@@ -39,11 +44,6 @@ const INITIAL_FORM: FormState = {
   skills: [],
   availabilityNotes: "",
 };
-
-const OVERLAY_CLASS = cn(MODAL_BACKDROP_CLASS, "overflow-y-auto");
-
-const CARD_CLASS =
-  "relative w-full max-w-lg max-h-[85vh] overflow-y-auto bg-white rounded-2xl shadow-2xl p-6 border border-slate-200";
 
 function toggleSkill(skills: HelperSkill[], skill: HelperSkill): HelperSkill[] {
   return skills.includes(skill)
@@ -151,58 +151,61 @@ export default function RegisterHelperModal({
   return createPortal(
     <div
       dir="rtl"
-      className={OVERLAY_CLASS}
+      className={MODAL_BACKDROP_CLASS}
       onClick={handleClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="register-helper-title"
-        className={CARD_CLASS}
+        className={MODAL_SHELL_CLASS}
         onClick={(event) => event.stopPropagation()}
       >
-        <button
-          onClick={handleClose}
-          type="button"
-          className="absolute top-4 left-4 z-10 rounded-full p-2 text-slate-400 transition-colors hover:bg-slate-100 hover:text-slate-800"
-          aria-label="إغلاق"
-        >
-          ✕
-        </button>
-
-        <div className="mb-4 border-b border-slate-100 pb-4 pr-10">
-          <h2
-            id="register-helper-title"
-            className="text-lg font-bold text-slate-900"
-          >
-            🤝 سجّل روحك متطوع / عارض مساعدة
-          </h2>
-          <p className="mt-1 text-xs text-slate-600">
-            عاون جيرانك في وقت الأزمات — التسجيل يخضع للمراجعة.
-          </p>
-        </div>
+        <header className={MODAL_HEADER_CLASS}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0 pr-2">
+              <h2
+                id="register-helper-title"
+                className="text-lg font-bold text-white"
+              >
+                🤝 سجّل روحك متطوع / عارض مساعدة
+              </h2>
+              <p className="mt-1 text-sm text-slate-300">
+                عاون جيرانك في وقت الأزمات — التسجيل يخضع للمراجعة.
+              </p>
+            </div>
+            <button
+              onClick={handleClose}
+              type="button"
+              className="shrink-0 rounded-lg p-1.5 text-slate-400 transition-colors hover:bg-slate-800 hover:text-white"
+              aria-label="إغلاق"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </header>
 
         {isSuccess ? (
-          <div className="space-y-4 text-center">
-            <p className="font-semibold text-emerald-700">
+          <div className={cn(MODAL_BODY_SCROLL_CLASS, "text-center")}>
+            <p className="font-semibold text-emerald-300">
               تم استلام تسجيلك — شكراً على روح التعاون!
             </p>
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-300">
               غادي تتفعل بياناتك بعد المراجعة وتبان للناس اللي محتاجة مساعدة.
             </p>
             <button
               type="button"
               onClick={handleClose}
-              className="w-full rounded-xl bg-emerald-700 py-3 text-sm font-semibold text-white hover:bg-emerald-800"
+              className={cn(primaryNextButtonClass, "w-full")}
             >
               إغلاق
             </button>
           </div>
         ) : (
-          <form className="flex flex-col" onSubmit={handleSubmit}>
-            <div className="max-h-[60vh] space-y-4 overflow-y-auto pr-1">
+          <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+            <div className={MODAL_BODY_SCROLL_CLASS}>
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-900">
+                <label className="mb-1 block text-sm font-medium text-slate-200">
                   الاسم واللقب
                 </label>
                 <input
@@ -214,12 +217,12 @@ export default function RegisterHelperModal({
                       fullName: event.target.value,
                     }))
                   }
-                  className={formInputClass}
+                  className={darkFormInputClass}
                 />
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-900">
+                <label className="mb-1 block text-sm font-medium text-slate-200">
                   رقم الهاتف
                 </label>
                 <input
@@ -233,9 +236,9 @@ export default function RegisterHelperModal({
                       phone: event.target.value,
                     }))
                   }
-                  className={formInputClass}
+                  className={darkFormInputClass}
                 />
-                <label className="mt-2 flex items-center gap-2 text-xs text-slate-600">
+                <label className="mt-2 flex items-center gap-2 text-xs text-slate-300">
                   <input
                     type="checkbox"
                     checked={form.whatsappSameAsPhone}
@@ -245,6 +248,7 @@ export default function RegisterHelperModal({
                         whatsappSameAsPhone: event.target.checked,
                       }))
                     }
+                    className="accent-emerald-600"
                   />
                   نفس الرقم للواتساب
                 </label>
@@ -259,14 +263,14 @@ export default function RegisterHelperModal({
                         whatsappPhone: event.target.value,
                       }))
                     }
-                    className={cn("mt-2", formInputClass)}
+                    className={cn("mt-2", darkFormInputClass)}
                   />
                 ) : null}
               </div>
 
               <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-900">
+                  <label className="mb-1 block text-sm font-medium text-slate-200">
                     الدائرة
                   </label>
                   <select
@@ -279,7 +283,7 @@ export default function RegisterHelperModal({
                         commune: "",
                       }))
                     }
-                    className={selectFieldClass}
+                    className={darkSelectClass}
                   >
                     <option value="">اختر الدائرة</option>
                     {dairas.map((daira) => (
@@ -290,7 +294,7 @@ export default function RegisterHelperModal({
                   </select>
                 </div>
                 <div>
-                  <label className="mb-1 block text-sm font-medium text-slate-900">
+                  <label className="mb-1 block text-sm font-medium text-slate-200">
                     البلدية
                   </label>
                   <select
@@ -303,7 +307,7 @@ export default function RegisterHelperModal({
                         commune: event.target.value,
                       }))
                     }
-                    className={cn(selectFieldClass, "disabled:bg-slate-100")}
+                    className={cn(darkSelectClass, "disabled:opacity-50")}
                   >
                     <option value="">اختر البلدية</option>
                     {communes.map((commune) => (
@@ -316,7 +320,7 @@ export default function RegisterHelperModal({
               </div>
 
               <div>
-                <p className="mb-2 text-sm font-medium text-slate-900">
+                <p className="mb-2 text-sm font-medium text-slate-200">
                   نوع المساعدة المتوفرة
                 </p>
                 <div className="space-y-2">
@@ -336,8 +340,8 @@ export default function RegisterHelperModal({
                         className={cn(
                           "w-full rounded-xl border px-3 py-2.5 text-right text-xs font-medium transition",
                           isSelected
-                            ? "border-emerald-600 bg-emerald-50 text-emerald-900"
-                            : "border-slate-200 bg-white text-slate-700 hover:border-slate-300",
+                            ? "border-emerald-500 bg-emerald-600/20 text-emerald-100"
+                            : "border-slate-700 bg-slate-800/80 text-slate-300 hover:border-slate-600",
                         )}
                       >
                         {option.labelAr}
@@ -348,7 +352,7 @@ export default function RegisterHelperModal({
               </div>
 
               <div>
-                <label className="mb-1 block text-sm font-medium text-slate-900">
+                <label className="mb-1 block text-sm font-medium text-slate-200">
                   ملاحظات حول أوقات التوفر والإمكانيات
                 </label>
                 <textarea
@@ -361,26 +365,31 @@ export default function RegisterHelperModal({
                     }))
                   }
                   placeholder="مثال: متاح نهار السبت والأحد — عندي سيارة 4x4..."
-                  className="w-full rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900"
+                  className={cn(darkFormInputClass, "min-h-[88px] resize-y")}
                 />
               </div>
             </div>
 
-            {error ? (
-              <p className="mt-4 text-sm text-red-600">{error}</p>
-            ) : null}
+            <div className="shrink-0 border-t border-slate-800 bg-slate-900 p-5">
+              {error ? (
+                <p className="mb-3 text-sm text-rose-300">{error}</p>
+              ) : null}
 
-            <button
-              type="submit"
-              disabled={isSubmitting || form.skills.length === 0}
-              className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 py-3 text-sm font-bold text-white hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              {isSubmitting ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                "إرسال التسجيل"
-              )}
-            </button>
+              <button
+                type="submit"
+                disabled={isSubmitting || form.skills.length === 0}
+                className={cn(
+                  primaryNextButtonClass,
+                  "flex w-full items-center justify-center gap-2",
+                )}
+              >
+                {isSubmitting ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "إرسال التسجيل"
+                )}
+              </button>
+            </div>
           </form>
         )}
       </div>

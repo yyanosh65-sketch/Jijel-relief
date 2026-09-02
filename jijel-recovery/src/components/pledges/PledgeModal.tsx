@@ -10,8 +10,8 @@ import {
   formatAlgerianPhoneHint,
   isValidAlgerianPhone,
 } from "@/lib/phone";
-import { MODAL_BACKDROP_CLASS } from "@/lib/z-index";
-import { NeedProgressBar, formInputClass, glassPanelClass, selectFieldClass } from "@/lib/ui-labels";
+import { MODAL_BACKDROP_CLASS, MODAL_BODY_SCROLL_CLASS, MODAL_HEADER_CLASS, MODAL_SHELL_CLASS } from "@/lib/z-index";
+import { NeedProgressBar, darkFormInputClass, darkSelectClass, primaryNextButtonClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 export const PLEDGE_TYPES = [
@@ -156,42 +156,46 @@ export default function PledgeModal({
   return (
     <div
       dir="rtl"
-      className={cn(MODAL_BACKDROP_CLASS, "items-end sm:items-center")}
+      className={MODAL_BACKDROP_CLASS}
+      onClick={handleClose}
     >
       <div
         role="dialog"
         aria-modal="true"
         aria-labelledby="pledge-modal-title"
-        className={cn(glassPanelClass, "w-full max-w-md")}
+        className={cn(MODAL_SHELL_CLASS, "max-w-md")}
+        onClick={(event) => event.stopPropagation()}
       >
-        <div className="flex items-start justify-between border-b border-slate-200/80 px-5 py-4">
-          <div>
-            <h2 id="pledge-modal-title" className="text-lg font-semibold text-slate-900">
-              نعاون في هاد الخير
-            </h2>
-            <p className="mt-1 text-sm text-slate-600">{need.title}</p>
-            <p className="text-xs text-slate-500">
-              {need.location.name} — {need.location.daira}
-            </p>
+        <header className={MODAL_HEADER_CLASS}>
+          <div className="flex items-start justify-between gap-3">
+            <div className="min-w-0">
+              <h2 id="pledge-modal-title" className="text-lg font-bold text-white">
+                نعاون في هاد الخير
+              </h2>
+              <p className="mt-1 text-sm text-slate-300">{need.title}</p>
+              <p className="text-xs text-slate-400">
+                {need.location.name} — {need.location.daira}
+              </p>
+            </div>
+            <button
+              type="button"
+              onClick={handleClose}
+              className="shrink-0 rounded-lg p-1.5 text-slate-400 hover:bg-slate-800 hover:text-white"
+              aria-label="إغلاق"
+            >
+              <X className="h-5 w-5" />
+            </button>
           </div>
-          <button
-            type="button"
-            onClick={handleClose}
-            className="rounded-full p-1 text-slate-500 hover:bg-slate-100"
-            aria-label="إغلاق"
-          >
-            <X className="h-5 w-5" />
-          </button>
-        </div>
+        </header>
 
         {isCompleted ? (
-          <div className="space-y-4 px-5 py-6">
-            <p className="text-sm font-medium text-emerald-700">
+          <div className={MODAL_BODY_SCROLL_CLASS}>
+            <p className="text-sm font-medium text-emerald-300">
               تسجّل تعاونك بنجاح — بارك الله فيك!
             </p>
             {whatsappUrl ? (
               <>
-                <p className="text-sm text-slate-600">
+                <p className="text-sm text-slate-300">
                   تواصل مباشرة مع المنسق عبر واتساب.
                 </p>
                 <a
@@ -205,136 +209,138 @@ export default function PledgeModal({
                 </a>
               </>
             ) : (
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-300">
                 ما كاينش رقم واتساب للمنسق حالياً.
               </p>
             )}
             <button
               type="button"
               onClick={handleClose}
-              className="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              className="w-full rounded-xl border border-slate-700 px-4 py-3 text-sm font-medium text-slate-200 hover:bg-slate-800"
             >
               إغلاق
             </button>
           </div>
         ) : (
-          <form className="space-y-4 px-5 py-6" onSubmit={handleSubmit}>
-            <NeedProgressBar
-              fulfilled={need.quantityFulfilled}
-              needed={need.quantityNeeded}
-            />
-            <p className="text-xs text-slate-500">
-              باقي {remaining} وحدة للتكفّل الكامل
-            </p>
-
-            <div>
-              <label htmlFor="contributorName" className="mb-1 block text-sm font-medium">
-                الاسم الكامل
-              </label>
-              <input
-                id="contributorName"
-                required
-                value={form.contributorName}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    contributorName: event.target.value,
-                  }))
-                }
-                className={formInputClass}
+          <form className="flex min-h-0 flex-1 flex-col" onSubmit={handleSubmit}>
+            <div className={MODAL_BODY_SCROLL_CLASS}>
+              <NeedProgressBar
+                fulfilled={need.quantityFulfilled}
+                needed={need.quantityNeeded}
               />
-            </div>
+              <p className="text-xs text-slate-400">
+                باقي {remaining} وحدة للتكفّل الكامل
+              </p>
 
-            <div>
-              <label
-                htmlFor="contributorContact"
-                className="mb-1 block text-sm font-medium"
-              >
-                رقم الهاتف
-              </label>
-              <input
-                id="contributorContact"
-                required
-                type="tel"
-                inputMode="tel"
-                placeholder={formatAlgerianPhoneHint()}
-                value={form.contributorContact}
-                onChange={(event) =>
-                  setForm((current) => ({
-                    ...current,
-                    contributorContact: event.target.value,
-                  }))
-                }
-                className={formInputClass}
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="quantity" className="mb-1 block text-sm font-medium">
-                  الكمية
+                <label htmlFor="contributorName" className="mb-1 block text-sm font-medium text-slate-200">
+                  الاسم الكامل
                 </label>
                 <input
-                  id="quantity"
+                  id="contributorName"
                   required
-                  type="number"
-                  min={1}
-                  max={remaining}
-                  value={form.quantity}
+                  value={form.contributorName}
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      quantity: event.target.value,
+                      contributorName: event.target.value,
                     }))
                   }
-                  className={formInputClass}
+                  className={darkFormInputClass}
                 />
               </div>
 
               <div>
-                <label htmlFor="pledgeType" className="mb-1 block text-sm font-medium">
-                  نوع المساهمة
+                <label
+                  htmlFor="contributorContact"
+                  className="mb-1 block text-sm font-medium text-slate-200"
+                >
+                  رقم الهاتف
                 </label>
-                <select
-                  id="pledgeType"
-                  value={form.pledgeType}
+                <input
+                  id="contributorContact"
+                  required
+                  type="tel"
+                  inputMode="tel"
+                  placeholder={formatAlgerianPhoneHint()}
+                  value={form.contributorContact}
                   onChange={(event) =>
                     setForm((current) => ({
                       ...current,
-                      pledgeType: event.target.value as PledgeType,
+                      contributorContact: event.target.value,
                     }))
                   }
-                  className={selectFieldClass}
-                >
-                  {PLEDGE_TYPES.map((type) => (
-                    <option key={type.value} value={type.value}>
-                      {type.labelAr}
-                    </option>
-                  ))}
-                </select>
+                  className={darkFormInputClass}
+                />
               </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label htmlFor="quantity" className="mb-1 block text-sm font-medium text-slate-200">
+                    الكمية
+                  </label>
+                  <input
+                    id="quantity"
+                    required
+                    type="number"
+                    min={1}
+                    max={remaining}
+                    value={form.quantity}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        quantity: event.target.value,
+                      }))
+                    }
+                    className={darkFormInputClass}
+                  />
+                </div>
+
+                <div>
+                  <label htmlFor="pledgeType" className="mb-1 block text-sm font-medium text-slate-200">
+                    نوع المساهمة
+                  </label>
+                  <select
+                    id="pledgeType"
+                    value={form.pledgeType}
+                    onChange={(event) =>
+                      setForm((current) => ({
+                        ...current,
+                        pledgeType: event.target.value as PledgeType,
+                      }))
+                    }
+                    className={darkSelectClass}
+                  >
+                    {PLEDGE_TYPES.map((type) => (
+                      <option key={type.value} value={type.value}>
+                        {type.labelAr}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {error ? (
+                <p className="text-sm text-rose-300">{error}</p>
+              ) : null}
             </div>
 
-            {error ? (
-              <p className="text-sm text-red-600">{error}</p>
-            ) : null}
-
-            <button
-              type="submit"
-              disabled={isSubmitting || remaining <= 0}
-              className={cn(
-                "flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-700 px-4 text-sm font-semibold text-white shadow-md transition hover:scale-[1.02] hover:bg-emerald-800 disabled:cursor-not-allowed disabled:opacity-60",
-              )}
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  جاري الإرسال...
-                </>
-              ) : (
-                "نعاون في هاد الخير"
-              )}
-            </button>
+            <div className="shrink-0 border-t border-slate-800 bg-slate-900 p-5">
+              <button
+                type="submit"
+                disabled={isSubmitting || remaining <= 0}
+                className={cn(primaryNextButtonClass, "flex w-full items-center justify-center gap-2")}
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    جاري الإرسال...
+                  </>
+                ) : (
+                  "نعاون في هاد الخير"
+                )}
+              </button>
+            </div>
           </form>
         )}
       </div>

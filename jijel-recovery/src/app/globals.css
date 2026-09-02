@@ -157,6 +157,24 @@ textarea::placeholder {
   background: transparent;
 }
 
+.modal-body-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(51 65 85) transparent;
+}
+
+.modal-body-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-body-scroll::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: rgb(51 65 85);
+}
+
+.modal-body-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 .leaflet-popup-content {
   margin: 12px 14px !important;
   color: #f8fafc !important;

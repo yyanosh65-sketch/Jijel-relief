@@ -43,6 +43,7 @@ export default function AdvancedNeedSearch({
   const router = useRouter();
   const pathname = usePathname();
   const filters = useNeedSearchFilters();
+  const isMapRoute = pathname === "/" || pathname === "/map";
 
   const [isExpanded, setIsExpanded] = useState(false);
   const [queryDraft, setQueryDraft] = useState(filters.query);
@@ -298,6 +299,10 @@ export default function AdvancedNeedSearch({
     </div>
   ) : null;
 
+  if (variant === "floating" && !isMapRoute) {
+    return null;
+  }
+
   if (variant === "panel") {
     return (
       <section
@@ -392,7 +397,8 @@ export default function AdvancedNeedSearch({
     <div
       dir="rtl"
       className={cn(
-        "pointer-events-none absolute top-4 left-1/2 z-[500] w-[92%] max-w-4xl -translate-x-1/2",
+        "pointer-events-none absolute top-4 left-1/2 w-[92%] max-w-4xl -translate-x-1/2",
+        Z_MAP_FLOATING,
         className,
       )}
       aria-label="بحث وتصفية الاحتياجات"
