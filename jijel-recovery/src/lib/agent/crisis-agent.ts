@@ -47,6 +47,8 @@ import {
   type FeedFlowCategory,
   resolveFeedLocation,
 } from "@/lib/feed-flow-classifier";
+import { extractFacebookUrl } from "@/lib/feed-facebook";
+import { createEmergencyNotification } from "@/lib/emergency-notifications";
 import {
   createAgentAbortSignal,
   deepseek,
@@ -356,6 +358,7 @@ export async function processSocialFeedFallback(rawText: string): Promise<{
       extracted,
       geo,
       sourceText: rawText,
+      facebookUrl: classified.facebookUrl,
     });
   }
 
@@ -638,6 +641,19 @@ export type SavedFeedRecord =
   | { kind: "accommodation"; id: number; locationId: number }
   | { kind: "incoming_convoy"; id: number };
 
+function inferNeedCategory(
+  classified: ClassifiedFeedPost,
+): z.infer<typeof EXTRACTED_ENTITY_SCHEMA>["category"] {
+  if (/يتيم|أيتام|عائلة يتيم|يتامى|orphan/i.test(classified.description)) {
+    return "sos_orphan_family";
+  }
+  if (classified.flowCategory === "accommodation") return "shelter";
+  if (classified.cargoType === "medicine") return "medical";
+  if (classified.cargoType === "food") return "food";
+  if (classified.flowCategory === "sos_medical") return "medical";
+  return "other";
+}
+
 function classifiedToExtracted(classified: ClassifiedFeedPost): ExtractedAidNeed {
   const entityType =
     classified.flowCategory === "sos_medical"
@@ -652,14 +668,7 @@ function classifiedToExtracted(classified: ClassifiedFeedPost): ExtractedAidNeed
     entityType,
     title: classified.title,
     description: classified.description,
-    category:
-      classified.flowCategory === "accommodation"
-        ? "shelter"
-        : classified.cargoType === "medicine"
-          ? "medical"
-          : classified.cargoType === "food"
-            ? "food"
-            : "other",
+    category: inferNeedCategory(classified),
     urgency:
       classified.flowCategory === "sos_medical" ? "critical" : "high",
     quantityNeeded: classified.bedCapacity ?? 1,
@@ -713,8 +722,11 @@ export async function persistExtractedFeedEntities(input: {
   extracted: ExtractedAidNeed;
   geo: GeoLocatedVillage;
   sourceText: string;
+  facebookUrl?: string | null;
 }): Promise<SavedFeedRecord> {
   const { extracted, geo, sourceText } = input;
+  const facebookUrl =
+    input.facebookUrl ?? extractFacebookUrl(sourceText) ?? null;
   const daira = resolveDairaForCommune(geo.commune);
 
   if (
@@ -736,9 +748,24 @@ export async function persistExtractedFeedEntities(input: {
         lat: String(geo.lat),
         lng: String(geo.lng),
         status: "active",
-        mediaUrls: [],
+        mediaUrls: facebookUrl ? [facebookUrl] : [],
+        facebookUrl,
       })
       .returning({ id: urgentAlerts.id });
+
+    await createEmergencyNotification({
+      title: extracted.title,
+      message: extracted.description,
+      commune: geo.commune,
+      communeAr: geo.commune_ar,
+      village: extracted.villageName ?? geo.matchedLabel,
+      phone: extracted.contactPhone ?? null,
+      facebookUrl,
+      urgency: extracted.urgency,
+      category: extracted.category,
+      sourceKind: "sos_alert",
+      sourceId: saved.id,
+    });
 
     revalidatePath("/");
     revalidatePath("/map");
@@ -812,9 +839,26 @@ export async function persistExtractedFeedEntities(input: {
       contactName: extracted.contactName ?? "منشور مجتمعي",
       contactPhone: extracted.contactPhone ?? null,
       contactWhatsapp: extracted.contactPhone ?? null,
-      mediaUrls: [],
+      mediaUrls: facebookUrl ? [facebookUrl] : [],
+      facebookUrl,
     })
     .returning({ id: needs.id });
+
+  await createEmergencyNotification({
+    title: isAccommodation
+      ? `إيواء ومبيت${venueLabel}${bedLabel}`
+      : extracted.title,
+    message: extracted.description,
+    commune: geo.commune,
+    communeAr: geo.commune_ar,
+    village: extracted.villageName ?? geo.matchedLabel,
+    phone: extracted.contactPhone ?? null,
+    facebookUrl,
+    urgency: extracted.urgency,
+    category: isAccommodation ? "shelter" : extracted.category,
+    sourceKind: "aid_need",
+    sourceId: need.id,
+  });
 
   revalidatePath("/");
   revalidatePath("/map");
@@ -895,10 +939,12 @@ export async function processSocialFeed(rawText: string): Promise<{
 
     let saved: SavedFeedRecord | null = null;
     if (extracted.description.trim()) {
+      const classified = classifyFeedPost(rawText);
       saved = await persistExtractedFeedEntities({
         extracted,
         geo,
         sourceText: rawText,
+        facebookUrl: classified.facebookUrl,
       });
     }
 

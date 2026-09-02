@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { db } from "@/db";
 import { urgentAlerts } from "@/db/schema";
+import { extractFacebookUrl } from "@/lib/feed-facebook";
+import { createEmergencyNotification } from "@/lib/emergency-notifications";
 import {
   buildFeedDispatchWhatsAppMessage,
   parseFacebookSosPost,
@@ -10,9 +12,9 @@ import {
 } from "@/lib/feed-parser";
 import { verifiedReliefContacts } from "@/lib/relief-contacts";
 
-function extractFacebookUrl(rawInput: string): string[] {
-  const match = rawInput.match(/https?:\/\/(?:www\.)?(?:facebook|fb)\.com\/\S+/i);
-  return match ? [match[0]] : [];
+function extractFacebookUrlList(rawInput: string): string[] {
+  const url = extractFacebookUrl(rawInput);
+  return url ? [url] : [];
 }
 
 export type FeedDispatchResult = {
@@ -37,6 +39,8 @@ export async function parseAndDispatchSosPost(
     throw new Error("لا يمكن حفظ نداء فارغ.");
   }
 
+  const facebookUrl = extractFacebookUrl(rawInput);
+
   const [row] = await db
     .insert(urgentAlerts)
     .values({
@@ -50,9 +54,24 @@ export async function parseAndDispatchSosPost(
       lat: String(parsed.lat),
       lng: String(parsed.lng),
       status: "active",
-      mediaUrls: extractFacebookUrl(rawInput),
+      mediaUrls: extractFacebookUrlList(rawInput),
+      facebookUrl,
     })
     .returning({ id: urgentAlerts.id });
+
+  await createEmergencyNotification({
+    title: parsed.description.slice(0, 120),
+    message: parsed.description,
+    commune: parsed.commune,
+    communeAr: parsed.communeAr,
+    village: parsed.village,
+    phone: parsed.reporterPhone,
+    facebookUrl,
+    urgency: "critical",
+    category: "medical",
+    sourceKind: "sos_alert",
+    sourceId: row.id,
+  });
 
   revalidatePath("/");
   revalidatePath("/map");

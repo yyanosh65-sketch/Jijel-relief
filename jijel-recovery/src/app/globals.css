@@ -111,6 +111,15 @@ textarea::placeholder {
   z-index: 700 !important;
 }
 
+@keyframes marquee {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
 .leaflet-pane.leaflet-marker-pane {
   z-index: 600;
 }

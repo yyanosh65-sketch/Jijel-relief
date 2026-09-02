@@ -26,6 +26,7 @@ type MapPopupShellProps = {
   lng: number;
   phone?: string | null;
   whatsappUrl?: string | null;
+  facebookUrl?: string | null;
   showFieldReportButton?: boolean;
   onFieldReportClick?: () => void;
   className?: string;
@@ -46,6 +47,7 @@ export default function MapPopupShell({
   lng,
   phone,
   whatsappUrl,
+  facebookUrl,
   showFieldReportButton = false,
   onFieldReportClick,
   className,
@@ -113,6 +115,17 @@ export default function MapPopupShell({
       </div>
 
       <div className="space-y-2 border-t border-slate-100 bg-white p-3 pb-3">
+        {facebookUrl ? (
+          <a
+            href={facebookUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-blue-700"
+          >
+            فتح المنشور على فيسبوك ↗
+          </a>
+        ) : null}
+
         {showFieldReportButton && onFieldReportClick ? (
           <button
             type="button"

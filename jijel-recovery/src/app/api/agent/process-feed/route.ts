@@ -4,6 +4,7 @@ import {
   processSocialFeed,
   processSocialFeedFallback,
 } from "@/lib/agent/crisis-agent";
+import { extractFacebookUrl } from "@/lib/feed-facebook";
 import { classifyFeedPost } from "@/lib/feed-flow-classifier";
 import { buildFeedDispatchWhatsAppMessage } from "@/lib/feed-parser";
 import { verifiedReliefContacts } from "@/lib/relief-contacts";
@@ -19,6 +20,7 @@ export async function POST(req: Request) {
     }
 
     const classified = classifyFeedPost(rawText);
+    const facebookUrl = classified.facebookUrl ?? extractFacebookUrl(rawText);
 
     if (previewOnly) {
       return Response.json({
@@ -33,6 +35,7 @@ export async function POST(req: Request) {
           daira: classified.location.daira,
           village: classified.location.village,
           phone: classified.phone,
+          facebookUrl,
           lat: classified.location.lat,
           lng: classified.location.lng,
           confidence: classified.confidence,
@@ -110,6 +113,7 @@ export async function POST(req: Request) {
       classified,
       flowCategory,
       flowBadge,
+      facebookUrl,
       pin: {
         lat: result.structured.lat ?? classified.location.lat,
         lng: result.structured.lng ?? classified.location.lng,

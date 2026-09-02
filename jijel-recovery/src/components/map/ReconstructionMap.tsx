@@ -152,6 +152,7 @@ function NeedPopupContent({
         buildCoordinatorWhatsAppMessage(need),
       )
     : null;
+  const facebookUrl = need.facebookUrl ?? null;
 
   const fieldReportTarget: VillageFieldReportTarget = {
     villageAr: villageRecord?.name_ar ?? need.location.name,
@@ -204,6 +205,7 @@ function NeedPopupContent({
         lng={lng}
         phone={need.contactPhone}
         whatsappUrl={whatsappUrl}
+        facebookUrl={facebookUrl}
         showFieldReportButton={Boolean(onOpenFieldReport)}
         onFieldReportClick={() => onOpenFieldReport?.(fieldReportTarget)}
       >
@@ -226,6 +228,7 @@ function NeedPopupContent({
       lng={lng}
       phone={need.contactPhone}
       whatsappUrl={whatsappUrl}
+      facebookUrl={facebookUrl}
       showFieldReportButton={Boolean(onOpenFieldReport)}
       onFieldReportClick={() => onOpenFieldReport?.(fieldReportTarget)}
     >
@@ -691,6 +694,8 @@ export default function ReconstructionMap({
                     roadAccessibility={alertDetails.roadAccessibility}
                     lat={alertLat}
                     lng={alertLng}
+                    phone={alert.reporterPhone}
+                    facebookUrl={alert.facebookUrl}
                     showFieldReportButton={Boolean(onOpenFieldReport)}
                     onFieldReportClick={() =>
                       onOpenFieldReport?.(sosFieldTarget)

@@ -6,6 +6,7 @@ import AgentCopilot from "@/components/admin/AgentCopilot";
 import SosAlertButton from "@/components/emergency/SosAlertButton";
 import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
 import CharityInventoryNavButton from "@/components/charity/CharityInventoryNavButton";
+import EmergencyAlertBanner from "@/components/layout/EmergencyAlertBanner";
 import RegisterHelperButton from "@/components/helpers/RegisterHelperButton";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
@@ -25,6 +26,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
+      <EmergencyAlertBanner />
       {children}
       <AgentCopilot />
       <SosAlertButton />

@@ -257,6 +257,8 @@ const VILLAGE_NAME_ALIASES: Record<string, string> = {
   "kaa ezzane": "قاع الزان",
   boutias: "بوتياس",
   boutiass: "بوتياس",
+  boumazbara: "بومزبرة",
+  boualramad: "بوالرماد",
   "souk essebt": "سوق السبت",
   "souk es sebt": "سوق السبت",
 };

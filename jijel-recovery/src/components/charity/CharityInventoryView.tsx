@@ -39,6 +39,7 @@ import { cn } from "@/lib/utils";
 
 type CharityInventoryViewProps = {
   initialItems: CharityInventoryRecord[];
+  initialCommune?: string;
 };
 
 type RegisterFormState = {
@@ -271,9 +272,10 @@ function CharityInventoryCard({
 
 export default function CharityInventoryView({
   initialItems,
+  initialCommune = "",
 }: CharityInventoryViewProps) {
   const [items, setItems] = useState(initialItems);
-  const [communeFilter, setCommuneFilter] = useState("");
+  const [communeFilter, setCommuneFilter] = useState(initialCommune);
   const [categoryFilter, setCategoryFilter] = useState<
     CharityItemCategory | ""
   >("");

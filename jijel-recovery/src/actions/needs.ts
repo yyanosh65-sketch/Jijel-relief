@@ -381,6 +381,7 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
       contact_phone: string | null;
       contact_whatsapp: string | null;
       media_urls: string[] | null;
+      facebook_url: string | null;
       voice_note_data: string | null;
       created_at: Date;
       updated_at: Date;
@@ -408,6 +409,7 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
         n.contact_phone,
         n.contact_whatsapp,
         n.media_urls,
+        n.facebook_url,
         n.voice_note_data,
         n.created_at,
         n.updated_at,
@@ -467,6 +469,7 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
       contactPhone: row.contact_phone,
       contactWhatsapp: row.contact_whatsapp,
       mediaUrls: row.media_urls ?? [],
+      facebookUrl: row.facebook_url,
       voiceNoteData: row.voice_note_data,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
@@ -550,6 +553,7 @@ export async function getNearbyNeeds(
       contact_phone: string | null;
       contact_whatsapp: string | null;
       media_urls: string[] | null;
+      facebook_url: string | null;
       voice_note_data: string | null;
       created_at: Date;
       updated_at: Date;
@@ -576,6 +580,7 @@ export async function getNearbyNeeds(
         n.contact_phone,
         n.contact_whatsapp,
         n.media_urls,
+        n.facebook_url,
         n.voice_note_data,
         n.created_at,
         n.updated_at,
@@ -624,6 +629,7 @@ export async function getNearbyNeeds(
       contactPhone: row.contact_phone,
       contactWhatsapp: row.contact_whatsapp,
       mediaUrls: row.media_urls ?? [],
+      facebookUrl: row.facebook_url,
       voiceNoteData: row.voice_note_data,
       createdAt: row.created_at,
       updatedAt: row.updated_at,

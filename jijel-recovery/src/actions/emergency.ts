@@ -52,12 +52,14 @@ export type UrgentAlertRecord = {
   emergencyType: SubmitUrgentAlertInput["emergencyType"];
   description: string;
   reporterName: string;
+  reporterPhone: string | null;
   daira: string;
   commune: string;
   village: string | null;
   lat: number;
   lng: number;
   mediaUrls: string[];
+  facebookUrl: string | null;
   voiceNoteData: string | null;
   createdAt: Date;
   helperDispatch?: SosDispatchBundle;
@@ -322,12 +324,14 @@ export async function submitUrgentAlert(
         emergencyType: alert.emergencyType,
         description: alert.description,
         reporterName: alert.reporterName,
+        reporterPhone: alert.reporterPhone,
         daira: alert.daira,
         commune: alert.commune,
         village: alert.village,
         lat: Number(alert.lat),
         lng: Number(alert.lng),
         mediaUrls: alert.mediaUrls ?? [],
+        facebookUrl: alert.facebookUrl,
         voiceNoteData: alert.voiceNoteData,
         createdAt: alert.createdAt,
         helperDispatch,

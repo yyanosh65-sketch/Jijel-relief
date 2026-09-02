@@ -10,6 +10,7 @@ import {
   extractAlgerianPhoneNumbers,
   type FeedParseConfidence,
 } from "@/lib/feed-parser";
+import { extractFacebookUrl } from "@/lib/feed-facebook";
 import {
   findVillageByName,
   getAllVillages,
@@ -72,6 +73,7 @@ export type ClassifiedFeedPost = {
   title: string;
   description: string;
   phone: string | null;
+  facebookUrl: string | null;
   location: ResolvedFeedLocation;
   confidence: FeedParseConfidence;
   // SOS-specific
@@ -95,6 +97,8 @@ const DOUAR_EXTRA_ALIASES: Array<{
   communeAr: string;
   daira: string;
   villageLabel: string;
+  lat?: number;
+  lng?: number;
 }> = [
   {
     aliases: ["لمنزل", "Lemnzel", "Menazel", "مشتى لمنازل", "مشتى", "moshti lmenazel", "moshti"],
@@ -123,6 +127,24 @@ const DOUAR_EXTRA_ALIASES: Array<{
     communeAr: "الشحنة",
     daira: "Taher",
     villageLabel: "دوار بني خطاب",
+  },
+  {
+    aliases: ["بومزبرة", "بومزبره", "boumazbara", "boumazbera"],
+    commune: "Djemaa Beni Habibi",
+    communeAr: "جمعة بني حبيبي",
+    daira: "El Ancer",
+    villageLabel: "دشرة بومزبرة",
+    lat: 36.6872,
+    lng: 5.8108,
+  },
+  {
+    aliases: ["بوالرماد", "بو الرماد", "boualramad", "bou el rmad"],
+    commune: "Boucif Ouled Askeur",
+    communeAr: "بوصيف أولاد عسكر",
+    daira: "Taher",
+    villageLabel: "دشرة بوالرماد",
+    lat: 36.6498,
+    lng: 6.0092,
   },
 ];
 
@@ -271,8 +293,8 @@ export function resolveFeedLocation(rawText: string): ResolvedFeedLocation {
           daira: extra.daira,
           dairaAr: getDairaArabicName(extra.daira),
           village: extra.villageLabel,
-          lat: meta?.lat ?? 36.6514,
-          lng: meta?.lng ?? 5.8822,
+          lat: extra.lat ?? meta?.lat ?? 36.6514,
+          lng: extra.lng ?? meta?.lng ?? 5.8822,
           matchedLabel: extra.villageLabel,
           source: "douar_alias",
           confidence: "high",
@@ -531,6 +553,7 @@ function computeConfidence(input: {
 }
 
 export function classifyFeedPost(rawInput: string): ClassifiedFeedPost {
+  const facebookUrl = extractFacebookUrl(rawInput);
   const description = stripNoise(rawInput);
   if (!description) {
     throw new Error("النص فارغ — الصق محتوى المنشور.");
@@ -554,6 +577,7 @@ export function classifyFeedPost(rawInput: string): ClassifiedFeedPost {
     title: buildTitle(flowCategory, description, location),
     description: description.slice(0, 2000),
     phone,
+    facebookUrl,
     location,
     confidence,
   };

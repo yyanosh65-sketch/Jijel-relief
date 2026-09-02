@@ -15,6 +15,7 @@ export const needCategoryEnum = pgEnum("need_category", [
   "water",
   "shelter",
   "medical",
+  "sos_orphan_family",
   "clothing",
   "transport",
   "other",
@@ -168,6 +169,7 @@ export const needs = pgTable("needs", {
   contactPhone: text("contact_phone"),
   contactWhatsapp: text("contact_whatsapp"),
   mediaUrls: text("media_urls").array().notNull().default([]),
+  facebookUrl: text("facebook_url"),
   voiceNoteData: text("voice_note_data"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -205,6 +207,7 @@ export const urgentAlerts = pgTable("urgent_alerts", {
   lng: numeric("lng", { precision: 10, scale: 6 }).notNull(),
   status: sosAlertStatusEnum("status").notNull().default("active"),
   mediaUrls: text("media_urls").array().notNull().default([]),
+  facebookUrl: text("facebook_url"),
   voiceNoteData: text("voice_note_data"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
@@ -213,6 +216,24 @@ export const urgentAlerts = pgTable("urgent_alerts", {
 
 /** @deprecated Use urgentAlerts — kept for existing imports */
 export const sosAlerts = urgentAlerts;
+
+export const emergencyNotifications = pgTable("emergency_notifications", {
+  id: serial("id").primaryKey(),
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  commune: text("commune").notNull(),
+  communeAr: text("commune_ar"),
+  village: text("village"),
+  phone: text("phone"),
+  facebookUrl: text("facebook_url"),
+  urgency: text("urgency"),
+  category: text("category"),
+  sourceKind: text("source_kind").notNull(),
+  sourceId: integer("source_id"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
 
 export const emergencyFacilities = pgTable("emergency_facilities", {
   id: serial("id").primaryKey(),

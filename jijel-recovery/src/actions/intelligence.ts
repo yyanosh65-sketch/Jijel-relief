@@ -24,11 +24,13 @@ export type SosMapAlert = {
   emergencyType: SubmitSosInput["emergencyType"];
   description: string;
   reporterName: string;
+  reporterPhone: string | null;
   daira: string;
   commune: string;
   village: string | null;
   lat: number;
   lng: number;
+  facebookUrl: string | null;
   createdAt: Date;
 };
 
@@ -59,11 +61,13 @@ export async function submitSosAlert(
       emergencyType: alert.emergencyType,
       description: alert.description,
       reporterName: alert.reporterName,
+      reporterPhone: alert.reporterPhone,
       daira: alert.daira,
       commune: alert.commune,
       village: alert.village,
       lat: alert.lat,
       lng: alert.lng,
+      facebookUrl: alert.facebookUrl ?? null,
       createdAt: alert.createdAt,
     },
   };
@@ -76,9 +80,11 @@ export async function getActiveSosAlerts(): Promise<ActionResult<SosMapAlert[]>>
       emergency_type: SosMapAlert["emergencyType"];
       description: string;
       reporter_name: string;
+      reporter_phone: string | null;
       daira: string;
       commune: string;
       village: string | null;
+      facebook_url: string | null;
       created_at: Date;
       lat: number;
       lng: number;
@@ -88,9 +94,11 @@ export async function getActiveSosAlerts(): Promise<ActionResult<SosMapAlert[]>>
         emergency_type,
         description,
         reporter_name,
+        reporter_phone,
         daira,
         commune,
         village,
+        facebook_url,
         created_at,
         lat::float8 AS lat,
         lng::float8 AS lng
@@ -104,11 +112,13 @@ export async function getActiveSosAlerts(): Promise<ActionResult<SosMapAlert[]>>
       emergencyType: row.emergency_type,
       description: row.description,
       reporterName: row.reporter_name,
+      reporterPhone: row.reporter_phone,
       daira: row.daira,
       commune: row.commune,
       village: row.village,
       lat: Number(row.lat),
       lng: Number(row.lng),
+      facebookUrl: row.facebook_url,
       createdAt: row.created_at,
     }));
 
