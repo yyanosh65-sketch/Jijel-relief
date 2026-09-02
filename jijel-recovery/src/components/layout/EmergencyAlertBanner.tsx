@@ -42,8 +42,13 @@ export default function EmergencyAlertBanner() {
   return (
     <div
       dir="rtl"
-      className="relative z-[2950] border-b border-red-300 bg-gradient-to-l from-red-700 via-red-600 to-amber-600 text-white shadow-lg"
+      className="relative z-[2950] border-b border-rose-400/40 bg-gradient-to-l from-rose-800 via-rose-700 to-amber-700 text-white shadow-lg"
     >
+      <div className="border-b border-white/10 bg-black/15 px-4 py-1 text-center">
+        <p className="text-[11px] font-semibold tracking-wide text-rose-50/90 sm:text-xs">
+          « وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَىٰ » — نداء ميداني عاجل
+        </p>
+      </div>
       <div className="mx-auto flex max-w-6xl flex-col gap-2 px-4 py-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="min-w-0 flex-1 overflow-hidden">
           <p className="animate-pulse text-xs font-bold uppercase tracking-wide text-red-100">
@@ -69,7 +74,7 @@ export default function EmergencyAlertBanner() {
           ) : null}
           <Link
             href={charitiesHref}
-            className="rounded-lg bg-white px-3 py-1.5 text-xs font-extrabold text-red-700 hover:bg-red-50"
+            className="rounded-lg bg-white px-3 py-1.5 text-xs font-extrabold text-rose-800 transition-colors hover:bg-rose-50"
           >
             توجيه نداء للجمعيات القريبة
           </Link>

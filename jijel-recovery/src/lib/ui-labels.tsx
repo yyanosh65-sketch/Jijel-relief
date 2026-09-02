@@ -6,6 +6,32 @@ export const glassPanelClass =
 export const premiumCardClass =
   "rounded-2xl border border-slate-200/80 bg-white/95 shadow-md backdrop-blur-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-xl";
 
+export const dashboardPanelClass =
+  "rounded-2xl border border-slate-800/60 bg-slate-900/80 shadow-xl shadow-black/20 backdrop-blur-md";
+
+export const dashboardCanvasClass =
+  "bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950";
+
+export const statusBadgeClass = {
+  emerald:
+    "inline-flex items-center rounded-full border border-emerald-500/30 bg-emerald-500/15 px-2.5 py-0.5 text-[11px] font-bold text-emerald-800",
+  rose: "inline-flex items-center rounded-full border border-rose-500/30 bg-rose-500/15 px-2.5 py-0.5 text-[11px] font-bold text-rose-800",
+  amber:
+    "inline-flex items-center rounded-full border border-amber-500/30 bg-amber-500/15 px-2.5 py-0.5 text-[11px] font-bold text-amber-900",
+  slate:
+    "inline-flex items-center rounded-full border border-slate-300 bg-slate-100 px-2.5 py-0.5 text-[11px] font-bold text-slate-700",
+} as const;
+
+export type StatusBadgeTone = keyof typeof statusBadgeClass;
+
+export const mapActionButtonClass =
+  "flex h-9 w-full items-center justify-center gap-2 rounded-lg px-3 text-sm font-bold text-white shadow-sm transition-colors duration-200";
+
+export const mapActionPrimaryClass = `${mapActionButtonClass} bg-blue-600 hover:bg-blue-700 active:bg-blue-800`;
+
+export const mapActionSecondaryClass =
+  "flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-bold text-emerald-700 transition-colors duration-200 hover:bg-emerald-100 active:bg-emerald-200";
+
 export const displayHeadingClass = "font-[family-name:var(--font-display)]";
 
 export const selectFieldClass =

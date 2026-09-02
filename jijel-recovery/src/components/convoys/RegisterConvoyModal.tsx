@@ -14,6 +14,7 @@ import {
   CONVOY_VEHICLE_OPTIONS,
 } from "@/lib/convoys";
 import { formatAlgerianPhoneHint } from "@/lib/phone";
+import SpiritualCallout from "@/components/layout/SpiritualCallout";
 import { formInputClass, formTextareaClass, selectFieldClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
@@ -223,6 +224,11 @@ export default function RegisterConvoyModal({
           <p className="mt-1 text-xs text-slate-500">
             سجّل قافلتك باش نستقبلوك ونعيّنو مرافق محلي عند المدخل.
           </p>
+          <SpiritualCallout
+            variant="emerald"
+            className="mt-3 border-emerald-200/80 bg-emerald-50 text-emerald-900"
+            verse="« وَمَنْ أَحْيَاهَا فَكَأَنَّمَا أَحْيَا النَّاسَ جَمِيعًا »"
+          />
         </div>
 
         {guideAssignUrl ? (

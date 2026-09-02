@@ -33,7 +33,7 @@ export default async function MapPage() {
   }
 
   return (
-    <main dir="rtl" className="flex h-dvh flex-col bg-gradient-to-b from-slate-50 to-white">
+    <main dir="rtl" className="dashboard-page flex flex-1 flex-col">
       <header className="border-b border-slate-200/80 bg-white/90 px-4 py-4 backdrop-blur-md">
         <div className="mx-auto max-w-6xl">
           <h1 className="text-lg font-semibold text-slate-900 sm:text-xl">

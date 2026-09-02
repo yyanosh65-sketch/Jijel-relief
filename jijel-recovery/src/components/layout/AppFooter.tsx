@@ -2,30 +2,31 @@ export function AppFooter() {
   return (
     <footer
       dir="rtl"
-      className="mt-auto w-full border-t border-slate-800/80 bg-slate-950 px-6 py-10 text-slate-400 sm:px-12"
+      className="relative z-[100] mt-auto w-full border-t border-slate-800/80 bg-[radial-gradient(ellipse_at_bottom,_var(--tw-gradient-stops))] from-slate-900 via-slate-950 to-slate-950 px-6 py-10 text-slate-400 sm:px-12"
     >
-      <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_0%,rgb(16_185_129_/_0.12),transparent_45%)]" />
+      <div className="relative mx-auto flex max-w-7xl flex-col items-center justify-between gap-6 md:flex-row">
         <div className="flex flex-col items-center space-y-2 text-center md:items-start md:text-right">
           <p className="text-sm font-semibold tracking-wide text-emerald-400">
             « وَتَعَاوَنُوا عَلَى الْبِرِّ وَالتَّقْوَىٰ »
           </p>
-          <p className="max-w-md text-xs leading-relaxed text-slate-500">
+          <p className="max-w-md text-xs leading-relaxed tracking-normal text-slate-500">
             منصة الإغاثة والتنسيق الميداني الموحدة لولاية جيجل. مبادرة تقنية
             تطوعية لتيسير وصول المساعدات ودعم الأهالي المتضررين.
           </p>
         </div>
 
         <div className="flex flex-col items-center space-y-1.5 text-center md:items-end md:text-left">
-          <div className="text-xs text-slate-400">
+          <div className="text-xs tracking-wide text-slate-400">
             تم التطوير بحرص وإخلاص لأهلنا في جيجل
           </div>
-          <div className="inline-flex items-center gap-2 rounded-lg border border-slate-800 bg-slate-900 px-3 py-1.5 text-sm font-bold text-slate-200 shadow-inner">
+          <div className="inline-flex items-center gap-2 rounded-lg border border-slate-800/60 bg-slate-900/80 px-3 py-1.5 text-sm font-bold text-slate-200 shadow-inner backdrop-blur-md">
             <span>تطوير وإشراف:</span>
             <span className="font-extrabold text-emerald-400">
               يونس تلماني (Younes Telmani)
             </span>
           </div>
-          <p className="text-[11px] text-slate-600">
+          <p className="text-[11px] leading-relaxed text-slate-600">
             جميع البيانات الميدانية والجغرافية مخصصة للأعمال الإنسانية
             والتضامنية
           </p>

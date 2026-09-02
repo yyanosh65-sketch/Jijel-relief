@@ -28,6 +28,7 @@ import {
   getDairas,
 } from "@/lib/locations";
 import { buildWhatsAppUrl } from "@/lib/phone";
+import SpiritualCallout from "@/components/layout/SpiritualCallout";
 import {
   formInputClass,
   glassPanelClass,
@@ -412,8 +413,14 @@ export default function CharityInventoryView({
   }
 
   return (
-    <div dir="rtl" className="mx-auto max-w-6xl space-y-6 px-4 py-6">
-      <section className={cn(glassPanelClass, "p-5")}>
+    <div dir="rtl" className="dashboard-page mx-auto max-w-6xl space-y-6 px-4 py-6">
+      <SpiritualCallout
+        variant="emerald"
+        className="border-emerald-200/80 bg-emerald-50 text-emerald-900"
+        verse="« وَمَنْ أَحْيَاهَا فَكَأَنَّمَا أَحْيَا النَّاسَ جَمِيعًا »"
+      />
+
+      <section className={cn(glassPanelClass, "border-slate-800/20 p-5 shadow-xl")}>
         <div className="flex flex-wrap items-start justify-between gap-4">
           <div>
             <h1 className="font-[family-name:var(--font-display)] text-2xl font-bold text-slate-900">

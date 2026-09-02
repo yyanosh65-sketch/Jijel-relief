@@ -42,7 +42,7 @@ export default async function HomePage() {
   return (
     <main
       dir="rtl"
-      className="min-h-[calc(100dvh-4rem)] bg-gradient-to-b from-slate-50 via-white to-emerald-50/40"
+      className="dashboard-page min-h-full"
     >
       <div className="mx-auto max-w-6xl border-b border-slate-200/80 px-4 py-5">
         <h1

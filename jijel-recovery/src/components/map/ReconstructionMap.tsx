@@ -196,6 +196,7 @@ function NeedPopupContent({
     return (
       <MapPopupShell
         pointTypeLabel={MAP_POINT_TYPE_LABELS.need}
+        badgeTone={need.urgency === "critical" ? "rose" : "amber"}
         title={translateNeedTitle(need.title)}
         dairaAr={mapDetails.dairaAr}
         communeAr={mapDetails.communeAr}
@@ -219,6 +220,7 @@ function NeedPopupContent({
   return (
     <MapPopupShell
       pointTypeLabel={MAP_POINT_TYPE_LABELS.need}
+      badgeTone={need.urgency === "critical" ? "rose" : "amber"}
       title={translateNeedTitle(need.title)}
       dairaAr={mapDetails.dairaAr}
       communeAr={mapDetails.communeAr}
@@ -552,6 +554,7 @@ export default function ReconstructionMap({
               >
                 <MapPopup>
                   <MapPopupShell
+                    badgeTone="slate"
                     pointTypeLabel={
                       pin.type === "daira"
                         ? MAP_POINT_TYPE_LABELS.daira
@@ -602,6 +605,7 @@ export default function ReconstructionMap({
               >
                 <MapPopup>
                   <MapPopupShell
+                    badgeTone="amber"
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.road}
                     title={road.name_ar}
                     addressHierarchy={`ولاية جيجل > ${road.name_ar}`}
@@ -638,6 +642,7 @@ export default function ReconstructionMap({
               >
                 <MapPopup>
                   <MapPopupShell
+                    badgeTone="emerald"
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.facility}
                     title={facility.name_ar}
                     dairaAr={facilityDetails.dairaAr}
@@ -685,6 +690,7 @@ export default function ReconstructionMap({
               >
                 <MapPopup>
                   <MapPopupShell
+                    badgeTone="rose"
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.sos}
                     title={`🚨 ${getSosLabel(alert.emergencyType)}`}
                     dairaAr={alertDetails.dairaAr}

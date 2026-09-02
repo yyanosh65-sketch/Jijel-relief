@@ -10,11 +10,18 @@ import {
   type RoadAccessibility,
   ROAD_ACCESSIBILITY_LABELS,
 } from "@/lib/map-location-display";
+import {
+  mapActionPrimaryClass,
+  mapActionSecondaryClass,
+  statusBadgeClass,
+  type StatusBadgeTone,
+} from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 type MapPopupShellProps = {
   pointTypeLabel: string;
   title: string;
+  badgeTone?: StatusBadgeTone;
   addressHierarchy?: string;
   dairaAr?: string;
   communeAr?: string;
@@ -36,6 +43,7 @@ type MapPopupShellProps = {
 export default function MapPopupShell({
   pointTypeLabel,
   title,
+  badgeTone = "slate",
   addressHierarchy,
   dairaAr,
   communeAr,
@@ -76,26 +84,29 @@ export default function MapPopupShell({
     <div
       dir="rtl"
       className={cn(
-        "map-popup-content w-[320px] overflow-hidden text-right text-slate-900",
+        "map-popup-content w-[320px] overflow-hidden text-right font-sans text-slate-900",
         className,
       )}
     >
-      <div className="sticky top-0 z-10 bg-white">
-        <div className="border-b border-slate-100 bg-slate-50 p-3 text-sm font-extrabold text-slate-900">
-          {title}
+      <div className="border-b border-slate-100 bg-white">
+        <div className="bg-slate-50/90 p-3">
+          <div className="mb-2 flex items-start justify-between gap-2">
+            <h3 className="flex-1 text-sm font-extrabold leading-snug tracking-tight text-slate-900">
+              {title}
+            </h3>
+            <span className={statusBadgeClass[badgeTone]}>{pointTypeLabel}</span>
+          </div>
+          {hierarchyTag ? (
+            <p className="rounded-lg border border-emerald-200/80 bg-emerald-50 px-2.5 py-1.5 text-xs font-semibold leading-relaxed text-emerald-950">
+              {hierarchyTag}
+            </p>
+          ) : null}
         </div>
-        {hierarchyTag ? (
-          <p className="border-b border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-semibold leading-relaxed text-emerald-950">
-            {hierarchyTag}
-          </p>
-        ) : null}
       </div>
 
-      <div className="max-h-[340px] overflow-y-auto overflow-x-hidden">
+      <div className="map-popup-scroll">
         <div className="space-y-3 p-3">
-          <p className="text-xs font-bold text-emerald-800">🏷️ {pointTypeLabel}</p>
-
-          <div className="space-y-1.5 text-xs leading-relaxed">
+          <div className="space-y-1.5 text-xs leading-relaxed tracking-normal">
             {showExactAddress ? (
               <p className="font-bold text-slate-700">{exactAddressAr}</p>
             ) : null}
@@ -105,7 +116,7 @@ export default function MapPopupShell({
                 {resolvedRoadLabel}
               </p>
             ) : null}
-            <p className="font-mono text-xs font-bold text-slate-700" dir="ltr">
+            <p className="font-mono text-[11px] font-bold text-slate-500" dir="ltr">
               {lat}, {lng}
             </p>
           </div>
@@ -120,7 +131,10 @@ export default function MapPopupShell({
             href={facebookUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 py-2 text-xs font-bold text-white transition hover:bg-blue-700"
+            className={cn(
+              mapActionPrimaryClass,
+              "h-auto py-2 text-xs hover:bg-blue-700",
+            )}
           >
             فتح المنشور على فيسبوك ↗
           </a>
@@ -130,7 +144,7 @@ export default function MapPopupShell({
           <button
             type="button"
             onClick={onFieldReportClick}
-            className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100"
+            className={mapActionSecondaryClass}
           >
             📝 إضافة تقرير ميداني / صور توثيقية
           </button>
@@ -140,7 +154,7 @@ export default function MapPopupShell({
           href={mapsUrl}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-blue-600 px-3 text-sm font-bold text-white shadow-sm transition hover:bg-blue-700"
+          className={mapActionPrimaryClass}
         >
           <Navigation className="h-4 w-4 shrink-0" aria-hidden />
           فتح في Google Maps للملاحة

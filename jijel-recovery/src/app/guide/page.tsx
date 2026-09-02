@@ -1,5 +1,6 @@
 import Link from "next/link";
 
+import SpiritualCallout from "@/components/layout/SpiritualCallout";
 import AssignGuideForm from "@/components/convoys/AssignGuideForm";
 import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import {
@@ -62,10 +63,16 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
   return (
     <main
       dir="rtl"
-      className="min-h-dvh bg-gradient-to-b from-sky-50 via-white to-emerald-50"
+      className="dashboard-page min-h-full"
     >
       <header className="border-b border-slate-200/80 bg-white/90 px-4 py-6 backdrop-blur-md">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-4xl space-y-4">
+          <SpiritualCallout
+            variant="emerald"
+            className="border-emerald-200/80 bg-emerald-50 text-emerald-900"
+            verse="« وَمَنْ أَحْيَاهَا فَكَأَنَّمَا أَحْيَا النَّاسَ جَمِيعًا »"
+          />
+          <div>
           <p className="text-sm font-medium text-sky-700">دليل القادمين لجيجل</p>
           <h1 className="mt-1 text-2xl font-bold text-slate-900 sm:text-3xl">
             مرحبا بخاوتنا اللي جاو يعاونو
@@ -87,6 +94,7 @@ export default async function GuidePage({ searchParams }: GuidePageProps) {
             >
               تسجيل ضرر محلي
             </Link>
+          </div>
           </div>
         </div>
       </header>

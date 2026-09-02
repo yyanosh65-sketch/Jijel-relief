@@ -30,8 +30,8 @@ export default function SiteNav() {
             className={cn(
               "inline-flex items-center gap-1.5 rounded-full px-3 py-2 text-xs font-semibold transition sm:text-sm",
               isActive
-                ? "bg-emerald-700 text-white shadow-sm"
-                : "border border-slate-200 bg-white text-slate-800 hover:bg-slate-50 hover:text-slate-900",
+                ? "bg-emerald-600 text-white shadow-sm shadow-emerald-900/30"
+                : "border border-slate-700/80 bg-slate-900/60 text-slate-200 hover:border-emerald-700/50 hover:bg-slate-800 hover:text-white",
             )}
           >
             <span aria-hidden>{item.icon}</span>
