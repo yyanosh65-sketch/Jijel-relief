@@ -44,7 +44,7 @@ import {
   MAP_LEGEND_LABELS,
   NeedProgressBar,
 } from "@/lib/ui-labels";
-import { Z_MAP_FLOATING, Z_MAP_HINT, Z_MAP_LEGEND, Z_MAP_PRIMARY_ACTION } from "@/lib/z-index";
+import { Z_MAP_CTA, Z_MAP_FLOATING, Z_MAP_HINT, Z_MAP_LEGEND } from "@/lib/z-index";
 import { buildWhatsAppDispatchUrl, buildWhatsAppUrl } from "@/lib/phone";
 import {
   buildMapPinWhatsAppDispatchMessage,
@@ -393,7 +393,7 @@ export default function ReconstructionMap({
     <div dir="rtl" className="relative z-10 h-full w-full">
       <div
         className={cn(
-          "pointer-events-none absolute bottom-6 left-4 hidden max-w-[200px] rounded-2xl border border-slate-800/80 bg-slate-900/90 p-3 text-xs shadow-xl backdrop-blur-md sm:block",
+          "pointer-events-none absolute bottom-6 left-6 hidden max-w-[200px] rounded-2xl border border-slate-800/80 bg-slate-900/90 p-3 text-xs shadow-xl backdrop-blur-md sm:block",
           Z_MAP_LEGEND,
         )}
       >
@@ -416,12 +416,11 @@ export default function ReconstructionMap({
 
       <div
         className={cn(
-          "pointer-events-none absolute bottom-6 left-4 hidden sm:block",
+          "pointer-events-none absolute top-4 left-4 hidden sm:block",
           Z_MAP_FLOATING,
-          "sm:bottom-[11.5rem]",
         )}
       >
-        <div className="pointer-events-auto flex max-w-[min(100vw-2rem,360px)] flex-wrap gap-1 rounded-2xl border border-slate-800/80 bg-slate-900/90 p-2 shadow-xl backdrop-blur-md">
+        <div className="pointer-events-auto flex max-w-xs flex-wrap gap-1.5 rounded-2xl border border-slate-800 bg-slate-900/90 p-2 backdrop-blur-md md:max-w-md">
           {LAYER_TOGGLES.map((layer) => {
             const isActive = layers[layer.key];
 
@@ -454,14 +453,14 @@ export default function ReconstructionMap({
 
       <div
         className={cn(
-          "pointer-events-none absolute bottom-6 left-6",
-          Z_MAP_PRIMARY_ACTION,
+          "pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2",
+          Z_MAP_CTA,
         )}
       >
         <button
           type="button"
           onClick={() => setIsCommunityReportOpen(true)}
-          className="pointer-events-auto rounded-2xl border border-emerald-500/40 bg-emerald-600 px-4 py-2.5 text-right text-xs font-extrabold text-white shadow-lg shadow-emerald-900/30 transition hover:bg-emerald-500"
+          className="pointer-events-auto rounded-2xl border border-emerald-500/40 bg-emerald-600 px-4 py-2.5 text-right text-xs font-extrabold text-white shadow-2xl shadow-emerald-900/30 transition-transform hover:-translate-y-0.5 hover:bg-emerald-500"
         >
           + تسجيل نداء أو استغاثة
         </button>
@@ -469,8 +468,8 @@ export default function ReconstructionMap({
 
       <div
         className={cn(
-          "pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2",
-          Z_MAP_HINT,
+          "pointer-events-none absolute bottom-[4.75rem] left-1/2 -translate-x-1/2",
+          Z_MAP_FLOATING,
         )}
       >
         <button

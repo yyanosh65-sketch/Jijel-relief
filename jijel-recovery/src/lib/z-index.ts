@@ -1,7 +1,8 @@
 /** Shared stacking scale for map overlays, drawers, and modals. */
 export const Z_MAP_TILES = "z-10";
-export const Z_MAP_LEGEND = "z-20";
+export const Z_MAP_LEGEND = "z-[25]";
 export const Z_MAP_FLOATING = "z-30";
+export const Z_MAP_CTA = "z-[35]";
 export const Z_MAP_HINT = "z-[300]";
 export const Z_DRAWER = "z-40";
 export const Z_MAP_PRIMARY_ACTION = "z-[400]";
