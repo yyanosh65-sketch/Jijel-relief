@@ -11,7 +11,7 @@ import "leaflet/dist/leaflet.css";
 /**
  * Map UI stacking (see globals.css + MAP_UI_Z_INDEX):
  * - Filter pills: z-[400]
- * - Leaflet popup pane: z-[700]
+ * - Leaflet popup pane: z-[700] (custom-jijel-popup via MapPopup)
  * - Modals: z-[9999]
  */
 

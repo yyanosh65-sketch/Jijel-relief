@@ -177,7 +177,9 @@ function NeedPopupContent({
       <MapPopupShell
         pointTypeLabel={MAP_POINT_TYPE_LABELS.need}
         title={translateNeedTitle(need.title)}
-        addressHierarchy={mapDetails.addressHierarchy}
+        dairaAr={mapDetails.dairaAr}
+        communeAr={mapDetails.communeAr}
+        villageAr={villageRecord?.name_ar}
         roadAccessibility={mapDetails.roadAccessibility}
         lat={lat}
         lng={lng}
@@ -195,7 +197,9 @@ function NeedPopupContent({
     <MapPopupShell
       pointTypeLabel={MAP_POINT_TYPE_LABELS.need}
       title={translateNeedTitle(need.title)}
-      addressHierarchy={mapDetails.addressHierarchy}
+      dairaAr={mapDetails.dairaAr}
+      communeAr={mapDetails.communeAr}
+      villageAr={villageRecord?.name_ar}
       roadAccessibility={mapDetails.roadAccessibility}
       lat={lat}
       lng={lng}
@@ -514,7 +518,9 @@ export default function ReconstructionMap({
                         : MAP_POINT_TYPE_LABELS.village
                     }
                     title={pin.name_ar}
-                    addressHierarchy={mapDetails.addressHierarchy}
+                    dairaAr={mapDetails.dairaAr}
+                    communeAr={mapDetails.communeAr}
+                    villageAr={isDouarPin ? pin.name_ar : undefined}
                     roadAccessibility={
                       roadPassabilityToAccessibility(pin.roadPassability)
                     }
@@ -590,7 +596,8 @@ export default function ReconstructionMap({
                   <MapPopupShell
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.facility}
                     title={facility.name_ar}
-                    addressHierarchy={facilityDetails.addressHierarchy}
+                    dairaAr={facilityDetails.dairaAr}
+                    communeAr={facilityDetails.communeAr}
                     roadAccessibility={facilityDetails.roadAccessibility}
                     lat={facilityLat}
                     lng={facilityLng}
@@ -609,6 +616,11 @@ export default function ReconstructionMap({
         {layers.sos
           ? intelligence.sosAlerts.map((alert) => {
               const [alertLat, alertLng] = clampJijelLandPosition(alert.lat, alert.lng);
+              const alertDetails = resolveLocationMapDetails(
+                alert.commune,
+                alert.daira,
+                alert.village ?? undefined,
+              );
 
               return (
               <Marker
@@ -621,16 +633,11 @@ export default function ReconstructionMap({
                   <MapPopupShell
                     pointTypeLabel={MAP_POINT_TYPE_LABELS.sos}
                     title={`🚨 ${getSosLabel(alert.emergencyType)}`}
-                    addressHierarchy={resolveLocationMapDetails(
-                      alert.commune,
-                      alert.daira,
-                      alert.village ?? undefined,
-                    ).addressHierarchy}
+                    dairaAr={alertDetails.dairaAr}
+                    communeAr={alertDetails.communeAr}
+                    villageAr={alert.village ?? undefined}
                     exactAddressAr={alert.description}
-                    roadAccessibility={
-                      resolveCommuneMapDetails(alert.commune, alert.daira)
-                        .roadAccessibility
-                    }
+                    roadAccessibility={alertDetails.roadAccessibility}
                     lat={alertLat}
                     lng={alertLng}
                   />

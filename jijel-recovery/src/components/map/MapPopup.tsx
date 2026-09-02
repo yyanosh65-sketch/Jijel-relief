@@ -4,9 +4,11 @@ import { Popup, type PopupProps } from "react-leaflet";
 
 /** Keeps popups below the filter bar (z-400) but above map controls. */
 export const MAP_POPUP_PROPS = {
+  offset: [0, -25] as [number, number],
   autoPan: true,
-  autoPanPaddingTopLeft: [20, 110] as [number, number],
-  className: "map-marker-popup",
+  autoPanPaddingTopLeft: [30, 90] as [number, number],
+  autoPanPaddingBottomRight: [30, 30] as [number, number],
+  className: "custom-jijel-popup",
 } as const;
 
 export default function MapPopup({

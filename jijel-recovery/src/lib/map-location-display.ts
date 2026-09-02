@@ -33,7 +33,26 @@ export function roadPassabilityToAccessibility(
 }
 
 export function buildGoogleMapsDirectionsUrl(lat: number, lng: number): string {
-  return `https://www.google.com/maps/dir/?api=1&destination=${lat.toFixed(4)},${lng.toFixed(4)}`;
+  return `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`;
+}
+
+export function formatPopupHierarchyTag(input: {
+  dairaAr: string;
+  communeAr: string;
+  villageAr?: string;
+}): string {
+  const segments = [
+    "ولاية جيجل",
+    `دائرة ${input.dairaAr.trim()}`,
+    `بلدية ${input.communeAr.trim()}`,
+  ];
+
+  const village = input.villageAr?.trim();
+  if (village) {
+    segments.push(village);
+  }
+
+  return segments.join(" > ");
 }
 
 export function formatAddressHierarchy(input: {
@@ -53,7 +72,7 @@ export function formatAddressHierarchy(input: {
   );
 
   if (douarLabel) {
-    segments.push(`مشتى/دوار ${douarLabel}`);
+    segments.push(douarLabel);
   }
 
   return segments.join(" > ");
