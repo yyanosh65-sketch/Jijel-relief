@@ -7,6 +7,7 @@ import {
   JIJEL_ENTRY_CORRIDORS,
   ROAD_STATUS_LABELS,
   ROAD_STATUS_STYLES,
+  type RoadCorridorStatus,
 } from "@/lib/road-corridors";
 import { cn } from "@/lib/utils";
 
@@ -14,6 +15,10 @@ type RoadTrackerProps = {
   className?: string;
   forceCollapsed?: boolean;
 };
+
+function getStatusBadgeLabel(status: RoadCorridorStatus): string {
+  return ROAD_STATUS_LABELS[status];
+}
 
 export default function RoadTracker({
   className,
@@ -33,7 +38,9 @@ export default function RoadTracker({
     <div
       dir="rtl"
       className={cn(
-        "pointer-events-auto rounded-2xl border border-slate-800/80 bg-slate-900/90 shadow-xl backdrop-blur-md",
+        "pointer-events-auto w-80 max-w-[90vw] overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/90 shadow-xl backdrop-blur-md",
+        isOpen &&
+          "max-h-[calc(100vh-12rem)] overflow-y-auto modal-body-scroll",
         className,
       )}
     >
@@ -42,16 +49,16 @@ export default function RoadTracker({
         onClick={() => setExpanded((value) => !value)}
         className="flex w-full items-center justify-between gap-2 px-4 py-3 text-right"
       >
-        <div className="flex items-center gap-2">
-          <Route className="h-4 w-4 text-emerald-400" />
+        <div className="flex min-w-0 items-center gap-2">
+          <Route className="h-4 w-4 shrink-0 text-emerald-400" />
           <span className="text-sm font-extrabold text-white">
             حالة محاور دخول جيجل
           </span>
         </div>
         {isOpen ? (
-          <ChevronUp className="h-4 w-4 text-slate-400" />
+          <ChevronUp className="h-4 w-4 shrink-0 text-slate-400" />
         ) : (
-          <ChevronDown className="h-4 w-4 text-slate-400" />
+          <ChevronDown className="h-4 w-4 shrink-0 text-slate-400" />
         )}
       </button>
 
@@ -59,14 +66,16 @@ export default function RoadTracker({
         <div className="space-y-2 border-t border-slate-800/80 px-3 pb-3 pt-2">
           {JIJEL_ENTRY_CORRIDORS.map((corridor) => {
             const styles = ROAD_STATUS_STYLES[corridor.status];
+            const isDifficult = corridor.status === "difficult_4x4";
+
             return (
               <div
                 key={corridor.id}
-                className="rounded-xl border border-slate-800/60 bg-slate-950/60 px-3 py-2.5"
+                className="overflow-hidden rounded-xl border border-slate-800/60 bg-slate-950/60 px-3 py-2.5"
               >
-                <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <p className="text-xs font-extrabold text-slate-100">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs font-extrabold leading-snug text-slate-100">
                       {corridor.route} — {corridor.labelAr}
                     </p>
                     <p className="mt-0.5 text-[11px] text-slate-500">
@@ -75,14 +84,18 @@ export default function RoadTracker({
                   </div>
                   <span
                     className={cn(
-                      "inline-flex shrink-0 items-center gap-1.5 rounded-full border px-2 py-0.5 text-[10px] font-bold",
+                      "inline-flex max-w-full items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold whitespace-normal break-words",
+                      isDifficult && "text-[11px] leading-tight",
                       styles.badge,
                     )}
                   >
                     <span
-                      className={cn("h-1.5 w-1.5 rounded-full", styles.dot)}
+                      className={cn(
+                        "h-1.5 w-1.5 shrink-0 rounded-full",
+                        styles.dot,
+                      )}
                     />
-                    {ROAD_STATUS_LABELS[corridor.status]}
+                    {getStatusBadgeLabel(corridor.status)}
                   </span>
                 </div>
                 <p className="mt-1.5 text-[11px] leading-relaxed text-slate-400">

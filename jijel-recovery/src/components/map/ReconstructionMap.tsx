@@ -44,7 +44,7 @@ import {
   MAP_LEGEND_LABELS,
   NeedProgressBar,
 } from "@/lib/ui-labels";
-import { Z_MAP_FLOATING, Z_MAP_LEGEND } from "@/lib/z-index";
+import { Z_MAP_FLOATING, Z_MAP_HINT, Z_MAP_LEGEND, Z_MAP_PRIMARY_ACTION } from "@/lib/z-index";
 import { buildWhatsAppUrl, buildWhatsAppShareUrl } from "@/lib/phone";
 import {
   buildMapPinShareMessage,
@@ -447,15 +447,15 @@ export default function ReconstructionMap({
       <RoadTracker
         forceCollapsed={collapseRoadTracker}
         className={cn(
-          "pointer-events-auto absolute bottom-6 right-4 hidden w-[min(100%,300px)] sm:block",
+          "pointer-events-auto absolute bottom-6 right-4 hidden sm:block",
           Z_MAP_FLOATING,
         )}
       />
 
       <div
         className={cn(
-          "pointer-events-none absolute bottom-44 right-4 sm:bottom-28",
-          Z_MAP_FLOATING,
+          "pointer-events-none absolute bottom-6 left-6",
+          Z_MAP_PRIMARY_ACTION,
         )}
       >
         <button
@@ -469,15 +469,15 @@ export default function ReconstructionMap({
 
       <div
         className={cn(
-          "pointer-events-none absolute bottom-24 right-4 sm:bottom-8",
-          Z_MAP_FLOATING,
+          "pointer-events-none absolute bottom-6 left-1/2 -translate-x-1/2",
+          Z_MAP_HINT,
         )}
       >
         <button
           type="button"
           onClick={() => setPinDropMode((current) => !current)}
           className={cn(
-            "pointer-events-auto max-w-[220px] rounded-2xl border px-3 py-2.5 text-right text-xs font-bold shadow-lg transition",
+            "pointer-events-auto max-w-[min(90vw,320px)] rounded-2xl border px-3 py-2.5 text-center text-xs font-bold shadow-lg transition",
             pinDropMode
               ? "border-emerald-500 bg-emerald-600 text-white"
               : "border-slate-700 bg-slate-900/90 text-slate-100 hover:bg-slate-800",

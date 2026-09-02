@@ -2,6 +2,7 @@
 export const Z_MAP_TILES = "z-10";
 export const Z_MAP_LEGEND = "z-20";
 export const Z_MAP_FLOATING = "z-30";
+export const Z_MAP_HINT = "z-[300]";
 export const Z_DRAWER = "z-40";
 export const Z_MAP_PRIMARY_ACTION = "z-[400]";
 export const Z_MODAL = "z-50";

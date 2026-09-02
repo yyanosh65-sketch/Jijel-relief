@@ -39,7 +39,7 @@ export const JIJEL_ENTRY_CORRIDORS: RoadCorridor[] = [
 export const ROAD_STATUS_LABELS: Record<RoadCorridorStatus, string> = {
   open: "سلكت (Open)",
   heavy_traffic: "حركة سير كثيفة (Heavy Traffic)",
-  difficult_4x4: "صعبة للمركبات الثقيلة (4x4 Recommended)",
+  difficult_4x4: "صعبة للمركبات الثقيلة (4x4)",
 };
 
 export const ROAD_STATUS_STYLES: Record<
