@@ -3,12 +3,7 @@ import { getCommuneArabicName } from "@/lib/locations";
 import { translateNeedTitle } from "@/lib/need-display";
 
 function resolveAppOrigin(origin?: string): string {
-  return (
-    origin ??
-    (typeof window !== "undefined"
-      ? window.location.origin
-      : process.env.NEXT_PUBLIC_APP_URL ?? "https://jijel-relief.local")
-  );
+  return origin ?? process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
 }
 
 export function buildNeedWhatsAppDispatchMessage(
