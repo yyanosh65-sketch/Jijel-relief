@@ -106,6 +106,19 @@ export const convoyStatusEnum = pgEnum("convoy_status", [
   "cancelled",
 ]);
 
+export const fieldRoadPassabilityEnum = pgEnum("field_road_passability", [
+  "paved",
+  "rough_4x4",
+  "closed",
+]);
+
+export const fieldInfrastructureStatusEnum = pgEnum("field_infrastructure_status", [
+  "normal",
+  "intermittent",
+  "cut_off",
+  "unknown",
+]);
+
 export const locations = pgTable("locations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -234,6 +247,37 @@ export const incomingConvoys = pgTable("incoming_convoys", {
 /** @deprecated Use incomingConvoys */
 export const convoys = incomingConvoys;
 
+export const villageFieldReports = pgTable("village_field_reports", {
+  id: serial("id").primaryKey(),
+  villageNameAr: text("village_name_ar").notNull(),
+  commune: text("commune").notNull(),
+  communeAr: text("commune_ar").notNull(),
+  daira: text("daira").notNull(),
+  dairaAr: text("daira_ar").notNull(),
+  lat: numeric("lat", { precision: 10, scale: 6 }).notNull(),
+  lng: numeric("lng", { precision: 10, scale: 6 }).notNull(),
+  reporterName: text("reporter_name").notNull(),
+  reporterPhone: text("reporter_phone").notNull(),
+  affectedFamilies: integer("affected_families"),
+  populationEstimate: integer("population_estimate"),
+  roadPassability: fieldRoadPassabilityEnum("road_passability").notNull(),
+  waterStatus: fieldInfrastructureStatusEnum("water_status")
+    .notNull()
+    .default("unknown"),
+  fodderStatus: fieldInfrastructureStatusEnum("fodder_status")
+    .notNull()
+    .default("unknown"),
+  electricityStatus: fieldInfrastructureStatusEnum("electricity_status")
+    .notNull()
+    .default("unknown"),
+  urgentNeeds: text("urgent_needs").array().notNull().default([]),
+  notes: text("notes"),
+  mediaUrls: text("media_urls").array().notNull().default([]),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const locationsRelations = relations(locations, ({ many }) => ({
   needs: many(needs),
 }));
@@ -275,3 +319,8 @@ export type ConvoyVehicleType = (typeof convoyVehicleTypeEnum.enumValues)[number
 export type ConvoyCargoType = (typeof convoyCargoTypeEnum.enumValues)[number];
 export type ConvoyEntryPoint = (typeof convoyEntryPointEnum.enumValues)[number];
 export type ConvoyStatus = (typeof convoyStatusEnum.enumValues)[number];
+export type FieldRoadPassability =
+  (typeof fieldRoadPassabilityEnum.enumValues)[number];
+export type FieldInfrastructureStatus =
+  (typeof fieldInfrastructureStatusEnum.enumValues)[number];
+export type VillageFieldReport = typeof villageFieldReports.$inferSelect;

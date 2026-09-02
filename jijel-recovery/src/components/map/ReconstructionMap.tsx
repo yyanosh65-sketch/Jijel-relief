@@ -17,6 +17,7 @@ import MapPopupShell from "@/components/map/MapPopupShell";
 import MarkServedControls from "@/components/needs/MarkServedControls";
 import { translateNeedTitle } from "@/lib/need-display";
 import { findVillageByName } from "@/lib/locations";
+import type { VillageFieldReportTarget } from "@/lib/field-reports";
 import { clampJijelLandCoordinates, clampJijelLandPosition } from "@/lib/geo";
 import {
   createFacilityMarkerIcon,
@@ -30,6 +31,7 @@ import {
   resolveLocationMapDetails,
   roadPassabilityToAccessibility,
   getRoadPassabilityLabel,
+  ROAD_ACCESSIBILITY_LABELS,
 } from "@/lib/map-location-display";
 import {
   getMarkerColor,
@@ -74,6 +76,7 @@ type ReconstructionMapProps = {
   onPledgeClick: (need: MapNeed) => void;
   onPledgeSuccess?: () => void;
   onVillageClick: (dossierId: string) => void;
+  onOpenFieldReport?: (target: VillageFieldReportTarget) => void;
 };
 
 type MapLayerKey = keyof typeof MAP_LAYER_LABELS;
@@ -114,10 +117,12 @@ function NeedPopupContent({
   need,
   onPledgeClick,
   onPledgeSuccess,
+  onOpenFieldReport,
 }: {
   need: MapNeed;
   onPledgeClick: (need: MapNeed) => void;
   onPledgeSuccess?: () => void;
+  onOpenFieldReport?: (target: VillageFieldReportTarget) => void;
 }) {
   const [form, setForm] = useState<PopupFormState>({
     contributorName: "",
@@ -147,6 +152,21 @@ function NeedPopupContent({
         buildCoordinatorWhatsAppMessage(need),
       )
     : null;
+
+  const fieldReportTarget: VillageFieldReportTarget = {
+    villageAr: villageRecord?.name_ar ?? need.location.name,
+    commune: villageRecord?.commune ?? communeKey,
+    communeAr: mapDetails.communeAr,
+    daira: villageRecord?.daira ?? need.location.daira ?? "",
+    dairaAr: mapDetails.dairaAr,
+    lat,
+    lng,
+    roadAccessibilityLabel:
+      mapDetails.roadLabel ??
+      (mapDetails.roadAccessibility
+        ? ROAD_ACCESSIBILITY_LABELS[mapDetails.roadAccessibility]
+        : undefined),
+  };
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -184,6 +204,8 @@ function NeedPopupContent({
         lng={lng}
         phone={need.contactPhone}
         whatsappUrl={whatsappUrl}
+        showFieldReportButton={Boolean(onOpenFieldReport)}
+        onFieldReportClick={() => onOpenFieldReport?.(fieldReportTarget)}
       >
         <p className="text-sm font-medium text-emerald-700">
           شكراً! تسجّل تعاونك بنجاح.
@@ -204,6 +226,8 @@ function NeedPopupContent({
       lng={lng}
       phone={need.contactPhone}
       whatsappUrl={whatsappUrl}
+      showFieldReportButton={Boolean(onOpenFieldReport)}
+      onFieldReportClick={() => onOpenFieldReport?.(fieldReportTarget)}
     >
       <NeedProgressBar
         fulfilled={need.quantityFulfilled}
@@ -301,6 +325,7 @@ export default function ReconstructionMap({
   onPledgeClick,
   onPledgeSuccess,
   onVillageClick,
+  onOpenFieldReport,
 }: ReconstructionMapProps) {
   const [activeCategories, setActiveCategories] = useState<Set<MapCategoryId>>(
     () => new Set(MAP_CATEGORIES.map((category) => category.id)),
@@ -497,6 +522,19 @@ export default function ReconstructionMap({
                 isDouarPin ? pin.name_ar : undefined,
               );
               const [pinLat, pinLng] = clampJijelLandPosition(pin.lat, pin.lng);
+              const fieldReportTarget: VillageFieldReportTarget = {
+                villageAr: pin.name_ar,
+                commune: pin.name,
+                communeAr: mapDetails.communeAr,
+                daira: pin.daira,
+                dairaAr: mapDetails.dairaAr,
+                lat: pinLat,
+                lng: pinLng,
+                population: pin.population || undefined,
+                totalFamilies: pin.totalFamilies || undefined,
+                affectedFamilies: pin.affectedFamilies || undefined,
+                roadAccessibilityLabel: getRoadPassabilityLabel(pin.roadPassability),
+              };
 
               return (
               <Marker
@@ -530,6 +568,10 @@ export default function ReconstructionMap({
                       pin.coordinator.phone,
                       `السلام عليكم، نحتاج معلومات عن ${pin.name_ar}`,
                     )}
+                    showFieldReportButton={Boolean(onOpenFieldReport)}
+                    onFieldReportClick={() =>
+                      onOpenFieldReport?.(fieldReportTarget)
+                    }
                   >
                     <button
                       type="button"
@@ -620,6 +662,16 @@ export default function ReconstructionMap({
                 alert.daira,
                 alert.village ?? undefined,
               );
+              const sosFieldTarget: VillageFieldReportTarget = {
+                villageAr: alert.village ?? alert.commune,
+                commune: alert.commune,
+                communeAr: alertDetails.communeAr,
+                daira: alert.daira,
+                dairaAr: alertDetails.dairaAr,
+                lat: alertLat,
+                lng: alertLng,
+                roadAccessibilityLabel: alertDetails.roadLabel,
+              };
 
               return (
               <Marker
@@ -639,6 +691,10 @@ export default function ReconstructionMap({
                     roadAccessibility={alertDetails.roadAccessibility}
                     lat={alertLat}
                     lng={alertLng}
+                    showFieldReportButton={Boolean(onOpenFieldReport)}
+                    onFieldReportClick={() =>
+                      onOpenFieldReport?.(sosFieldTarget)
+                    }
                   />
                 </MapPopup>
               </Marker>
@@ -673,6 +729,7 @@ export default function ReconstructionMap({
                       need={need}
                       onPledgeClick={onPledgeClick}
                       onPledgeSuccess={onPledgeSuccess}
+                      onOpenFieldReport={onOpenFieldReport}
                     />
                   </MapPopup>
                 </Marker>

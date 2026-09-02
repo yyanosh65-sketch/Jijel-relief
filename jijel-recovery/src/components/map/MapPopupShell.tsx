@@ -26,6 +26,8 @@ type MapPopupShellProps = {
   lng: number;
   phone?: string | null;
   whatsappUrl?: string | null;
+  showFieldReportButton?: boolean;
+  onFieldReportClick?: () => void;
   className?: string;
   children?: React.ReactNode;
 };
@@ -44,6 +46,8 @@ export default function MapPopupShell({
   lng,
   phone,
   whatsappUrl,
+  showFieldReportButton = false,
+  onFieldReportClick,
   className,
   children,
 }: MapPopupShellProps) {
@@ -69,11 +73,11 @@ export default function MapPopupShell({
   return (
     <div dir="rtl" className={cn("map-popup-content text-right text-slate-900", className)}>
       <div className="sticky top-0 z-10 bg-white">
-        <div className="border-b border-slate-100 bg-slate-50 p-3 text-sm font-bold text-slate-900">
+        <div className="border-b border-slate-100 bg-slate-50 p-3 text-base font-bold text-slate-900">
           {title}
         </div>
         {hierarchyTag ? (
-          <p className="border-b border-slate-100 px-3 py-2 text-xs font-medium leading-relaxed text-slate-600">
+          <p className="border-b border-emerald-100 bg-emerald-50 px-3 py-2 text-xs font-semibold leading-relaxed text-emerald-950">
             {hierarchyTag}
           </p>
         ) : null}
@@ -100,6 +104,16 @@ export default function MapPopupShell({
         {children}
 
         <div className="space-y-2 pt-1">
+          {showFieldReportButton && onFieldReportClick ? (
+            <button
+              type="button"
+              onClick={onFieldReportClick}
+              className="flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-emerald-300 bg-emerald-50 px-3 text-sm font-bold text-emerald-700 transition hover:bg-emerald-100"
+            >
+              📝 إضافة تقرير ميداني / صور توثيقية
+            </button>
+          ) : null}
+
           <a
             href={mapsUrl}
             target="_blank"

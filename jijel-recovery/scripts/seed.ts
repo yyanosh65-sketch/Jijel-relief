@@ -249,6 +249,7 @@ async function runMigration(pool: Pool): Promise<void> {
     resolve(__dirname, "../drizzle/0008_incoming_convoys.sql"),
     resolve(__dirname, "../drizzle/0009_numeric_coordinates.sql"),
     resolve(__dirname, "../drizzle/0010_mila_entry_point.sql"),
+    resolve(__dirname, "../drizzle/0011_village_field_reports.sql"),
   ];
 
   for (const migrationPath of migrationPaths) {

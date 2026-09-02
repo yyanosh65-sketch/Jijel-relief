@@ -13,11 +13,13 @@ import RegisterHelperButton from "@/components/helpers/RegisterHelperButton";
 import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
 import NeedCard from "@/components/needs/NeedCard";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
+import VillageDetailDrawer from "@/components/map/VillageDetailDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
 import { useNeedSearchFilters } from "@/hooks/useNeedSearchFilters";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
 import { getDossierById, getDossierByLocation, getNearbyFacilities } from "@/lib/intelligence";
 import { filterAndSortNeeds } from "@/lib/need-search";
+import type { VillageFieldReportTarget } from "@/lib/field-reports";
 import { glassPanelClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
@@ -56,6 +58,9 @@ export default function ReconstructionMapLoader({
     EmergencyFacility[]
   >([]);
   const [isDossierOpen, setIsDossierOpen] = useState(false);
+  const [fieldReportTarget, setFieldReportTarget] =
+    useState<VillageFieldReportTarget | null>(null);
+  const [isFieldReportOpen, setIsFieldReportOpen] = useState(false);
 
   function openPledgeModal(need: MapNeed) {
     setSelectedNeed(need);
@@ -104,6 +109,16 @@ export default function ReconstructionMapLoader({
     setIsDossierOpen(false);
     setSelectedDossier(null);
     setDossierFacilities([]);
+  }
+
+  function openFieldReportDrawer(target: VillageFieldReportTarget) {
+    setFieldReportTarget(target);
+    setIsFieldReportOpen(true);
+  }
+
+  function closeFieldReportDrawer() {
+    setIsFieldReportOpen(false);
+    setFieldReportTarget(null);
   }
 
   const needsListHeader = (
@@ -180,6 +195,7 @@ export default function ReconstructionMapLoader({
                 onPledgeClick={openPledgeModal}
                 onPledgeSuccess={() => router.refresh()}
                 onVillageClick={openVillageDossier}
+                onOpenFieldReport={openFieldReportDrawer}
               />
             </div>
 
@@ -205,6 +221,7 @@ export default function ReconstructionMapLoader({
                 onPledgeClick={openPledgeModal}
                 onPledgeSuccess={() => router.refresh()}
                 onVillageClick={openVillageDossier}
+                onOpenFieldReport={openFieldReportDrawer}
               />
             </div>
 
@@ -231,6 +248,12 @@ export default function ReconstructionMapLoader({
         facilities={dossierFacilities}
         open={isDossierOpen}
         onClose={closeDossier}
+      />
+
+      <VillageDetailDrawer
+        target={fieldReportTarget}
+        open={isFieldReportOpen}
+        onClose={closeFieldReportDrawer}
       />
     </>
   );
