@@ -12,7 +12,6 @@ import {
   type NeedSearchFilters,
   type UrgencyFilterGroup,
 } from "@/lib/need-search";
-import { Z_MAP_FLOATING } from "@/lib/z-index";
 import { cn } from "@/lib/utils";
 
 function toggleListValue<T extends string>(values: T[], value: T): T[] {
@@ -49,9 +48,14 @@ const CATEGORY_IDLE =
 
 type MapFilterRibbonProps = {
   className?: string;
+  /** When true, renders inline (no fixed positioning) for MapTopHud stack */
+  embedded?: boolean;
 };
 
-export default function MapFilterRibbon({ className }: MapFilterRibbonProps) {
+export default function MapFilterRibbon({
+  className,
+  embedded = false,
+}: MapFilterRibbonProps) {
   const router = useRouter();
   const pathname = usePathname();
   const filters = useNeedSearchFilters();
@@ -74,81 +78,89 @@ export default function MapFilterRibbon({ className }: MapFilterRibbonProps) {
     [filters, replaceFilters],
   );
 
-  return (
+  const rail = (
     <div
-      dir="rtl"
       className={cn(
-        "pointer-events-none fixed top-[4.75rem] inset-x-0 z-30",
-        Z_MAP_FLOATING,
-        className,
+        "map-filter-rail flex w-full flex-nowrap items-center justify-start gap-1.5 overflow-x-auto py-1 md:justify-center",
+        "scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+        embedded && "px-2",
       )}
       aria-label="تصفية سريعة"
     >
-      <div className="pointer-events-auto mx-auto max-w-2xl px-3">
-        <div className="scrollbar-hide flex gap-2 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          {URGENCY_FILTER_OPTIONS.map((option) => {
-            const isActive = filters.urgencyGroups.includes(option.id);
-            const glow = URGENCY_GLOW[option.id];
-            const shortLabel =
-              option.id === "critical"
-                ? "عاجل جداً"
-                : option.id === "medium"
-                  ? "متوسط"
-                  : "عادي";
+      {URGENCY_FILTER_OPTIONS.map((option) => {
+        const isActive = filters.urgencyGroups.includes(option.id);
+        const glow = URGENCY_GLOW[option.id];
+        const shortLabel =
+          option.id === "critical"
+            ? "عاجل جداً"
+            : option.id === "medium"
+              ? "متوسط"
+              : "عادي";
 
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() =>
-                  patchFilters({
-                    urgencyGroups: toggleListValue(
-                      filters.urgencyGroups,
-                      option.id,
-                    ) as UrgencyFilterGroup[],
-                  })
-                }
-                className={cn(
-                  "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wide transition duration-200",
-                  isActive ? glow.active : glow.idle,
-                )}
-              >
-                {shortLabel}
-              </button>
-            );
-          })}
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() =>
+              patchFilters({
+                urgencyGroups: toggleListValue(
+                  filters.urgencyGroups,
+                  option.id,
+                ) as UrgencyFilterGroup[],
+              })
+            }
+            className={cn(
+              "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wide transition duration-200",
+              isActive ? glow.active : glow.idle,
+            )}
+          >
+            {shortLabel}
+          </button>
+        );
+      })}
 
-          <span
-            aria-hidden
-            className="mx-0.5 w-px shrink-0 self-stretch bg-white/10"
-          />
+      <span
+        aria-hidden
+        className="mx-0.5 h-4 w-px shrink-0 self-center bg-white/10"
+      />
 
-          {SEARCH_CATEGORY_OPTIONS.map((option) => {
-            const isActive = filters.categories.includes(option.id);
+      {SEARCH_CATEGORY_OPTIONS.map((option) => {
+        const isActive = filters.categories.includes(option.id);
 
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() =>
-                  patchFilters({
-                    categories: toggleListValue(
-                      filters.categories,
-                      option.id,
-                    ) as NeedSearchCategoryId[],
-                  })
-                }
-                className={cn(
-                  "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition duration-200",
-                  isActive ? CATEGORY_ACTIVE : CATEGORY_IDLE,
-                )}
-              >
-                {option.labelAr}
-              </button>
-            );
-          })}
-        </div>
-      </div>
+        return (
+          <button
+            key={option.id}
+            type="button"
+            onClick={() =>
+              patchFilters({
+                categories: toggleListValue(
+                  filters.categories,
+                  option.id,
+                ) as NeedSearchCategoryId[],
+              })
+            }
+            className={cn(
+              "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition duration-200",
+              isActive ? CATEGORY_ACTIVE : CATEGORY_IDLE,
+            )}
+          >
+            {option.labelAr}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  if (embedded) {
+    return <div className={cn("w-full", className)}>{rail}</div>;
+  }
+
+  return (
+    <div
+      dir="rtl"
+      className={cn("pointer-events-none fixed top-[4.75rem] inset-x-0 z-30", className)}
+    >
+      <div className="pointer-events-auto mx-auto max-w-2xl px-3">{rail}</div>
     </div>
   );
 }

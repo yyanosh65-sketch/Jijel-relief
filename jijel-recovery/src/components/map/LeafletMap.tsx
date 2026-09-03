@@ -4,6 +4,8 @@ import type { ReactNode } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 
 import { MapClickHandler } from "@/components/map/MapClickHandler";
+import MapInvalidateSize from "@/components/map/MapInvalidateSize";
+import MapZoomControl from "@/components/map/MapZoomControl";
 import {
   DEFAULT_MAP_ZOOM,
   JIJEL_CENTER,
@@ -20,13 +22,16 @@ type LeafletMapProps = {
   className?: string;
   pinDropMode?: boolean;
   onMapClick?: (lat: number, lng: number) => void;
+  /** Changes trigger map.invalidateSize() */
+  layoutEpoch?: unknown;
 };
 
 export default function LeafletMap({
   children,
-  className = "relative z-10 h-full w-full",
+  className = "relative z-10 h-full w-full touch-pan-x touch-pan-y",
   pinDropMode = false,
   onMapClick,
+  layoutEpoch,
 }: LeafletMapProps) {
   return (
     <MapContainer
@@ -38,12 +43,16 @@ export default function LeafletMap({
       maxBoundsViscosity={1.0}
       className={className}
       scrollWheelZoom
+      zoomControl={false}
+      style={{ touchAction: "pan-x pan-y" }}
     >
       <TileLayer
         attribution={MAP_TILE_LAYER.attribution}
         url={MAP_TILE_LAYER.url}
         maxZoom={JIJEL_MAX_ZOOM}
       />
+      <MapZoomControl />
+      <MapInvalidateSize trigger={layoutEpoch} />
       {onMapClick ? (
         <MapClickHandler enabled={pinDropMode} onMapClick={onMapClick} />
       ) : null}

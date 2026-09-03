@@ -85,7 +85,7 @@ export default function MapPopupShell({
     <div
       dir="rtl"
       className={cn(
-        "map-popup-content w-[320px] overflow-hidden rounded-xl text-right font-sans text-slate-100",
+        "map-popup-content w-full max-w-[320px] overflow-hidden rounded-xl text-right font-sans text-slate-100",
         className,
       )}
     >

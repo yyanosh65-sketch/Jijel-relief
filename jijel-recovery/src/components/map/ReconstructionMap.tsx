@@ -73,6 +73,8 @@ type ReconstructionMapProps = {
   layersPanelOpen?: boolean;
   onLayersPanelOpenChange?: (open: boolean) => void;
   onNeedInspect?: (need: MapNeed) => void;
+  onPointInspect?: (point: import("@/components/map/PointInspectionPanel").PointInspectionData) => void;
+  layoutEpoch?: unknown;
 };
 
 type MapLayerKey = keyof typeof MAP_LAYER_LABELS;
@@ -340,6 +342,8 @@ export default function ReconstructionMap({
   onPinDropActiveChange,
   layersPanelOpen,
   onNeedInspect,
+  onPointInspect,
+  layoutEpoch,
 }: ReconstructionMapProps) {
   const [layers, setLayers] = useState<Record<MapLayerKey, boolean>>({
     needs: true,
@@ -435,7 +439,7 @@ export default function ReconstructionMap({
       <div
         className={cn(
           "pointer-events-none absolute z-[25] hidden max-w-[200px] rounded-2xl border border-slate-800/80 bg-slate-900/90 p-3 text-xs shadow-xl backdrop-blur-md sm:block",
-          immersiveChrome ? "bottom-24 left-6" : "bottom-6 left-6",
+          immersiveChrome ? "bottom-28 left-6" : "bottom-6 left-6",
           Z_MAP_LEGEND,
         )}
       >
@@ -493,8 +497,10 @@ export default function ReconstructionMap({
       <RoadTracker
         forceCollapsed={collapseRoadTracker}
         className={cn(
-          "pointer-events-auto absolute hidden sm:block",
-          immersiveChrome ? "bottom-24 right-4" : "bottom-6 right-4",
+          "pointer-events-auto absolute z-30 hidden sm:block",
+          immersiveChrome
+            ? "bottom-28 right-6 mb-2 max-w-[min(20rem,calc(100vw-3rem))]"
+            : "bottom-6 right-4",
           Z_MAP_FLOATING,
         )}
       />
@@ -550,6 +556,8 @@ export default function ReconstructionMap({
       <LeafletMap
         pinDropMode={pinDropMode}
         onMapClick={handleMapPinClick}
+        layoutEpoch={layoutEpoch}
+        className="relative z-10 h-full w-full touch-pan-x touch-pan-y"
       >
         {layers.villages
           ? intelligence.villagePins.map((pin) => {
@@ -582,9 +590,16 @@ export default function ReconstructionMap({
                   pin.type === "daira" ? villageIcons.daira : villageIcons.commune
                 }
                 eventHandlers={{
-                  click: () => onVillageClick(pin.id),
+                  click: () => {
+                    onVillageClick(pin.id);
+                    if (immersiveChrome && onPointInspect) {
+                      // Dossier drawer is primary; skip Leaflet popup path
+                      return;
+                    }
+                  },
                 }}
               >
+                {immersiveChrome ? null : (
                 <MapPopup>
                   <MapPopupShell
                     badgeTone="slate"
@@ -632,6 +647,7 @@ export default function ReconstructionMap({
                     </button>
                   </MapPopupShell>
                 </MapPopup>
+                )}
               </Marker>
             );
             })
@@ -640,13 +656,41 @@ export default function ReconstructionMap({
         {layers.roads
           ? intelligence.roads.map((road) => {
               const [roadLat, roadLng] = clampJijelLandPosition(road.lat, road.lng);
+              const roadPoint = {
+                badgeTone: "amber" as const,
+                pointTypeLabel: MAP_POINT_TYPE_LABELS.road,
+                title: road.name_ar,
+                addressHierarchy: `ولاية جيجل > ${road.name_ar}`,
+                exactAddressAr: road.notes,
+                roadAccessibility: roadPassabilityToAccessibility(
+                  road.passability,
+                ),
+                roadLabel: getRoadPassabilityLabel(road.passability),
+                lat: roadLat,
+                lng: roadLng,
+                shareWhatsAppUrl: buildWhatsAppDispatchUrl(
+                  buildMapPinWhatsAppDispatchMessage({
+                    title: road.name_ar,
+                    communeAr: "جيجل",
+                    details: `${road.name_ar} — ${road.notes}`,
+                    lat: roadLat,
+                    lng: roadLng,
+                  }),
+                ),
+              };
 
               return (
               <Marker
                 key={road.id}
                 position={[roadLat, roadLng]}
                 icon={createRoadMarkerIcon(road.passability)}
+                eventHandlers={
+                  immersiveChrome && onPointInspect
+                    ? { click: () => onPointInspect(roadPoint) }
+                    : undefined
+                }
               >
+                {immersiveChrome && onPointInspect ? null : (
                 <MapPopup>
                   <MapPopupShell
                     badgeTone="amber"
@@ -660,17 +704,10 @@ export default function ReconstructionMap({
                     roadLabel={getRoadPassabilityLabel(road.passability)}
                     lat={roadLat}
                     lng={roadLng}
-                    shareWhatsAppUrl={buildWhatsAppDispatchUrl(
-                      buildMapPinWhatsAppDispatchMessage({
-                        title: road.name_ar,
-                        communeAr: "جيجل",
-                        details: `${road.name_ar} — ${road.notes}`,
-                        lat: roadLat,
-                        lng: roadLng,
-                      }),
-                    )}
+                    shareWhatsAppUrl={roadPoint.shareWhatsAppUrl}
                   />
                 </MapPopup>
+                )}
               </Marker>
             );
             })

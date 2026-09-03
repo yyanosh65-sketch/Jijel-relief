@@ -7,11 +7,12 @@ import { useMemo, useState } from "react";
 import type { MapIntelligenceData } from "@/actions/intelligence";
 import { getVillageDossier } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
-import AdvancedNeedSearch from "@/components/search/AdvancedNeedSearch";
-import FloatingMapHeader from "@/components/map/FloatingMapHeader";
 import MapActionDock from "@/components/map/MapActionDock";
-import MapFilterRibbon from "@/components/map/MapFilterRibbon";
+import MapTopHud from "@/components/map/MapTopHud";
 import NeedInspectionDrawer from "@/components/map/NeedInspectionDrawer";
+import PointInspectionPanel, {
+  type PointInspectionData,
+} from "@/components/map/PointInspectionPanel";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import VillageDetailDrawer from "@/components/map/VillageDetailDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
@@ -57,6 +58,9 @@ export default function ReconstructionMapLoader({
   );
   const [selectedNeed, setSelectedNeed] = useState<MapNeed | null>(null);
   const [inspectNeed, setInspectNeed] = useState<MapNeed | null>(null);
+  const [inspectPoint, setInspectPoint] = useState<PointInspectionData | null>(
+    null,
+  );
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
   const [selectedDossier, setSelectedDossier] = useState<VillageDossier | null>(
     null,
@@ -73,7 +77,16 @@ export default function ReconstructionMapLoader({
   const [pinDropActive, setPinDropActive] = useState(false);
   const [layersPanelOpen, setLayersPanelOpen] = useState(false);
 
-  const forceRoadTrackerCollapsed = mapModalOpen || isPledgeModalOpen;
+  const sheetOpen =
+    isDossierOpen ||
+    Boolean(inspectNeed) ||
+    Boolean(inspectPoint) ||
+    isFieldReportOpen ||
+    isPledgeModalOpen ||
+    mapModalOpen;
+
+  const layoutEpoch = sheetOpen;
+  const forceRoadTrackerCollapsed = sheetOpen;
 
   function openPledgeModal(need: MapNeed) {
     setSelectedNeed(need);
@@ -143,9 +156,6 @@ export default function ReconstructionMapLoader({
             : "relative h-full min-h-0 w-full",
         )}
       >
-        {showSearchBar ? (
-          <AdvancedNeedSearch variant="floating" immersive={fullViewportMap} />
-        ) : null}
         <ReconstructionMap
           needs={filteredNeeds}
           intelligence={intelligence}
@@ -162,14 +172,16 @@ export default function ReconstructionMapLoader({
           onPinDropActiveChange={setPinDropActive}
           layersPanelOpen={layersPanelOpen}
           onNeedInspect={fullViewportMap ? setInspectNeed : undefined}
+          onPointInspect={fullViewportMap ? setInspectPoint : undefined}
+          layoutEpoch={layoutEpoch}
         />
       </div>
 
       {fullViewportMap ? (
         <>
-          <FloatingMapHeader />
-          <MapFilterRibbon />
+          <MapTopHud showSearch={showSearchBar} />
           <MapActionDock
+            hidden={sheetOpen}
             onUrgentReport={() =>
               setCommunityReportSignal((current) => current + 1)
             }
@@ -194,6 +206,12 @@ export default function ReconstructionMapLoader({
         onClose={() => setInspectNeed(null)}
         onPledge={openPledgeModal}
         onOpenSettlement={openDossierFromNeed}
+      />
+
+      <PointInspectionPanel
+        point={inspectPoint}
+        open={Boolean(inspectPoint)}
+        onClose={() => setInspectPoint(null)}
       />
 
       <VillageDossierDrawer

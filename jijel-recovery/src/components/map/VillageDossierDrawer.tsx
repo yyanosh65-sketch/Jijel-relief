@@ -7,18 +7,17 @@ import {
   Shield,
   ShieldCheck,
   Stethoscope,
-  X,
   Zap,
 } from "lucide-react";
 
 import ContactActionButtons from "@/components/ui/ContactActionButtons";
+import MapInspectionShell from "@/components/map/MapInspectionShell";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
 import {
   INFRASTRUCTURE_LABELS,
   ROAD_PASSABILITY_LABELS,
 } from "@/lib/intelligence";
 import { buildWhatsAppUrl } from "@/lib/phone";
-import { Z_MODAL } from "@/lib/z-index";
 import { cn } from "@/lib/utils";
 
 type VillageDossierDrawerProps = {
@@ -141,250 +140,227 @@ export default function VillageDossierDrawer({
       : 0;
 
   return (
-    <div className={cn("fixed inset-0", Z_MODAL)}>
-      <button
-        type="button"
-        aria-label="إغلاق"
-        className="absolute inset-0 bg-black/50 backdrop-blur-[2px] transition-opacity"
-        onClick={onClose}
-      />
+    <MapInspectionShell
+      open={open}
+      onClose={onClose}
+      titleId="village-dossier-title"
+    >
+      <header className="mb-4">
+        <div>
+          <p className="text-xs font-medium text-emerald-300/90">
+            {dossier.type === "daira" ? "دائرة" : "بلدية"} · {dossier.daira_ar}
+          </p>
+          <h2
+            id="village-dossier-title"
+            className="font-[family-name:var(--font-display)] text-xl font-bold text-white"
+          >
+            {dossier.name_ar}
+          </h2>
+        </div>
 
-      <aside
-        dir="rtl"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="village-dossier-title"
-        className="fixed inset-x-0 bottom-0 z-50 max-h-[85vh] overflow-y-auto rounded-t-3xl border-t border-slate-700 bg-slate-900/95 p-5 shadow-2xl backdrop-blur-2xl"
-      >
-        <div className="mb-4 mx-auto h-1.5 w-12 rounded-full bg-slate-600" />
+        <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-slate-700/80 bg-slate-950/60 px-3 py-2.5">
+          <span className="text-sm font-semibold text-slate-200">
+            حالة المسلك
+          </span>
+          <StatusBadge
+            label={roadLabel.ar}
+            tone={roadTone(dossier.roadPassability)}
+          />
+        </div>
 
-        <header className="mb-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <p className="text-xs font-medium text-emerald-300/90">
-                {dossier.type === "daira" ? "دائرة" : "بلدية"} ·{" "}
-                {dossier.daira_ar}
-              </p>
-              <h2
-                id="village-dossier-title"
-                className="font-[family-name:var(--font-display)] text-xl font-bold text-white"
-              >
-                {dossier.name_ar}
-              </h2>
+        <div className="mt-3 flex gap-2">
+          <button
+            type="button"
+            onClick={() => setActiveTab("overview")}
+            className={cn(
+              "flex-1 rounded-xl py-2.5 text-sm font-semibold transition",
+              activeTab === "overview"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/40"
+                : "bg-slate-800 text-slate-400 hover:bg-slate-700",
+            )}
+          >
+            نظرة عامة
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab("emergency")}
+            className={cn(
+              "flex-1 rounded-xl py-2.5 text-sm font-semibold transition",
+              activeTab === "emergency"
+                ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/40"
+                : "bg-slate-800 text-slate-400 hover:bg-slate-700",
+            )}
+          >
+            خدمات الطوارئ
+          </button>
+        </div>
+      </header>
+
+      {activeTab === "overview" ? (
+        <div className="space-y-3 pb-2">
+          <MetricTile
+            title="البنية التحتية"
+            icon={<Zap className="h-4 w-4" />}
+            accent="amber"
+          >
+            <div className="grid gap-2">
+              <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2.5">
+                <div className="flex items-center gap-2 text-sm text-slate-200">
+                  <Droplets className="h-4 w-4 text-sky-400" />
+                  الماء
+                </div>
+                <StatusBadge
+                  label={waterLabel.ar}
+                  tone={infrastructureTone(dossier.waterStatus)}
+                />
+              </div>
+              <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2.5">
+                <div className="flex items-center gap-2 text-sm text-slate-200">
+                  <Zap className="h-4 w-4 text-amber-400" />
+                  الكهرباء
+                </div>
+                <StatusBadge
+                  label={electricityLabel.ar}
+                  tone={infrastructureTone(dossier.electricityStatus)}
+                />
+              </div>
             </div>
-            <button
-              type="button"
-              onClick={onClose}
-              className="rounded-full border border-white/10 bg-slate-800/80 p-2 text-slate-300 transition hover:bg-slate-700 hover:text-white"
-            >
-              <X className="h-5 w-5" />
-            </button>
-          </div>
+          </MetricTile>
 
-          <div className="mt-3 flex items-center justify-between gap-3 rounded-2xl border border-slate-700/80 bg-slate-950/60 px-3 py-2.5">
-            <span className="text-sm font-semibold text-slate-200">
-              حالة المسلك
-            </span>
-            <StatusBadge
-              label={roadLabel.ar}
-              tone={roadTone(dossier.roadPassability)}
-            />
-          </div>
-
-          <div className="mt-3 flex gap-2">
-            <button
-              type="button"
-              onClick={() => setActiveTab("overview")}
-              className={cn(
-                "flex-1 rounded-xl py-2.5 text-sm font-semibold transition",
-                activeTab === "overview"
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/40"
-                  : "bg-slate-800 text-slate-400 hover:bg-slate-700",
-              )}
-            >
-              نظرة عامة
-            </button>
-            <button
-              type="button"
-              onClick={() => setActiveTab("emergency")}
-              className={cn(
-                "flex-1 rounded-xl py-2.5 text-sm font-semibold transition",
-                activeTab === "emergency"
-                  ? "bg-emerald-600 text-white shadow-md shadow-emerald-900/40"
-                  : "bg-slate-800 text-slate-400 hover:bg-slate-700",
-              )}
-            >
-              خدمات الطوارئ
-            </button>
-          </div>
-        </header>
-
-        {activeTab === "overview" ? (
-          <div className="space-y-3 pb-6">
-            <MetricTile
-              title="البنية التحتية"
-              icon={<Zap className="h-4 w-4" />}
-              accent="amber"
-            >
-              <div className="grid gap-2">
-                <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2.5">
-                  <div className="flex items-center gap-2 text-sm text-slate-200">
-                    <Droplets className="h-4 w-4 text-sky-400" />
-                    الماء
-                  </div>
-                  <StatusBadge
-                    label={waterLabel.ar}
-                    tone={infrastructureTone(dossier.waterStatus)}
-                  />
-                </div>
-                <div className="flex items-center justify-between rounded-xl border border-white/5 bg-black/20 px-3 py-2.5">
-                  <div className="flex items-center gap-2 text-sm text-slate-200">
-                    <Zap className="h-4 w-4 text-amber-400" />
-                    الكهرباء
-                  </div>
-                  <StatusBadge
-                    label={electricityLabel.ar}
-                    tone={infrastructureTone(dossier.electricityStatus)}
-                  />
-                </div>
-              </div>
-            </MetricTile>
-
-            <MetricTile
-              title="الإمدادات والأضرار"
-              icon={<Package className="h-4 w-4" />}
-              accent="sky"
-            >
-              <div className="grid grid-cols-2 gap-2">
-                <div className="rounded-xl border border-white/5 bg-black/20 p-3">
-                  <p className="text-[11px] text-slate-400">السكان</p>
-                  <p className="mt-1 text-lg font-bold text-white">
-                    {dossier.population.toLocaleString("ar-DZ")}
-                  </p>
-                </div>
-                <div className="rounded-xl border border-white/5 bg-black/20 p-3">
-                  <p className="text-[11px] text-slate-400">العائلات</p>
-                  <p className="mt-1 text-lg font-bold text-white">
-                    {dossier.totalFamilies.toLocaleString("ar-DZ")}
-                  </p>
-                </div>
-                <div className="col-span-2 rounded-xl border border-rose-500/30 bg-rose-950/40 p-3">
-                  <div className="flex items-end justify-between gap-3">
-                    <div>
-                      <p className="text-[11px] font-medium text-rose-300">
-                        عائلات متضررة
-                      </p>
-                      <p className="mt-1 text-lg font-bold text-rose-100">
-                        {dossier.affectedFamilies.toLocaleString("ar-DZ")} /{" "}
-                        {dossier.totalFamilies.toLocaleString("ar-DZ")}
-                      </p>
-                    </div>
-                    <div className="text-left">
-                      <p className="text-[11px] text-slate-400">نسبة الأضرار</p>
-                      <p className="text-2xl font-extrabold text-rose-300">
-                        {dossier.damagePercent}%
-                      </p>
-                    </div>
-                  </div>
-                  <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-800">
-                    <div
-                      className="h-full rounded-full bg-emerald-500"
-                      style={{ width: `${Math.max(0, supplyCoverage)}%` }}
-                    />
-                  </div>
-                  <p className="mt-1.5 text-[10px] text-slate-400">
-                    تغطية تقديرية غير متضررة: {supplyCoverage}%
-                  </p>
-                </div>
-              </div>
-            </MetricTile>
-
-            <MetricTile
-              title="جهة تنسيق موثّقة"
-              icon={<ShieldCheck className="h-4 w-4" />}
-              accent="emerald"
-            >
-              <div className="flex flex-wrap items-center gap-2">
-                <p className="font-bold text-white">
-                  {dossier.coordinator.name_ar}
+          <MetricTile
+            title="الإمدادات والأضرار"
+            icon={<Package className="h-4 w-4" />}
+            accent="sky"
+          >
+            <div className="grid grid-cols-2 gap-2">
+              <div className="rounded-xl border border-white/5 bg-black/20 p-3">
+                <p className="text-[11px] text-slate-400">السكان</p>
+                <p className="mt-1 text-lg font-bold text-white">
+                  {dossier.population.toLocaleString("ar-DZ")}
                 </p>
-                {dossier.coordinator.verified ? (
-                  <StatusBadge label="موثّق ✓" tone="green" />
-                ) : (
-                  <StatusBadge label="غير موثّق" tone="slate" />
-                )}
               </div>
-              <ContactActionButtons
-                phone={dossier.coordinator.phone}
-                whatsappUrl={coordinatorWhatsApp}
-                className="mt-3"
-              />
-            </MetricTile>
-          </div>
-        ) : (
-          <div className="space-y-3 pb-6">
-            <MetricTile
-              title="عيادات بيطرية قريبة"
-              icon={<Stethoscope className="h-4 w-4" />}
-            >
-              <ul className="space-y-2">
-                {veterinary.length === 0 ? (
-                  <li className="text-xs text-slate-400">
-                    لا توجد عيادات بيطرية مسجّلة في النطاق القريب.
-                  </li>
-                ) : null}
-                {veterinary.map((facility) => (
-                  <li
-                    key={facility.id}
-                    className="rounded-xl border border-white/5 bg-black/20 p-3"
-                  >
-                    <p className="font-medium text-white">{facility.name_ar}</p>
-                    <ContactActionButtons
-                      phone={facility.phone}
-                      whatsappUrl={buildWhatsAppUrl(
-                        facility.phone,
-                        `السلام، نحتاج مساعدة بيطرية في ${dossier.name_ar}.`,
-                      )}
-                      className="mt-2"
-                      compact
-                    />
-                  </li>
-                ))}
-              </ul>
-            </MetricTile>
+              <div className="rounded-xl border border-white/5 bg-black/20 p-3">
+                <p className="text-[11px] text-slate-400">العائلات</p>
+                <p className="mt-1 text-lg font-bold text-white">
+                  {dossier.totalFamilies.toLocaleString("ar-DZ")}
+                </p>
+              </div>
+              <div className="col-span-2 rounded-xl border border-rose-500/30 bg-rose-950/40 p-3">
+                <div className="flex items-end justify-between gap-3">
+                  <div>
+                    <p className="text-[11px] font-medium text-rose-300">
+                      عائلات متضررة
+                    </p>
+                    <p className="mt-1 text-lg font-bold text-rose-100">
+                      {dossier.affectedFamilies.toLocaleString("ar-DZ")} /{" "}
+                      {dossier.totalFamilies.toLocaleString("ar-DZ")}
+                    </p>
+                  </div>
+                  <div className="text-left">
+                    <p className="text-[11px] text-slate-400">نسبة الأضرار</p>
+                    <p className="text-2xl font-extrabold text-rose-300">
+                      {dossier.damagePercent}%
+                    </p>
+                  </div>
+                </div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-slate-800">
+                  <div
+                    className="h-full rounded-full bg-emerald-500"
+                    style={{ width: `${Math.max(0, supplyCoverage)}%` }}
+                  />
+                </div>
+                <p className="mt-1.5 text-[10px] text-slate-400">
+                  تغطية تقديرية غير متضررة: {supplyCoverage}%
+                </p>
+              </div>
+            </div>
+          </MetricTile>
 
-            <MetricTile
-              title="الحماية المدنية"
-              icon={<Shield className="h-4 w-4" />}
-            >
-              <ul className="space-y-2">
-                {civilProtection.length === 0 ? (
-                  <li className="text-xs text-slate-400">
-                    لا توجد وحدات حماية مدنية قريبة مسجّلة.
-                  </li>
-                ) : null}
-                {civilProtection.map((facility) => (
-                  <li
-                    key={facility.id}
-                    className="rounded-xl border border-white/5 bg-black/20 p-3"
-                  >
-                    <p className="font-medium text-white">{facility.name_ar}</p>
-                    <ContactActionButtons
-                      phone={facility.phone}
-                      whatsappUrl={buildWhatsAppUrl(
-                        facility.phone,
-                        `نداء استغاثة — ${dossier.name_ar}`,
-                      )}
-                      className="mt-2"
-                      compact
-                    />
-                  </li>
-                ))}
-              </ul>
-            </MetricTile>
-          </div>
-        )}
-      </aside>
-    </div>
+          <MetricTile
+            title="جهة تنسيق موثّقة"
+            icon={<ShieldCheck className="h-4 w-4" />}
+            accent="emerald"
+          >
+            <div className="flex flex-wrap items-center gap-2">
+              <p className="font-bold text-white">
+                {dossier.coordinator.name_ar}
+              </p>
+              {dossier.coordinator.verified ? (
+                <StatusBadge label="موثّق ✓" tone="green" />
+              ) : (
+                <StatusBadge label="غير موثّق" tone="slate" />
+              )}
+            </div>
+            <ContactActionButtons
+              phone={dossier.coordinator.phone}
+              whatsappUrl={coordinatorWhatsApp}
+              className="mt-3"
+            />
+          </MetricTile>
+        </div>
+      ) : (
+        <div className="space-y-3 pb-2">
+          <MetricTile
+            title="عيادات بيطرية قريبة"
+            icon={<Stethoscope className="h-4 w-4" />}
+          >
+            <ul className="space-y-2">
+              {veterinary.length === 0 ? (
+                <li className="text-xs text-slate-400">
+                  لا توجد عيادات بيطرية مسجّلة في النطاق القريب.
+                </li>
+              ) : null}
+              {veterinary.map((facility) => (
+                <li
+                  key={facility.id}
+                  className="rounded-xl border border-white/5 bg-black/20 p-3"
+                >
+                  <p className="font-medium text-white">{facility.name_ar}</p>
+                  <ContactActionButtons
+                    phone={facility.phone}
+                    whatsappUrl={buildWhatsAppUrl(
+                      facility.phone,
+                      `السلام، نحتاج مساعدة بيطرية في ${dossier.name_ar}.`,
+                    )}
+                    className="mt-2"
+                    compact
+                  />
+                </li>
+              ))}
+            </ul>
+          </MetricTile>
+
+          <MetricTile
+            title="الحماية المدنية"
+            icon={<Shield className="h-4 w-4" />}
+          >
+            <ul className="space-y-2">
+              {civilProtection.length === 0 ? (
+                <li className="text-xs text-slate-400">
+                  لا توجد وحدات حماية مدنية قريبة مسجّلة.
+                </li>
+              ) : null}
+              {civilProtection.map((facility) => (
+                <li
+                  key={facility.id}
+                  className="rounded-xl border border-white/5 bg-black/20 p-3"
+                >
+                  <p className="font-medium text-white">{facility.name_ar}</p>
+                  <ContactActionButtons
+                    phone={facility.phone}
+                    whatsappUrl={buildWhatsAppUrl(
+                      facility.phone,
+                      `نداء استغاثة — ${dossier.name_ar}`,
+                    )}
+                    className="mt-2"
+                    compact
+                  />
+                </li>
+              ))}
+            </ul>
+          </MetricTile>
+        </div>
+      )}
+    </MapInspectionShell>
   );
 }

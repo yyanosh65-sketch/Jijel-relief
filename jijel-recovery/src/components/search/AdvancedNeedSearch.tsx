@@ -32,8 +32,8 @@ function toggleListValue<T extends string>(values: T[], value: T): T[] {
 }
 
 type AdvancedNeedSearchProps = {
-  variant?: "floating" | "panel";
-  /** Compact search docked under the immersive map chrome */
+  variant?: "floating" | "panel" | "embedded";
+  /** Compact search docked under the immersive map chrome (legacy fixed positioning) */
   immersive?: boolean;
   className?: string;
 };
@@ -43,6 +43,7 @@ export default function AdvancedNeedSearch({
   immersive = false,
   className,
 }: AdvancedNeedSearchProps) {
+  const isEmbedded = variant === "embedded";
   const router = useRouter();
   const pathname = usePathname();
   const filters = useNeedSearchFilters();
@@ -306,6 +307,117 @@ export default function AdvancedNeedSearch({
     return null;
   }
 
+  const hideUrgencyPills = immersive || isEmbedded;
+
+  function renderToolbar() {
+    return (
+      <div
+        className={cn(
+          "flex items-center gap-2",
+          isEmbedded ? "flex-nowrap" : "flex-wrap",
+        )}
+      >
+        <div
+          className={cn(
+            "relative flex-1",
+            isEmbedded ? "min-w-0 max-w-xs md:max-w-none" : "min-w-[180px]",
+          )}
+        >
+          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
+          <input
+            type="search"
+            value={queryDraft}
+            onChange={(event) => setQueryDraft(event.target.value)}
+            placeholder="ابحث بالقرية أو البلدية..."
+            className="min-h-9 w-full rounded-xl border border-slate-700 bg-slate-950/80 py-1.5 pl-3 pr-9 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none"
+          />
+        </div>
+
+        <select
+          value={filters.commune}
+          onChange={(event) => patchFilters({ commune: event.target.value })}
+          className={cn(
+            "relative z-40 min-h-9 max-w-[140px] shrink-0 rounded-xl border border-slate-700 bg-slate-950/80 px-2 text-xs font-semibold text-slate-100 focus:border-emerald-500/50 focus:outline-none md:max-w-[160px]",
+          )}
+        >
+          <option value="">كل البلديات</option>
+          {communeOptions.map((option) => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+
+        {hideUrgencyPills ? null : (
+          <div className="flex flex-wrap gap-1.5">
+            {URGENCY_FILTER_OPTIONS.map((option) => {
+              const isActive = filters.urgencyGroups.includes(option.id);
+
+              return (
+                <button
+                  key={option.id}
+                  type="button"
+                  onClick={() =>
+                    patchFilters({
+                      urgencyGroups: toggleListValue(
+                        filters.urgencyGroups,
+                        option.id,
+                      ) as UrgencyFilterGroup[],
+                    })
+                  }
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[11px] font-bold transition",
+                    isActive
+                      ? option.id === "critical"
+                        ? "bg-rose-600/90 text-white"
+                        : "bg-emerald-600/90 text-white"
+                      : "bg-slate-800 text-slate-400 hover:bg-slate-700",
+                  )}
+                >
+                  {option.id === "critical"
+                    ? "عاجل جداً"
+                    : option.id === "medium"
+                      ? "متوسط"
+                      : "عادي"}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        <button
+          type="button"
+          onClick={() => setIsExpanded((current) => !current)}
+          className="inline-flex shrink-0 items-center gap-1 rounded-xl border border-slate-700 bg-slate-800 px-2.5 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700 md:px-3"
+        >
+          <SlidersHorizontal className="h-3.5 w-3.5" />
+          <span className="hidden sm:inline">{isExpanded ? "إخفاء" : "المزيد"}</span>
+        </button>
+      </div>
+    );
+  }
+
+  const searchBody = (
+    <>
+      <div
+        className={cn(
+          "flex flex-wrap items-center gap-2 border border-slate-800 bg-slate-900/90 p-2 shadow-2xl backdrop-blur-md",
+          "rounded-2xl border-white/10 bg-slate-950/80 backdrop-blur-xl",
+        )}
+      >
+        {renderToolbar()}
+      </div>
+      {expandedPanel ? (
+        <div className="relative z-40 mt-2">{expandedPanel}</div>
+      ) : null}
+      {outsideJijel ? (
+        <p className="mt-1 px-1 text-center text-[10px] leading-relaxed text-amber-300/90">
+          موقعك خارج جيجل — العرض على كامل الولاية
+        </p>
+      ) : null}
+    </>
+  );
+
   if (variant === "panel") {
     return (
       <section
@@ -322,78 +434,10 @@ export default function AdvancedNeedSearch({
     );
   }
 
-  function renderToolbar() {
+  if (isEmbedded) {
     return (
-      <div className="flex flex-wrap items-center gap-2">
-        <div className="relative min-w-[180px] flex-1">
-          <Search className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" />
-          <input
-            type="search"
-            value={queryDraft}
-            onChange={(event) => setQueryDraft(event.target.value)}
-            placeholder="ابحث بالقرية أو البلدية..."
-            className="min-h-9 w-full rounded-xl border border-slate-700 bg-slate-950/80 py-1.5 pl-3 pr-9 text-sm text-white placeholder:text-slate-500 focus:border-emerald-500/50 focus:outline-none"
-          />
-        </div>
-
-        <select
-          value={filters.commune}
-          onChange={(event) => patchFilters({ commune: event.target.value })}
-          className="min-h-9 max-w-[160px] rounded-xl border border-slate-700 bg-slate-950/80 px-2 text-xs font-semibold text-slate-100 focus:border-emerald-500/50 focus:outline-none"
-        >
-          <option value="">كل البلديات</option>
-          {communeOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-
-        <div className="flex flex-wrap gap-1.5">
-          {immersive
-            ? null
-            : URGENCY_FILTER_OPTIONS.map((option) => {
-                const isActive = filters.urgencyGroups.includes(option.id);
-
-                return (
-                  <button
-                    key={option.id}
-                    type="button"
-                    onClick={() =>
-                      patchFilters({
-                        urgencyGroups: toggleListValue(
-                          filters.urgencyGroups,
-                          option.id,
-                        ) as UrgencyFilterGroup[],
-                      })
-                    }
-                    className={cn(
-                      "rounded-full px-2.5 py-1 text-[11px] font-bold transition",
-                      isActive
-                        ? option.id === "critical"
-                          ? "bg-rose-600/90 text-white"
-                          : "bg-emerald-600/90 text-white"
-                        : "bg-slate-800 text-slate-400 hover:bg-slate-700",
-                    )}
-                  >
-                    {option.id === "critical"
-                      ? "عاجل جداً"
-                      : option.id === "medium"
-                        ? "متوسط"
-                        : "عادي"}
-                  </button>
-                );
-              })}
-        </div>
-
-        <button
-          type="button"
-          onClick={() => setIsExpanded((current) => !current)}
-          className="inline-flex items-center gap-1 rounded-xl border border-slate-700 bg-slate-800 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-700"
-        >
-          <SlidersHorizontal className="h-3.5 w-3.5" />
-          {isExpanded ? "إخفاء" : "المزيد"}
-        </button>
+      <div dir="rtl" className={cn("w-full", className)} aria-label="بحث وتصفية الاحتياجات">
+        {searchBody}
       </div>
     );
   }
@@ -416,22 +460,7 @@ export default function AdvancedNeedSearch({
       )}
       aria-label="بحث وتصفية الاحتياجات"
     >
-      <div
-        className={cn(
-          "pointer-events-auto flex flex-wrap items-center gap-2 border border-slate-800 bg-slate-900/90 p-2 shadow-2xl backdrop-blur-md",
-          immersive ? "rounded-2xl border-white/10 bg-slate-950/80 backdrop-blur-xl" : "rounded-2xl",
-        )}
-      >
-        {renderToolbar()}
-      </div>
-      {expandedPanel ? (
-        <div className="pointer-events-auto mt-2">{expandedPanel}</div>
-      ) : null}
-      {outsideJijel ? (
-        <p className="mt-1 text-center text-[10px] text-amber-300/90">
-          موقعك خارج جيجل — العرض على كامل الولاية
-        </p>
-      ) : null}
+      <div className="pointer-events-auto">{searchBody}</div>
     </div>
   );
 }

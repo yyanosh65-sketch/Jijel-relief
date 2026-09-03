@@ -24,7 +24,17 @@ export default function RoadTracker({
   className,
   forceCollapsed = false,
 }: RoadTrackerProps) {
-  const [expanded, setExpanded] = useState(true);
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    // Desktop can start expanded; mobile stays collapsed to avoid edge collisions
+    const mq = window.matchMedia("(min-width: 768px)");
+    setExpanded(mq.matches);
+
+    const onChange = () => setExpanded(mq.matches);
+    mq.addEventListener("change", onChange);
+    return () => mq.removeEventListener("change", onChange);
+  }, []);
 
   useEffect(() => {
     if (forceCollapsed) {
@@ -38,7 +48,7 @@ export default function RoadTracker({
     <div
       dir="rtl"
       className={cn(
-        "pointer-events-auto w-80 max-w-[90vw] overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/90 shadow-xl backdrop-blur-md",
+        "pointer-events-auto w-full max-w-xs overflow-hidden rounded-2xl border border-slate-800/80 bg-slate-900/90 shadow-xl backdrop-blur-md sm:max-w-sm",
         isOpen &&
           "max-h-[calc(100vh-12rem)] overflow-y-auto modal-body-scroll",
         className,

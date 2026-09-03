@@ -100,6 +100,7 @@ textarea::placeholder {
 .leaflet-container {
   font-family: inherit;
   z-index: 10;
+  touch-action: pan-x pan-y;
 }
 
 .leaflet-pane {
@@ -116,12 +117,69 @@ textarea::placeholder {
   left: 0.75rem;
 }
 
+/* Immersive cockpit: zoom above dock; attribution clear of corridor pill */
+.leaflet-bottom.leaflet-right {
+  bottom: 6rem;
+  right: 0.75rem;
+  margin-bottom: 0;
+}
+
+@media (min-width: 768px) {
+  .leaflet-bottom.leaflet-right {
+    bottom: 1.5rem;
+    right: 1.5rem;
+  }
+}
+
+.leaflet-control-zoom {
+  border: 1px solid rgb(51 65 85 / 0.9) !important;
+  border-radius: 0.75rem !important;
+  overflow: hidden;
+  box-shadow: 0 10px 25px rgb(0 0 0 / 0.35);
+}
+
+.leaflet-control-zoom a {
+  background: rgb(15 23 42 / 0.92) !important;
+  color: #e2e8f0 !important;
+  border-bottom-color: rgb(51 65 85) !important;
+  width: 34px !important;
+  height: 34px !important;
+  line-height: 34px !important;
+}
+
+.leaflet-control-attribution {
+  font-size: 10px;
+  background: rgb(15 23 42 / 0.75) !important;
+  color: rgb(148 163 184) !important;
+  border-radius: 0.5rem;
+  padding: 2px 6px;
+  margin: 0 0 0.25rem 0 !important;
+  max-width: min(14rem, 42vw);
+}
+
 .map-viewport-shell .leaflet-control-attribution {
   font-size: 10px;
   background: rgb(15 23 42 / 0.75) !important;
   color: rgb(148 163 184) !important;
   border-radius: 0.5rem;
   padding: 2px 6px;
+}
+
+.map-filter-rail {
+  mask-image: linear-gradient(
+    to left,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
+  -webkit-mask-image: linear-gradient(
+    to left,
+    transparent,
+    black 8%,
+    black 92%,
+    transparent
+  );
 }
 
 .leaflet-popup-content-wrapper {

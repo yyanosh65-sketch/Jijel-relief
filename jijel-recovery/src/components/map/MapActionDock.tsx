@@ -9,7 +9,6 @@ import {
   Truck,
 } from "lucide-react";
 
-import { Z_MAP_CTA } from "@/lib/z-index";
 import { cn } from "@/lib/utils";
 
 type MapActionDockProps = {
@@ -18,6 +17,8 @@ type MapActionDockProps = {
   onTogglePinDrop?: () => void;
   pinDropActive?: boolean;
   layersPanelOpen?: boolean;
+  /** Hide when an inspection sheet is open (sheet covers dock at z-50) */
+  hidden?: boolean;
   className?: string;
 };
 
@@ -35,7 +36,7 @@ function DockIcon({
   children: React.ReactNode;
 }) {
   const className = cn(
-    "flex h-11 w-11 flex-col items-center justify-center rounded-2xl border transition",
+    "flex h-10 w-10 flex-col items-center justify-center rounded-2xl border transition md:h-11 md:w-11",
     active
       ? "border-emerald-400/50 bg-emerald-500/20 text-emerald-100 shadow-[0_0_18px_rgba(16,185,129,0.35)]"
       : "border-white/10 bg-slate-900/70 text-slate-300 hover:border-white/20 hover:bg-slate-800 hover:text-white",
@@ -68,18 +69,22 @@ export default function MapActionDock({
   onTogglePinDrop,
   pinDropActive = false,
   layersPanelOpen = false,
+  hidden = false,
   className,
 }: MapActionDockProps) {
+  if (hidden) {
+    return null;
+  }
+
   return (
     <div
       dir="rtl"
       className={cn(
-        "pointer-events-none fixed inset-x-0 bottom-0 z-[35] px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
-        Z_MAP_CTA,
+        "pointer-events-none fixed bottom-4 left-1/2 z-30 -translate-x-1/2 pb-[max(0.75rem,env(safe-area-inset-bottom))]",
         className,
       )}
     >
-      <div className="pointer-events-auto mx-auto flex max-w-lg items-center gap-2 rounded-3xl border border-white/10 bg-slate-950/85 p-2 shadow-2xl backdrop-blur-xl">
+      <div className="pointer-events-auto flex items-center gap-2 rounded-2xl border border-white/10 bg-slate-950/80 p-1.5 shadow-2xl backdrop-blur-xl">
         <DockIcon href="/guide" label="دليل القوافل">
           <Truck className="h-5 w-5" />
         </DockIcon>
@@ -108,7 +113,7 @@ export default function MapActionDock({
         <button
           type="button"
           onClick={onUrgentReport}
-          className="ms-auto inline-flex min-h-11 flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-400/40 bg-gradient-to-l from-rose-600 to-amber-600 px-4 text-sm font-extrabold text-white shadow-[0_0_24px_rgba(244,63,94,0.45)] transition hover:brightness-110 active:scale-[0.98]"
+          className="ms-1 inline-flex min-h-10 flex-1 items-center justify-center gap-2 rounded-2xl border border-rose-400/40 bg-gradient-to-l from-rose-600 to-amber-600 px-3 text-sm font-extrabold text-white shadow-[0_0_24px_rgba(244,63,94,0.45)] transition hover:brightness-110 active:scale-[0.98] md:min-h-11 md:px-4"
         >
           <AlertTriangle className="h-4 w-4 shrink-0" />
           <span className="truncate">نداء عاجل</span>

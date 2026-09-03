@@ -6,9 +6,11 @@ import { Popup, type PopupProps } from "react-leaflet";
 export const MAP_POPUP_PROPS = {
   offset: [0, -25] as [number, number],
   autoPan: true,
-  autoPanPaddingTopLeft: [30, 120] as [number, number],
-  autoPanPaddingBottomRight: [30, 80] as [number, number],
+  autoPanPaddingTopLeft: [30, 160] as [number, number],
+  autoPanPaddingBottomRight: [30, 120] as [number, number],
   className: "custom-jijel-popup",
+  maxWidth: 340,
+  minWidth: 280,
 } as const;
 
 export default function MapPopup({
