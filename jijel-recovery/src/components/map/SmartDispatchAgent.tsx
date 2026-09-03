@@ -5,10 +5,16 @@ import { Bot, Loader2, Sparkles } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 
-const QUICK_PROMPTS = [
+const FIELD_PROMPTS = [
   "واش يخصهم درك بالظبط؟",
   "كاش طريق ساهلة نوصل بيها؟",
   "شكون نقدر نتاصل بيه تم؟",
+] as const;
+
+const WILAYA_PROMPTS = [
+  "ملخص وضع الولاية كاملة",
+  "أكثر المناطق تضرراً حالياً",
+  "حالة المحاور الرئيسية (RN43 / RN27 / RN77)",
 ] as const;
 
 type SectionKind = "gaps" | "routes" | "cautions" | "other";
@@ -45,7 +51,7 @@ function classifyHeading(line: string): SectionKind | null {
   if (/🚨|العجز|فراغ|ناقص|يخصهم|تغطية|الاحتياج/i.test(normalized)) {
     return "gaps";
   }
-  if (/🚛|🧭|المسالك|طريق|مسلك|RN43|RN77|CW135/i.test(normalized)) {
+  if (/🚛|🧭|المسالك|طريق|مسلك|RN43|RN27|RN77|CW135/i.test(normalized)) {
     return "routes";
   }
   if (/⚠️|تنبيه|منع التكرار|فائض|تحذير|نصيحة/i.test(normalized)) {
@@ -124,18 +130,24 @@ function parseAgentResponse(text: string): ParsedSection[] {
 type SmartDispatchAgentProps = {
   needId?: number | null;
   settlementId?: number | null;
+  /** `wilaya` = global Jijel coordinator (no point required) */
+  scope?: "field" | "wilaya";
   className?: string;
 };
 
 export default function SmartDispatchAgent({
   needId,
   settlementId,
+  scope = "field",
   className,
 }: SmartDispatchAgentProps) {
   const [answer, setAnswer] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [activeChip, setActiveChip] = useState<string | null>(null);
+
+  const isWilaya = scope === "wilaya";
+  const prompts = isWilaya ? WILAYA_PROMPTS : FIELD_PROMPTS;
 
   const sections = useMemo(
     () => (answer ? parseAgentResponse(answer) : []),
@@ -153,8 +165,9 @@ export default function SmartDispatchAgent({
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          needId: needId ?? null,
-          settlementId: settlementId ?? null,
+          mode: "field",
+          needId: isWilaya ? null : (needId ?? null),
+          settlementId: isWilaya ? null : (settlementId ?? null),
           query,
         }),
       });
@@ -189,15 +202,19 @@ export default function SmartDispatchAgent({
           <Bot className="h-4 w-4" />
         </span>
         <div>
-          <h3 className="text-sm font-bold text-white">وكيل التوجيه الميداني</h3>
+          <h3 className="text-sm font-bold text-white">
+            {isWilaya ? "مساعد إغاثة الولاية" : "وكيل التوجيه الميداني"}
+          </h3>
           <p className="text-[11px] text-violet-200/80">
-            تحليل فوري للفراغات والطرق والتنسيق
+            {isWilaya
+              ? "تنسيق على مستوى ولاية جيجل — عجز، محاور، وأولويات"
+              : "تحليل فوري للفراغات والطرق والتنسيق"}
           </p>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-1.5">
-        {QUICK_PROMPTS.map((prompt) => (
+        {prompts.map((prompt) => (
           <button
             key={prompt}
             type="button"

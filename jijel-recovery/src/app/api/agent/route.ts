@@ -313,12 +313,15 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
 
-    // Field coordination / Smart Dispatch sheet prompts
+    // Field / wilaya Smart Dispatch — needId & settlementId optional
     if (
       body &&
       typeof body === "object" &&
       typeof body.query === "string" &&
-      (body.needId != null || body.settlementId != null || body.query)
+      (body.mode === "field" ||
+        body.needId != null ||
+        body.settlementId != null ||
+        body.query)
     ) {
       const needId =
         body.needId != null && Number.isFinite(Number(body.needId))
@@ -329,21 +332,43 @@ export async function POST(req: Request) {
           ? Number(body.settlementId)
           : null;
       const query = String(body.query || "").trim();
+      const isFieldMode =
+        body.mode === "field" ||
+        needId != null ||
+        settlementId != null ||
+        /طريق|شكون|واش يخص|ولاية|المحاور|تضررا|ملخص وضع|RN43|RN27|RN77/i.test(
+          query,
+        );
 
-      if (query && (needId || settlementId || /طريق|شكون|واش يخص/i.test(query))) {
+      if (query && isFieldMode) {
         const text = await buildFieldCoordinationBrief({
           needId,
           settlementId,
           query,
         });
+        const isWilayaScope = needId == null && settlementId == null;
 
         // Optionally enrich with DeepSeek when configured
-        if (isDeepSeekConfigured() && (needId || settlementId)) {
+        if (isDeepSeekConfigured()) {
           try {
             const enriched = await generateText({
               model: deepseek(DEEPSEEK_CHAT_MODEL),
               abortSignal: createAgentAbortSignal(12_000),
-              system: `أنت وكيل تنسيق ميداني لإغاثة جيجل. جاوب بالدارجة الجزائرية فقط.
+              system: isWilayaScope
+                ? `أنت منسّق إغاثة على مستوى ولاية جيجل. جاوب بالدارجة الجزائرية فقط.
+
+قواعد إلزامية:
+1) أسماء الأماكن بالعربية فقط (مثال: بوراعي بلهادف، العنصر، تكسنة، الميلية) — ممنوع الأسماء اللاتينية.
+2) الإجابة قصيرة: 2–3 أقسام بالشكل:
+🚨 العجز المتبقي:
+• نقطة أو اثنتين (احتياجات معلّقة مقابل المغطّاة، وأهم البلديات)
+🚛 المسالك المفتوحة:
+• حالة RN43 / RN27 / RN77 باختصار
+⚠️ تنبيه هام:
+• نقطة توجيه واحدة فقط
+3) لا جدران نص. كل نقطة أقل من ~20 كلمة.
+4) ركّز على أولويات الولاية ومنع تكرار القوافل.`
+                : `أنت وكيل تنسيق ميداني لإغاثة جيجل. جاوب بالدارجة الجزائرية فقط.
 
 قواعد إلزامية:
 1) أسماء الأماكن بالعربية فقط (مثال: بوراعي بلهادف، العنصر، تكسنة) — ممنوع كتابة الأسماء اللاتينية مثل Bouraoui Belhadef أو El Ancer.
@@ -359,14 +384,21 @@ export async function POST(req: Request) {
               prompt: `السؤال: ${query}\n\nمعطيات النظام (بالعربية):\n${text}`,
             });
             if (enriched.text?.trim()) {
-              return Response.json({ text: enriched.text.trim(), mode: "field" });
+              return Response.json({
+                text: enriched.text.trim(),
+                mode: isWilayaScope ? "wilaya" : "field",
+              });
             }
           } catch (error) {
             console.error("Field agent DeepSeek fallback to brief:", error);
           }
         }
 
-        return Response.json({ text, mode: "field", fallback: true });
+        return Response.json({
+          text,
+          mode: isWilayaScope ? "wilaya" : "field",
+          fallback: true,
+        });
       }
     }
 

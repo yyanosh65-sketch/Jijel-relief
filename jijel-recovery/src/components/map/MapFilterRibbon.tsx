@@ -50,11 +50,15 @@ type MapFilterRibbonProps = {
   className?: string;
   /** When true, renders inline (no fixed positioning) for MapTopHud stack */
   embedded?: boolean;
+  onOpenAgroOlive?: () => void;
+  onOpenAgroLivestock?: () => void;
 };
 
 export default function MapFilterRibbon({
   className,
   embedded = false,
+  onOpenAgroOlive,
+  onOpenAgroLivestock,
 }: MapFilterRibbonProps) {
   const router = useRouter();
   const pathname = usePathname();
@@ -148,6 +152,33 @@ export default function MapFilterRibbon({
           </button>
         );
       })}
+
+      {(onOpenAgroOlive || onOpenAgroLivestock) ? (
+        <span
+          aria-hidden
+          className="mx-0.5 h-4 w-px shrink-0 self-center bg-white/10"
+        />
+      ) : null}
+
+      {onOpenAgroOlive ? (
+        <button
+          type="button"
+          onClick={onOpenAgroOlive}
+          className="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-950/60 px-3 py-1.5 text-[11px] font-semibold text-emerald-200 transition duration-200 hover:border-emerald-400/60 hover:bg-emerald-900/60"
+        >
+          🌿 غراسة الزيتون
+        </button>
+      ) : null}
+
+      {onOpenAgroLivestock ? (
+        <button
+          type="button"
+          onClick={onOpenAgroLivestock}
+          className="shrink-0 rounded-full border border-amber-500/40 bg-amber-950/60 px-3 py-1.5 text-[11px] font-semibold text-amber-200 transition duration-200 hover:border-amber-400/60 hover:bg-amber-900/60"
+        >
+          🐝 المواشي وخلايا النحل
+        </button>
+      ) : null}
     </div>
   );
 

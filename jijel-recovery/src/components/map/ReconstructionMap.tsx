@@ -51,6 +51,8 @@ import {
   buildNeedWhatsAppDispatchMessage,
 } from "@/lib/incident-share";
 import WaypointsLayer from "@/components/map/WaypointsLayer";
+import TrailClearanceLayer from "@/components/map/TrailClearanceLayer";
+import type { SerializedMountainTrail } from "@/lib/trail-clearance";
 import { cn } from "@/lib/utils";
 
 import "leaflet/dist/leaflet.css";
@@ -74,6 +76,8 @@ type ReconstructionMapProps = {
   onLayersPanelOpenChange?: (open: boolean) => void;
   onNeedInspect?: (need: MapNeed) => void;
   onPointInspect?: (point: import("@/components/map/PointInspectionPanel").PointInspectionData) => void;
+  onTrailInspect?: (trail: SerializedMountainTrail) => void;
+  trailRefreshKey?: number;
   layoutEpoch?: unknown;
   responderBadgesByNeedId?: Map<number, import("@/lib/responders").ResponderBadgeCounts>;
 };
@@ -84,6 +88,7 @@ const LAYER_TOGGLES: Array<{ key: MapLayerKey; labelAr: string }> = [
   { key: "needs", labelAr: MAP_LAYER_LABELS.needs },
   { key: "sos", labelAr: MAP_LAYER_LABELS.sos },
   { key: "roads", labelAr: MAP_LAYER_LABELS.roads },
+  { key: "trails", labelAr: MAP_LAYER_LABELS.trails },
   { key: "facilities", labelAr: MAP_LAYER_LABELS.facilities },
   { key: "villages", labelAr: MAP_LAYER_LABELS.villages },
   { key: "waypoints", labelAr: MAP_LAYER_LABELS.waypoints },
@@ -344,6 +349,8 @@ export default function ReconstructionMap({
   layersPanelOpen,
   onNeedInspect,
   onPointInspect,
+  onTrailInspect,
+  trailRefreshKey = 0,
   layoutEpoch,
   responderBadgesByNeedId,
 }: ReconstructionMapProps) {
@@ -351,6 +358,7 @@ export default function ReconstructionMap({
     needs: true,
     sos: true,
     roads: true,
+    trails: true,
     facilities: true,
     villages: true,
     waypoints: true,
@@ -819,6 +827,14 @@ export default function ReconstructionMap({
         <WaypointsLayer
           waypoints={intelligence.waypoints}
           visible={layers.waypoints}
+        />
+
+        <TrailClearanceLayer
+          visible={layers.trails}
+          refreshKey={trailRefreshKey}
+          onTrailClick={
+            immersiveChrome && onTrailInspect ? onTrailInspect : undefined
+          }
         />
 
         {clickPin ? (

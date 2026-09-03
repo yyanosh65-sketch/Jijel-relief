@@ -452,6 +452,36 @@ textarea::placeholder {
   }
 }
 
+.trail-clearance-pin {
+  display: flex;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 2px solid color-mix(in srgb, var(--trail-pin, #22c55e) 70%, white);
+  background: color-mix(in srgb, var(--trail-pin, #22c55e) 35%, #0f172a);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  font-size: 14px;
+  line-height: 1;
+}
+
+.trail-blocked-pulse {
+  animation: trail-blocked-glow 1.4s ease-in-out infinite;
+}
+
+@keyframes trail-blocked-glow {
+  0%,
+  100% {
+    box-shadow: 0 0 0 0 rgba(225, 29, 72, 0.55), 0 2px 10px rgba(0, 0, 0, 0.45);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(225, 29, 72, 0), 0 2px 10px rgba(0, 0, 0, 0.45);
+    transform: scale(1.08);
+  }
+}
+
 .need-responder-badge {
   position: absolute;
   bottom: calc(100% + 4px);

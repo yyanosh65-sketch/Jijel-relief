@@ -4,8 +4,10 @@ import Link from "next/link";
 import {
   AlertTriangle,
   HandHeart,
+  ArrowLeftRight,
   Layers,
   MapPinned,
+  Sparkles,
   Truck,
 } from "lucide-react";
 
@@ -15,6 +17,8 @@ type MapActionDockProps = {
   onUrgentReport: () => void;
   onToggleLayers?: () => void;
   onTogglePinDrop?: () => void;
+  onOpenGlobalAgent?: () => void;
+  onOpenBarter?: () => void;
   pinDropActive?: boolean;
   layersPanelOpen?: boolean;
   /** Hide when an inspection sheet is open (sheet covers dock at z-50) */
@@ -67,6 +71,8 @@ export default function MapActionDock({
   onUrgentReport,
   onToggleLayers,
   onTogglePinDrop,
+  onOpenGlobalAgent,
+  onOpenBarter,
   pinDropActive = false,
   layersPanelOpen = false,
   hidden = false,
@@ -107,6 +113,25 @@ export default function MapActionDock({
             active={pinDropActive}
           >
             <MapPinned className="h-5 w-5" />
+          </DockIcon>
+        ) : null}
+
+        {onOpenGlobalAgent ? (
+          <button
+            type="button"
+            onClick={onOpenGlobalAgent}
+            className="flex items-center gap-1.5 rounded-xl bg-purple-600/90 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-purple-900/30 backdrop-blur transition-transform hover:bg-purple-600 active:scale-95"
+            title="مساعد الإغاثة الذكي"
+            aria-label="مساعد الإغاثة الذكي"
+          >
+            <Sparkles className="h-4 w-4 animate-pulse text-purple-200" />
+            <span className="hidden sm:inline">مساعد الإغاثة</span>
+          </button>
+        ) : null}
+
+        {onOpenBarter ? (
+          <DockIcon onClick={onOpenBarter} label="بورصة التبادل">
+            <ArrowLeftRight className="h-5 w-5" />
           </DockIcon>
         ) : null}
 

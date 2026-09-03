@@ -17,6 +17,7 @@ import {
   getVillageFieldReports,
   type FieldReportRecord,
 } from "@/actions/field-reports";
+import OfflineSmsFallbackModal from "@/components/emergency/OfflineSmsFallbackModal";
 import FieldReportMediaUpload from "@/components/forms/FieldReportMediaUpload";
 import type { FieldInfrastructureStatus, FieldRoadPassability } from "@/db/schema";
 import {
@@ -28,6 +29,11 @@ import {
   URGENT_NEED_OPTIONS,
   type VillageFieldReportTarget,
 } from "@/lib/field-reports";
+import {
+  isBrowserOffline,
+  isLikelyNetworkError,
+  type EmergencySmsDraft,
+} from "@/lib/offline-storage";
 import { premiumCardClass } from "@/lib/ui-labels";
 import { Z_DRAWER } from "@/lib/z-index";
 import { cn } from "@/lib/utils";
@@ -131,6 +137,8 @@ export default function VillageDetailDrawer({
   const [form, setForm] = useState<FormState>(INITIAL_FORM);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [smsDraft, setSmsDraft] = useState<EmergencySmsDraft | null>(null);
+  const [smsPayload, setSmsPayload] = useState<unknown>(null);
 
   const loadReports = useCallback(async () => {
     if (!target) return;
@@ -167,9 +175,8 @@ export default function VillageDetailDrawer({
 
     setError(null);
     setSuccess(null);
-    setIsSubmitting(true);
 
-    const result = await createVillageFieldReport({
+    const reportInput = {
       villageAr: target.villageAr,
       commune: target.commune,
       communeAr: target.communeAr,
@@ -192,18 +199,49 @@ export default function VillageDetailDrawer({
       urgentNeeds: form.urgentNeeds,
       notes: form.notes.trim() || undefined,
       mediaUrls: form.mediaUrls,
-    });
+    };
 
-    setIsSubmitting(false);
+    const offlineDraft: EmergencySmsDraft = {
+      type: "ROAD",
+      locationCodeOrName: target.villageAr || target.communeAr || "جيجل",
+      urgency: form.roadPassability,
+      contactPhone: form.reporterPhone.trim() || "unknown",
+    };
 
-    if (!result.success) {
-      setError(result.error ?? "تعذر إرسال التقرير.");
+    if (isBrowserOffline()) {
+      setSmsDraft(offlineDraft);
+      setSmsPayload({ form: reportInput, draft: offlineDraft });
       return;
     }
 
-    setSuccess("تم إرسال التقرير الميداني بنجاح.");
-    setForm(INITIAL_FORM);
-    await loadReports();
+    setIsSubmitting(true);
+
+    try {
+      const result = await createVillageFieldReport(reportInput);
+
+      if (!result.success) {
+        if (isLikelyNetworkError(new Error(result.error ?? "network"))) {
+          setSmsDraft(offlineDraft);
+          setSmsPayload({ form: reportInput, draft: offlineDraft });
+          return;
+        }
+        setError(result.error ?? "تعذر إرسال التقرير.");
+        return;
+      }
+
+      setSuccess("تم إرسال التقرير الميداني بنجاح.");
+      setForm(INITIAL_FORM);
+      await loadReports();
+    } catch (submitError) {
+      if (isLikelyNetworkError(submitError)) {
+        setSmsDraft(offlineDraft);
+        setSmsPayload({ form: reportInput, draft: offlineDraft });
+        return;
+      }
+      setError("تعذر إرسال التقرير.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function toggleUrgentNeed(id: string) {
@@ -608,6 +646,18 @@ export default function VillageDetailDrawer({
           </section>
         </div>
       </aside>
+
+      {smsDraft ? (
+        <OfflineSmsFallbackModal
+          open
+          draft={smsDraft}
+          payload={smsPayload}
+          onClose={() => {
+            setSmsDraft(null);
+            setSmsPayload(null);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

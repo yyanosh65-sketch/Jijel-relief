@@ -158,6 +158,30 @@ export const responderStatusEnum = pgEnum("responder_status", [
   "completed",
 ]);
 
+/** Mountain trail vehicle clearance for offline / field reporting */
+export const trailClearanceEnum = pgEnum("trail_clearance", [
+  "sedan_passable",
+  "high_clearance_only",
+  "strict_4x4_required",
+  "completely_blocked",
+]);
+
+/** Cross-hub stockpile barter (Bourse d'Échange) */
+export const transferStatusEnum = pgEnum("transfer_status", [
+  "available_surplus",
+  "matched_in_transit",
+  "received",
+]);
+
+/** Agro-pastoral burn recovery pledges */
+export const agroCategoryEnum = pgEnum("agro_category", [
+  "olive_saplings",
+  "beehives",
+  "livestock_feed_hay",
+  "irrigation_hoses",
+  "veterinary_supplies",
+]);
+
 export const locations = pgTable("locations", {
   id: serial("id").primaryKey(),
   name: text("name").notNull(),
@@ -395,6 +419,49 @@ export const activeResponders = pgTable("active_responders", {
     .notNull(),
 });
 
+export const mountainTrails = pgTable("mountain_trails", {
+  id: serial("id").primaryKey(),
+  roadCode: varchar("road_code", { length: 50 }).notNull(),
+  settlementId: integer("settlement_id"),
+  clearanceLevel: trailClearanceEnum("clearance_level").notNull(),
+  audioVoiceNoteUrl: text("audio_voice_note_url"),
+  notes: text("notes"),
+  reportedByPhone: varchar("reported_by_phone", { length: 20 }),
+  lat: varchar("lat", { length: 30 }).notNull(),
+  lng: varchar("lng", { length: 30 }).notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const inventoryTransfers = pgTable("inventory_transfers", {
+  id: serial("id").primaryKey(),
+  sourceHubName: varchar("source_hub_name", { length: 120 }).notNull(),
+  sourceCommune: varchar("source_commune", { length: 80 }).notNull(),
+  itemCategory: varchar("item_category", { length: 80 }).notNull(),
+  surplusQuantity: integer("surplus_quantity").notNull(),
+  neededInExchange: varchar("needed_in_exchange", { length: 150 }),
+  status: transferStatusEnum("status").notNull().default("available_surplus"),
+  coordinatorPhone: varchar("coordinator_phone", { length: 20 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const agroRecoveryPledges = pgTable("agro_recovery_pledges", {
+  id: serial("id").primaryKey(),
+  donorOrganization: varchar("donor_organization", { length: 150 }).notNull(),
+  donorWilaya: varchar("donor_wilaya", { length: 50 }).notNull(),
+  category: agroCategoryEnum("category").notNull(),
+  quantityOffered: integer("quantity_offered").notNull(),
+  targetCommune: varchar("target_commune", { length: 80 }),
+  status: varchar("status", { length: 30 }).notNull().default("ready_for_dispatch"),
+  contactPhone: varchar("contact_phone", { length: 20 }).notNull(),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const locationsRelations = relations(locations, ({ many }) => ({
   needs: many(needs),
 }));
@@ -463,3 +530,13 @@ export type CharityAvailability =
 export type CharityInventoryStatus =
   (typeof charityInventoryStatusEnum.enumValues)[number];
 export type PushSubscription = typeof pushSubscriptions.$inferSelect;
+export type MountainTrail = typeof mountainTrails.$inferSelect;
+export type NewMountainTrail = typeof mountainTrails.$inferInsert;
+export type TrailClearanceLevel =
+  (typeof trailClearanceEnum.enumValues)[number];
+export type InventoryTransfer = typeof inventoryTransfers.$inferSelect;
+export type NewInventoryTransfer = typeof inventoryTransfers.$inferInsert;
+export type TransferStatus = (typeof transferStatusEnum.enumValues)[number];
+export type AgroRecoveryPledge = typeof agroRecoveryPledges.$inferSelect;
+export type NewAgroRecoveryPledge = typeof agroRecoveryPledges.$inferInsert;
+export type AgroCategory = (typeof agroCategoryEnum.enumValues)[number];

@@ -5,11 +5,17 @@ import { Loader2, LocateFixed, X } from "lucide-react";
 
 import { submitUrgentAlert } from "@/actions/emergency";
 import NearestHelpBox from "@/components/emergency/NearestHelpBox";
+import OfflineSmsFallbackModal from "@/components/emergency/OfflineSmsFallbackModal";
 import SosMediaCapture, {
   type SosMediaPayload,
 } from "@/components/emergency/SosMediaCapture";
 import { getCommuneCoordinates, getCommunesByDaira, getDairas, formatCommuneOptionLabel, formatDairaOptionLabel } from "@/lib/locations";
 import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
+import {
+  isBrowserOffline,
+  isLikelyNetworkError,
+  type EmergencySmsDraft,
+} from "@/lib/offline-storage";
 import {
   formInputClass,
   formTextareaClass,
@@ -59,6 +65,8 @@ export default function SosAlertButton() {
   const [helperDispatch, setHelperDispatch] = useState<
     import("@/lib/agent/sos-dispatch").SosDispatchBundle | null
   >(null);
+  const [smsDraft, setSmsDraft] = useState<EmergencySmsDraft | null>(null);
+  const [smsPayload, setSmsPayload] = useState<unknown>(null);
 
   const dairas = useMemo(() => getDairas(), []);
   const communes = useMemo(
@@ -145,31 +153,72 @@ export default function SosAlertButton() {
       return;
     }
 
-    setIsSubmitting(true);
-
-    const result = await submitUrgentAlert({
+    const locationLabel =
+      form.commune || form.village || form.daira || "جيجل";
+    const offlineDraft: EmergencySmsDraft = {
+      type: "SOS",
+      locationCodeOrName: locationLabel,
+      urgency: form.emergencyType,
+      contactPhone: form.reporterPhone || "unknown",
+    };
+    const offlinePayload = {
       emergencyType: form.emergencyType,
       description: form.description,
       reporterName: form.reporterName,
-      reporterPhone: form.reporterPhone || undefined,
+      reporterPhone: form.reporterPhone,
       daira: form.daira,
       commune: form.commune,
-      village: form.village || undefined,
+      village: form.village,
       lat: Number(form.lat),
       lng: Number(form.lng),
-      mediaUrls: mediaPayload.mediaUrls,
-      voiceNoteData: mediaPayload.voiceNoteData ?? undefined,
-    });
+      contactPhone: form.reporterPhone,
+    };
 
-    setIsSubmitting(false);
-
-    if (!result.success) {
-      setError(result.error ?? "تعذر الإرسال.");
+    if (isBrowserOffline()) {
+      setSmsDraft(offlineDraft);
+      setSmsPayload(offlinePayload);
       return;
     }
 
-    setIsSuccess(true);
-    setHelperDispatch(result.data?.helperDispatch ?? null);
+    setIsSubmitting(true);
+
+    try {
+      const result = await submitUrgentAlert({
+        emergencyType: form.emergencyType,
+        description: form.description,
+        reporterName: form.reporterName,
+        reporterPhone: form.reporterPhone || undefined,
+        daira: form.daira,
+        commune: form.commune,
+        village: form.village || undefined,
+        lat: Number(form.lat),
+        lng: Number(form.lng),
+        mediaUrls: mediaPayload.mediaUrls,
+        voiceNoteData: mediaPayload.voiceNoteData ?? undefined,
+      });
+
+      if (!result.success) {
+        if (isLikelyNetworkError(new Error(result.error ?? "network"))) {
+          setSmsDraft(offlineDraft);
+          setSmsPayload(offlinePayload);
+          return;
+        }
+        setError(result.error ?? "تعذر الإرسال.");
+        return;
+      }
+
+      setIsSuccess(true);
+      setHelperDispatch(result.data?.helperDispatch ?? null);
+    } catch (submitError) {
+      if (isLikelyNetworkError(submitError)) {
+        setSmsDraft(offlineDraft);
+        setSmsPayload(offlinePayload);
+        return;
+      }
+      setError("تعذر الإرسال.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   function handleClose() {
@@ -181,6 +230,8 @@ export default function SosAlertButton() {
     setGpsMessage(null);
     setIsSuccess(false);
     setHelperDispatch(null);
+    setSmsDraft(null);
+    setSmsPayload(null);
   }
 
   return (
@@ -454,6 +505,18 @@ export default function SosAlertButton() {
             )}
           </div>
         </div>
+      ) : null}
+
+      {smsDraft ? (
+        <OfflineSmsFallbackModal
+          open
+          draft={smsDraft}
+          payload={smsPayload}
+          onClose={() => {
+            setSmsDraft(null);
+            setSmsPayload(null);
+          }}
+        />
       ) : null}
     </>
   );

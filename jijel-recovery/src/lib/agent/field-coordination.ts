@@ -1,5 +1,6 @@
-import { and, desc, eq, ne } from "drizzle-orm";
+import { and, desc, eq, ne, sql } from "drizzle-orm";
 
+import { getReliefStatsSummary } from "@/lib/agent/deficit";
 import { db } from "@/db";
 import { activeResponders, needs } from "@/db/schema";
 import {
@@ -29,18 +30,78 @@ function summarizeRoles(roles: ResponderRole[]): ResponderBadgeCounts {
   return counts;
 }
 
-function corridorBriefAr(): string[] {
-  return JIJEL_ENTRY_CORRIDORS.filter((c) =>
-    ["RN43", "RN77", "CW135"].includes(c.route),
-  ).map(
+function corridorBriefAr(routes: string[] = ["RN43", "RN77", "CW135"]): string[] {
+  return JIJEL_ENTRY_CORRIDORS.filter((c) => routes.includes(c.route)).map(
     (c) =>
       `${c.route} — ${c.labelAr}: ${ROAD_STATUS_LABELS[c.status]} — ${c.noteAr}`,
   );
 }
 
 /**
+ * Wilaya-level briefing when no need / settlement is selected.
+ */
+export async function buildWilayaCoordinationBrief(
+  query: string,
+): Promise<string> {
+  const stats = await getReliefStatsSummary();
+
+  const [fulfilledRow] = (
+    await db.execute<{ count: string }>(sql`
+      SELECT COUNT(*)::text AS count
+      FROM ${needs}
+      WHERE status = 'fulfilled'
+    `)
+  ).rows;
+
+  const covered = Number(fulfilledRow?.count ?? 0);
+  const pending = stats.openNeeds;
+  const topZones = stats.topDeficitZones.slice(0, 3).map(
+    (zone) =>
+      `${getCommuneArabicName(zone.commune)} (دائرة ${getDairaArabicName(zone.daira)}) — باقي ${zone.deficitUnits} وحدة`,
+  );
+  const majorAxes = corridorBriefAr(["RN43", "RN27", "RN77"]);
+
+  if (/محاور|RN43|RN27|RN77|طريق|مسلك|حالة المحاور/i.test(query)) {
+    return [
+      "🚛 المسالك المفتوحة:",
+      ...majorAxes.map((line) => `• ${line}`),
+      "",
+      "⚠️ تنبيه هام:",
+      "• الشاحنة الثقيلة: فضّل RN43 الساحلي؛ RN77 جبلي ويفضّل 4x4.",
+      "• RN27 عبر الميلية — حركة كثيفة، خطّط التفريغ في سيدي معروف.",
+    ].join("\n");
+  }
+
+  if (/تضرر|أكثر المناطق|عجز|مناطق/i.test(query)) {
+    return [
+      "🚨 العجز المتبقي:",
+      ...(topZones.length > 0
+        ? topZones.map((line) => `• ${line}`)
+        : ["• ما كاش مناطق عجز بارزة دوكا."]),
+      "",
+      "⚠️ تنبيه هام:",
+      `• نداءات SOS نشطة: ${stats.activeSosAlerts} · قوافل قادمة: ${stats.incomingConvoys}`,
+    ].join("\n");
+  }
+
+  return [
+    "🚨 العجز المتبقي:",
+    `• ولاية جيجل: ${pending} احتياج معلّق (مفتوح/جزئي) · ${covered} مغطّى بالكامل`,
+    `• نداءات SOS نشطة: ${stats.activeSosAlerts}`,
+    ...(topZones.slice(0, 2).map((line) => `• أولوية: ${line}`)),
+    "",
+    "🚛 المسالك المفتوحة:",
+    ...majorAxes.slice(0, 2).map((line) => `• ${line}`),
+    "",
+    "⚠️ تنبيه هام:",
+    `• قوافل قادمة مسجّلة: ${stats.incomingConvoys} — وزّع الحمولة على أعلى مناطق العجز قبل التكرار.`,
+  ].join("\n");
+}
+
+/**
  * Builds a Darija operational briefing for field coordination prompts.
  * Uses Arabic place names and scannable section headers for the UI parser.
+ * When no needId/settlementId is provided, returns a wilaya-level brief.
  */
 export async function buildFieldCoordinationBrief(input: {
   needId?: number | null;
@@ -48,6 +109,11 @@ export async function buildFieldCoordinationBrief(input: {
   query: string;
 }): Promise<string> {
   const query = input.query.trim();
+
+  if (!input.needId && !input.settlementId) {
+    return buildWilayaCoordinationBrief(query);
+  }
+
   const filters = [];
   if (input.needId) filters.push(eq(activeResponders.needId, input.needId));
   if (input.settlementId) {

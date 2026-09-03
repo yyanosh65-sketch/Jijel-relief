@@ -71,6 +71,7 @@ export const MAP_LAYER_LABELS = {
   needs: "حاجيات المداشر",
   sos: "نداءات الفزعة 🚨",
   roads: "حالة المسالك",
+  trails: "صلاحية المسالك الجبلية 4x4",
   facilities: "ديار الإغاثة والبيطرة",
   villages: "البلديات والدواوير",
   waypoints: "دليل القوافل ومحطات الطريق",

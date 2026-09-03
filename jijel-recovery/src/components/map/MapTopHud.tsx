@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Search, X } from "lucide-react";
+import { Menu, Search, Sparkles, X } from "lucide-react";
 import { Suspense, useState } from "react";
 
 import AdvancedNeedSearch from "@/components/search/AdvancedNeedSearch";
@@ -13,21 +13,45 @@ import FeedImporterButton from "@/components/admin/FeedImporterButton";
 import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
 import CharityInventoryNavButton from "@/components/charity/CharityInventoryNavButton";
 import RegisterHelperButton from "@/components/helpers/RegisterHelperButton";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { cn } from "@/lib/utils";
 
 type MapTopHudProps = {
   showSearch?: boolean;
+  onOpenGlobalAgent?: () => void;
+  onOpenAgroOlive?: () => void;
+  onOpenAgroLivestock?: () => void;
 };
 
-export default function MapTopHud({ showSearch = true }: MapTopHudProps) {
+export default function MapTopHud({
+  showSearch = true,
+  onOpenGlobalAgent,
+  onOpenAgroOlive,
+  onOpenAgroLivestock,
+}: MapTopHudProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const isOnline = useOnlineStatus();
 
   return (
     <div
       dir="rtl"
       className="pointer-events-none fixed top-3 inset-x-0 z-30 flex flex-col items-center gap-2 px-3"
     >
+      {!isOnline ? (
+        <div className="pointer-events-none w-full max-w-xl mx-auto">
+          <div
+            role="status"
+            className="inline-flex max-w-full items-center gap-1.5 rounded-full border border-amber-500/35 bg-slate-900/95 px-3 py-1 text-[11px] font-semibold text-amber-200 shadow-lg backdrop-blur-xl"
+          >
+            <span aria-hidden>🟠</span>
+            <span className="truncate">
+              وضع بدون إنترنت (بيانات مخزنة محلياً)
+            </span>
+          </div>
+        </div>
+      ) : null}
+
       {/* 1. Brand header */}
       <div className="pointer-events-auto w-full max-w-xl mx-auto">
         <header
@@ -77,6 +101,19 @@ export default function MapTopHud({ showSearch = true }: MapTopHudProps) {
           <div className="mt-2 space-y-3 rounded-2xl border border-white/10 bg-slate-950/90 p-3 shadow-2xl backdrop-blur-xl">
             <SiteNav />
             <div className="flex flex-wrap items-center gap-2 border-t border-white/5 pt-3">
+              {onOpenGlobalAgent ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setMenuOpen(false);
+                    onOpenGlobalAgent();
+                  }}
+                  className="inline-flex items-center gap-2 rounded-full border border-violet-500/40 bg-violet-600/20 px-3 py-2 text-xs font-semibold text-violet-100 hover:bg-violet-600/30"
+                >
+                  <Sparkles className="h-3.5 w-3.5" />
+                  غرفة التوجيه الذكي (AI Copilot)
+                </button>
+              ) : null}
               <FeedImporterButton variant="navbar" />
               <RegisterConvoyButton variant="navbar" />
               <CharityInventoryNavButton />
@@ -109,7 +146,11 @@ export default function MapTopHud({ showSearch = true }: MapTopHudProps) {
       {/* 3. Filter ribbon */}
       <div className="pointer-events-auto w-full max-w-2xl mx-auto">
         <Suspense fallback={null}>
-          <MapFilterRibbon embedded />
+          <MapFilterRibbon
+            embedded
+            onOpenAgroOlive={onOpenAgroOlive}
+            onOpenAgroLivestock={onOpenAgroLivestock}
+          />
         </Suspense>
       </div>
     </div>

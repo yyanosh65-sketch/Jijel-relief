@@ -4,11 +4,17 @@ import { useEffect, useMemo, useState } from "react";
 import { Loader2, Phone, Users } from "lucide-react";
 
 import type { ActiveResponder, ResponderRole, ResponderStatus } from "@/db/schema";
+import OfflineSmsFallbackModal from "@/components/emergency/OfflineSmsFallbackModal";
 import type { ResponderUpdatePayload } from "@/lib/responder-events";
 import {
   RESPONDER_ROLE_LABELS,
   RESPONDER_STATUS_LABELS,
 } from "@/lib/responders";
+import {
+  isBrowserOffline,
+  isLikelyNetworkError,
+  type EmergencySmsDraft,
+} from "@/lib/offline-storage";
 import { buildWhatsAppUrl } from "@/lib/phone";
 import { cn } from "@/lib/utils";
 
@@ -59,7 +65,8 @@ export default function FieldCoordinationPanel({
   const [etaMinutes, setEtaMinutes] = useState("30");
   const [organizationName, setOrganizationName] = useState("");
   const [suppliesBrought, setSuppliesBrought] = useState("");
-
+  const [smsDraft, setSmsDraft] = useState<EmergencySmsDraft | null>(null);
+  const [smsPayload, setSmsPayload] = useState<unknown>(null);
   const query = useMemo(() => {
     const params = new URLSearchParams();
     if (needId) params.set("needId", String(needId));
@@ -136,23 +143,39 @@ export default function FieldCoordinationPanel({
     event.preventDefault();
     setError(null);
     setSuccess(null);
+
+    const formBody = {
+      fullName,
+      phone,
+      role,
+      status,
+      organizationName: organizationName || null,
+      needId: needId ?? null,
+      settlementId: settlementId ?? null,
+      etaMinutes: status === "en_route" ? Number(etaMinutes) || null : null,
+      suppliesBrought: suppliesBrought || null,
+    };
+
+    const offlineDraft: EmergencySmsDraft = {
+      type: "CHECKIN",
+      locationCodeOrName: locationLabel || String(settlementId ?? needId ?? "جيجل"),
+      urgency: status,
+      contactPhone: phone || "unknown",
+    };
+
+    if (isBrowserOffline()) {
+      setSmsDraft(offlineDraft);
+      setSmsPayload({ form: formBody, draft: offlineDraft });
+      return;
+    }
+
     setSubmitting(true);
 
     try {
       const response = await fetch("/api/responders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          fullName,
-          phone,
-          role,
-          status,
-          organizationName: organizationName || null,
-          needId: needId ?? null,
-          settlementId: settlementId ?? null,
-          etaMinutes: status === "en_route" ? Number(etaMinutes) || null : null,
-          suppliesBrought: suppliesBrought || null,
-        }),
+        body: JSON.stringify(formBody),
       });
 
       const json = (await response.json()) as {
@@ -175,7 +198,12 @@ export default function FieldCoordinationPanel({
       setPhone("");
       setSuppliesBrought("");
       setOrganizationName("");
-    } catch {
+    } catch (submitError) {
+      if (isLikelyNetworkError(submitError)) {
+        setSmsDraft(offlineDraft);
+        setSmsPayload({ form: formBody, draft: offlineDraft });
+        return;
+      }
       setError("فشل الاتصال بالخادم.");
     } finally {
       setSubmitting(false);
@@ -388,6 +416,18 @@ export default function FieldCoordinationPanel({
           </div>
         </form>
       )}
+
+      {smsDraft ? (
+        <OfflineSmsFallbackModal
+          open
+          draft={smsDraft}
+          payload={smsPayload}
+          onClose={() => {
+            setSmsDraft(null);
+            setSmsPayload(null);
+          }}
+        />
+      ) : null}
     </section>
   );
 }
