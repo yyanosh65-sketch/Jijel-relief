@@ -33,11 +33,14 @@ function toggleListValue<T extends string>(values: T[], value: T): T[] {
 
 type AdvancedNeedSearchProps = {
   variant?: "floating" | "panel";
+  /** Compact search docked under the immersive map chrome */
+  immersive?: boolean;
   className?: string;
 };
 
 export default function AdvancedNeedSearch({
   variant = "floating",
+  immersive = false,
   className,
 }: AdvancedNeedSearchProps) {
   const router = useRouter();
@@ -347,38 +350,40 @@ export default function AdvancedNeedSearch({
         </select>
 
         <div className="flex flex-wrap gap-1.5">
-          {URGENCY_FILTER_OPTIONS.map((option) => {
-            const isActive = filters.urgencyGroups.includes(option.id);
+          {immersive
+            ? null
+            : URGENCY_FILTER_OPTIONS.map((option) => {
+                const isActive = filters.urgencyGroups.includes(option.id);
 
-            return (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() =>
-                  patchFilters({
-                    urgencyGroups: toggleListValue(
-                      filters.urgencyGroups,
-                      option.id,
-                    ) as UrgencyFilterGroup[],
-                  })
-                }
-                className={cn(
-                  "rounded-full px-2.5 py-1 text-[11px] font-bold transition",
-                  isActive
-                    ? option.id === "critical"
-                      ? "bg-rose-600/90 text-white"
-                      : "bg-emerald-600/90 text-white"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700",
-                )}
-              >
-                {option.id === "critical"
-                  ? "عاجل جداً"
-                  : option.id === "medium"
-                    ? "متوسط"
-                    : "عادي"}
-              </button>
-            );
-          })}
+                return (
+                  <button
+                    key={option.id}
+                    type="button"
+                    onClick={() =>
+                      patchFilters({
+                        urgencyGroups: toggleListValue(
+                          filters.urgencyGroups,
+                          option.id,
+                        ) as UrgencyFilterGroup[],
+                      })
+                    }
+                    className={cn(
+                      "rounded-full px-2.5 py-1 text-[11px] font-bold transition",
+                      isActive
+                        ? option.id === "critical"
+                          ? "bg-rose-600/90 text-white"
+                          : "bg-emerald-600/90 text-white"
+                        : "bg-slate-800 text-slate-400 hover:bg-slate-700",
+                    )}
+                  >
+                    {option.id === "critical"
+                      ? "عاجل جداً"
+                      : option.id === "medium"
+                        ? "متوسط"
+                        : "عادي"}
+                  </button>
+                );
+              })}
         </div>
 
         <button
@@ -397,13 +402,26 @@ export default function AdvancedNeedSearch({
     <div
       dir="rtl"
       className={cn(
-        "pointer-events-none absolute top-4 left-1/2 w-[92%] max-w-4xl -translate-x-1/2",
-        Z_MAP_FLOATING,
+        "pointer-events-none",
+        immersive
+          ? cn(
+              "fixed inset-x-0 top-[7.5rem] z-30 mx-auto w-[min(92vw,28rem)] px-3",
+              Z_MAP_FLOATING,
+            )
+          : cn(
+              "absolute top-4 left-1/2 w-[92%] max-w-4xl -translate-x-1/2",
+              Z_MAP_FLOATING,
+            ),
         className,
       )}
       aria-label="بحث وتصفية الاحتياجات"
     >
-      <div className="pointer-events-auto flex flex-wrap items-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/90 p-2 shadow-2xl backdrop-blur-md">
+      <div
+        className={cn(
+          "pointer-events-auto flex flex-wrap items-center gap-2 border border-slate-800 bg-slate-900/90 p-2 shadow-2xl backdrop-blur-md",
+          immersive ? "rounded-2xl border-white/10 bg-slate-950/80 backdrop-blur-xl" : "rounded-2xl",
+        )}
+      >
         {renderToolbar()}
       </div>
       {expandedPanel ? (

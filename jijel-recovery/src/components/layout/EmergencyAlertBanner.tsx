@@ -22,7 +22,13 @@ function formatBannerLine(alert: {
   return `[عاجل] ${villageLabel} (${communeLabel}): ${alert.title}${facebookPart}${phonePart}`;
 }
 
-export default function EmergencyAlertBanner() {
+type EmergencyAlertBannerProps = {
+  floating?: boolean;
+};
+
+export default function EmergencyAlertBanner({
+  floating = false,
+}: EmergencyAlertBannerProps) {
   const liveAlerts = useEmergencyNotificationStream();
   const [dismissedIds, setDismissedIds] = useState<number[]>([]);
 
@@ -42,7 +48,11 @@ export default function EmergencyAlertBanner() {
   return (
     <div
       dir="rtl"
-      className="relative z-[2950] border-b border-rose-400/40 bg-gradient-to-l from-rose-800 via-rose-700 to-amber-700 text-white shadow-lg"
+      className={
+        floating
+          ? "pointer-events-auto fixed top-0 inset-x-0 z-[40] border-b border-rose-400/40 bg-gradient-to-l from-rose-800 via-rose-700 to-amber-700 text-white shadow-lg"
+          : "relative z-[2950] border-b border-rose-400/40 bg-gradient-to-l from-rose-800 via-rose-700 to-amber-700 text-white shadow-lg"
+      }
     >
       <div className="border-b border-white/10 bg-black/15 px-4 py-1 text-center">
         <p className="text-[11px] font-semibold tracking-wide text-rose-50/90 sm:text-xs">

@@ -8,22 +8,28 @@ import type { MapIntelligenceData } from "@/actions/intelligence";
 import { getVillageDossier } from "@/actions/intelligence";
 import type { MapNeed } from "@/actions/needs";
 import AdvancedNeedSearch from "@/components/search/AdvancedNeedSearch";
-import NeedCard from "@/components/needs/NeedCard";
+import FloatingMapHeader from "@/components/map/FloatingMapHeader";
+import MapActionDock from "@/components/map/MapActionDock";
+import MapFilterRibbon from "@/components/map/MapFilterRibbon";
+import NeedInspectionDrawer from "@/components/map/NeedInspectionDrawer";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import VillageDetailDrawer from "@/components/map/VillageDetailDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
 import { useNeedSearchFilters } from "@/hooks/useNeedSearchFilters";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
-import { getDossierById, getDossierByLocation, getNearbyFacilities } from "@/lib/intelligence";
+import {
+  getDossierById,
+  getDossierByLocation,
+  getNearbyFacilities,
+} from "@/lib/intelligence";
 import { filterAndSortNeeds } from "@/lib/need-search";
 import type { VillageFieldReportTarget } from "@/lib/field-reports";
-import { glassPanelClass } from "@/lib/ui-labels";
 import { cn } from "@/lib/utils";
 
 const ReconstructionMap = dynamic(() => import("./ReconstructionMap"), {
   ssr: false,
   loading: () => (
-    <div className="relative z-10 flex h-full w-full items-center justify-center bg-slate-950 text-sm text-slate-400">
+    <div className="fixed inset-0 z-0 flex h-dvh w-screen items-center justify-center bg-slate-950 text-sm text-slate-400">
       جاري تحميل الخريطة...
     </div>
   ),
@@ -40,8 +46,7 @@ type ReconstructionMapLoaderProps = {
 export default function ReconstructionMapLoader({
   needs,
   intelligence,
-  layout = "sidebar",
-  fullViewportMap = false,
+  fullViewportMap = true,
   showSearchBar = true,
 }: ReconstructionMapLoaderProps) {
   const router = useRouter();
@@ -51,6 +56,7 @@ export default function ReconstructionMapLoader({
     [filters, intelligence, needs],
   );
   const [selectedNeed, setSelectedNeed] = useState<MapNeed | null>(null);
+  const [inspectNeed, setInspectNeed] = useState<MapNeed | null>(null);
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
   const [selectedDossier, setSelectedDossier] = useState<VillageDossier | null>(
     null,
@@ -63,6 +69,9 @@ export default function ReconstructionMapLoader({
     useState<VillageFieldReportTarget | null>(null);
   const [isFieldReportOpen, setIsFieldReportOpen] = useState(false);
   const [mapModalOpen, setMapModalOpen] = useState(false);
+  const [communityReportSignal, setCommunityReportSignal] = useState(0);
+  const [pinDropActive, setPinDropActive] = useState(false);
+  const [layersPanelOpen, setLayersPanelOpen] = useState(false);
 
   const forceRoadTrackerCollapsed = mapModalOpen || isPledgeModalOpen;
 
@@ -125,103 +134,66 @@ export default function ReconstructionMapLoader({
     setFieldReportTarget(null);
   }
 
-  const needsListHeader = (
-    <div className="space-y-2 border-b border-slate-800/80 px-4 py-3">
-      <div>
-        <h2 className="text-sm font-semibold text-slate-100">حاجيات موثقة</h2>
-        <p className="text-xs text-slate-400">
-          {filteredNeeds.length} من {needs.length} احتياج
-        </p>
-      </div>
-      <p className="text-[11px] leading-relaxed text-slate-500">
-        استخدم زر «تسجيل نداء أو استغاثة» على الخريطة لإضافة نداء ميداني جديد.
-      </p>
-    </div>
-  );
-
-  const needsListBody = (
-    <div className="space-y-3 p-4">
-      {filteredNeeds.length === 0 ? (
-        <p
-          className={cn(
-            glassPanelClass,
-            "px-4 py-6 text-center text-sm text-slate-400",
-          )}
-        >
-          لا توجد نتائج مطابقة — جرّب توسيع نطاق البحث أو تعديل الفلاتر.
-        </p>
-      ) : null}
-      {filteredNeeds.map((need) => (
-        <NeedCard
-          key={need.id}
-          need={need}
-          isSelected={selectedNeed?.id === need.id}
-          onPledge={openPledgeModal}
-          onOpenDossier={openDossierFromNeed}
-          onRefresh={() => router.refresh()}
-        />
-      ))}
-    </div>
-  );
-
-  const mapHeightClass = fullViewportMap
-    ? "h-full min-h-0"
-    : layout === "stacked"
-      ? "h-[min(52vh,520px)] min-h-[320px]"
-      : "h-[55vh] lg:h-full";
-
-  const mapSection = (
-    <div className={cn("relative w-full", mapHeightClass)}>
-      {showSearchBar ? <AdvancedNeedSearch variant="floating" /> : null}
-      <ReconstructionMap
-        needs={needs}
-        intelligence={intelligence}
-        selectedNeedId={selectedNeed?.id ?? null}
-        onPledgeClick={openPledgeModal}
-        onPledgeSuccess={() => router.refresh()}
-        onVillageClick={openVillageDossier}
-        onOpenFieldReport={openFieldReportDrawer}
-        forceRoadTrackerCollapsed={forceRoadTrackerCollapsed}
-        onModalOpenChange={setMapModalOpen}
-      />
-    </div>
-  );
-
   return (
     <>
-      <div className={cn("flex min-h-0 flex-col", fullViewportMap && "h-full")}>
-        {layout === "stacked" ? (
-          <>
-            {mapSection}
-
-            <section
-              dir="rtl"
-              className="border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-sm"
-            >
-              {needsListHeader}
-              {needsListBody}
-            </section>
-          </>
-        ) : (
-          <div className="relative flex min-h-0 flex-1 flex-col lg:flex-row">
-            {mapSection}
-
-            <aside
-              dir="rtl"
-              className="flex h-[45vh] flex-col border-t border-slate-800/80 bg-slate-950/80 backdrop-blur-sm lg:h-full lg:w-96 lg:border-t-0 lg:border-l lg:border-slate-800/80"
-            >
-              {needsListHeader}
-              <div className="flex-1 overflow-y-auto">{needsListBody}</div>
-            </aside>
-          </div>
+      <div
+        className={cn(
+          fullViewportMap
+            ? "fixed inset-0 z-0 h-dvh w-screen"
+            : "relative h-full min-h-0 w-full",
         )}
+      >
+        {showSearchBar ? (
+          <AdvancedNeedSearch variant="floating" immersive={fullViewportMap} />
+        ) : null}
+        <ReconstructionMap
+          needs={filteredNeeds}
+          intelligence={intelligence}
+          selectedNeedId={selectedNeed?.id ?? inspectNeed?.id ?? null}
+          onPledgeClick={openPledgeModal}
+          onPledgeSuccess={() => router.refresh()}
+          onVillageClick={openVillageDossier}
+          onOpenFieldReport={openFieldReportDrawer}
+          forceRoadTrackerCollapsed={forceRoadTrackerCollapsed}
+          onModalOpenChange={setMapModalOpen}
+          immersiveChrome={fullViewportMap}
+          communityReportSignal={communityReportSignal}
+          pinDropActive={pinDropActive}
+          onPinDropActiveChange={setPinDropActive}
+          layersPanelOpen={layersPanelOpen}
+          onNeedInspect={fullViewportMap ? setInspectNeed : undefined}
+        />
       </div>
+
+      {fullViewportMap ? (
+        <>
+          <FloatingMapHeader />
+          <MapFilterRibbon />
+          <MapActionDock
+            onUrgentReport={() =>
+              setCommunityReportSignal((current) => current + 1)
+            }
+            onToggleLayers={() => setLayersPanelOpen((open) => !open)}
+            onTogglePinDrop={() => setPinDropActive((active) => !active)}
+            pinDropActive={pinDropActive}
+            layersPanelOpen={layersPanelOpen}
+          />
+        </>
+      ) : null}
 
       <PledgeModal
         need={selectedNeed}
         open={isPledgeModalOpen}
         onClose={closePledgeModal}
         onSuccess={() => router.refresh()}
+      />
+
+      <NeedInspectionDrawer
+        need={inspectNeed}
+        open={Boolean(inspectNeed)}
+        onClose={() => setInspectNeed(null)}
+        onPledge={openPledgeModal}
+        onOpenSettlement={openDossierFromNeed}
       />
 
       <VillageDossierDrawer

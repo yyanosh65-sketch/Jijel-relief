@@ -66,6 +66,13 @@ type ReconstructionMapProps = {
   onOpenFieldReport?: (target: VillageFieldReportTarget) => void;
   forceRoadTrackerCollapsed?: boolean;
   onModalOpenChange?: (open: boolean) => void;
+  immersiveChrome?: boolean;
+  communityReportSignal?: number;
+  pinDropActive?: boolean;
+  onPinDropActiveChange?: (active: boolean) => void;
+  layersPanelOpen?: boolean;
+  onLayersPanelOpenChange?: (open: boolean) => void;
+  onNeedInspect?: (need: MapNeed) => void;
 };
 
 type MapLayerKey = keyof typeof MAP_LAYER_LABELS;
@@ -327,6 +334,12 @@ export default function ReconstructionMap({
   onOpenFieldReport,
   forceRoadTrackerCollapsed = false,
   onModalOpenChange,
+  immersiveChrome = false,
+  communityReportSignal = 0,
+  pinDropActive,
+  onPinDropActiveChange,
+  layersPanelOpen,
+  onNeedInspect,
 }: ReconstructionMapProps) {
   const [layers, setLayers] = useState<Record<MapLayerKey, boolean>>({
     needs: true,
@@ -336,12 +349,27 @@ export default function ReconstructionMap({
     villages: true,
     waypoints: true,
   });
-  const [pinDropMode, setPinDropMode] = useState(false);
+  const [internalPinDropMode, setInternalPinDropMode] = useState(false);
   const [clickPin, setClickPin] = useState<{ lat: number; lng: number } | null>(
     null,
   );
   const [isReportModalOpen, setIsReportModalOpen] = useState(false);
   const [isCommunityReportOpen, setIsCommunityReportOpen] = useState(false);
+
+  const pinDropMode = pinDropActive ?? internalPinDropMode;
+  const setPinDropMode = (value: boolean | ((current: boolean) => boolean)) => {
+    const next =
+      typeof value === "function" ? value(pinDropMode) : value;
+    if (onPinDropActiveChange) {
+      onPinDropActiveChange(next);
+    } else {
+      setInternalPinDropMode(next);
+    }
+  };
+
+  const showLayersPanel = immersiveChrome
+    ? Boolean(layersPanelOpen)
+    : true;
 
   const mapModalOpen =
     isReportModalOpen || isCommunityReportOpen;
@@ -349,6 +377,19 @@ export default function ReconstructionMap({
   useEffect(() => {
     onModalOpenChange?.(mapModalOpen);
   }, [mapModalOpen, onModalOpenChange]);
+
+  useEffect(() => {
+    if (communityReportSignal > 0) {
+      setIsCommunityReportOpen(true);
+    }
+  }, [communityReportSignal]);
+
+  // Keep controlled pin-drop in sync when parent clears it after modal close
+  useEffect(() => {
+    if (pinDropActive === false) {
+      setInternalPinDropMode(false);
+    }
+  }, [pinDropActive]);
 
   const sosMarkerIcon = useMemo(() => createSosMarkerIcon(), []);
 
@@ -393,7 +434,8 @@ export default function ReconstructionMap({
     <div dir="rtl" className="relative z-10 h-full w-full">
       <div
         className={cn(
-          "pointer-events-none absolute bottom-6 left-6 z-[25] hidden max-w-[200px] rounded-2xl border border-slate-800/80 bg-slate-900/90 p-3 text-xs shadow-xl backdrop-blur-md sm:block",
+          "pointer-events-none absolute z-[25] hidden max-w-[200px] rounded-2xl border border-slate-800/80 bg-slate-900/90 p-3 text-xs shadow-xl backdrop-blur-md sm:block",
+          immersiveChrome ? "bottom-24 left-6" : "bottom-6 left-6",
           Z_MAP_LEGEND,
         )}
       >
@@ -414,76 +456,96 @@ export default function ReconstructionMap({
         </ul>
       </div>
 
-      <div
-        className={cn(
-          "pointer-events-none absolute top-4 right-4 hidden sm:block",
-          Z_MAP_FLOATING,
-        )}
-      >
-        <div className="pointer-events-auto flex max-w-xs flex-wrap gap-1.5 rounded-2xl border border-slate-800 bg-slate-900/90 p-2 md:max-w-md">
-          {LAYER_TOGGLES.map((layer) => {
-            const isActive = layers[layer.key];
+      {(!immersiveChrome || showLayersPanel) && (
+        <div
+          className={cn(
+            "pointer-events-none absolute",
+            immersiveChrome
+              ? "bottom-24 left-1/2 w-[min(92vw,28rem)] -translate-x-1/2 sm:left-auto sm:right-4 sm:w-auto sm:translate-x-0"
+              : "top-4 right-4 hidden sm:block",
+            Z_MAP_FLOATING,
+          )}
+        >
+          <div className="pointer-events-auto flex max-w-xs flex-wrap gap-1.5 rounded-2xl border border-slate-800 bg-slate-900/90 p-2 md:max-w-md">
+            {LAYER_TOGGLES.map((layer) => {
+              const isActive = layers[layer.key];
 
-            return (
-              <button
-                key={layer.key}
-                type="button"
-                onClick={() => toggleLayer(layer.key)}
-                className={cn(
-                  "rounded-full px-2 py-1 text-[10px] font-semibold transition",
-                  isActive
-                    ? "bg-emerald-600 text-white"
-                    : "bg-slate-800 text-slate-400 hover:bg-slate-700",
-                )}
-              >
-                {layer.labelAr}
-              </button>
-            );
-          })}
+              return (
+                <button
+                  key={layer.key}
+                  type="button"
+                  onClick={() => toggleLayer(layer.key)}
+                  className={cn(
+                    "rounded-full px-2 py-1 text-[10px] font-semibold transition",
+                    isActive
+                      ? "bg-emerald-600 text-white"
+                      : "bg-slate-800 text-slate-400 hover:bg-slate-700",
+                  )}
+                >
+                  {layer.labelAr}
+                </button>
+              );
+            })}
+          </div>
         </div>
-      </div>
+      )}
 
       <RoadTracker
         forceCollapsed={collapseRoadTracker}
         className={cn(
-          "pointer-events-auto absolute bottom-6 right-4 hidden sm:block",
+          "pointer-events-auto absolute hidden sm:block",
+          immersiveChrome ? "bottom-24 right-4" : "bottom-6 right-4",
           Z_MAP_FLOATING,
         )}
       />
 
-      <div
-        className={cn(
-          "pointer-events-none absolute bottom-6 left-1/2 z-[35] -translate-x-1/2",
-          Z_MAP_CTA,
-        )}
-      >
-        <button
-          type="button"
-          onClick={() => setIsCommunityReportOpen(true)}
-          className="pointer-events-auto rounded-2xl border border-emerald-500/40 bg-emerald-600 px-4 py-2.5 text-right text-xs font-extrabold text-white shadow-2xl shadow-emerald-900/30 transition-transform hover:-translate-y-0.5 hover:bg-emerald-500"
-        >
-          + تسجيل نداء أو استغاثة
-        </button>
-      </div>
+      {!immersiveChrome ? (
+        <>
+          <div
+            className={cn(
+              "pointer-events-none absolute bottom-6 left-1/2 z-[35] -translate-x-1/2",
+              Z_MAP_CTA,
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setIsCommunityReportOpen(true)}
+              className="pointer-events-auto rounded-2xl border border-emerald-500/40 bg-emerald-600 px-4 py-2.5 text-right text-xs font-extrabold text-white shadow-2xl shadow-emerald-900/30 transition-transform hover:-translate-y-0.5 hover:bg-emerald-500"
+            >
+              + تسجيل نداء أو استغاثة
+            </button>
+          </div>
 
-      <div
-        className={cn(
-          "pointer-events-none absolute bottom-[5.5rem] left-1/2 z-30 -translate-x-1/2",
-        )}
-      >
-        <button
-          type="button"
-          onClick={() => setPinDropMode((current) => !current)}
+          <div
+            className={cn(
+              "pointer-events-none absolute bottom-[5.5rem] left-1/2 z-30 -translate-x-1/2",
+            )}
+          >
+            <button
+              type="button"
+              onClick={() => setPinDropMode((current) => !current)}
+              className={cn(
+                "pointer-events-auto max-w-[min(90vw,320px)] rounded-2xl border px-3 py-2.5 text-center text-xs font-bold shadow-lg transition",
+                pinDropMode
+                  ? "border-emerald-500 bg-emerald-600 text-white"
+                  : "border-slate-700 bg-slate-900/90 text-slate-100 hover:bg-slate-800",
+              )}
+            >
+              📍 انقر على الخريطة لتسجيل ضرر في هذا الموقع
+            </button>
+          </div>
+        </>
+      ) : pinDropMode ? (
+        <div
           className={cn(
-            "pointer-events-auto max-w-[min(90vw,320px)] rounded-2xl border px-3 py-2.5 text-center text-xs font-bold shadow-lg transition",
-            pinDropMode
-              ? "border-emerald-500 bg-emerald-600 text-white"
-              : "border-slate-700 bg-slate-900/90 text-slate-100 hover:bg-slate-800",
+            "pointer-events-none absolute bottom-24 left-1/2 z-30 -translate-x-1/2",
           )}
         >
-          📍 انقر على الخريطة لتسجيل ضرر في هذا الموقع
-        </button>
-      </div>
+          <p className="pointer-events-auto max-w-[min(90vw,320px)] rounded-2xl border border-emerald-500/50 bg-emerald-950/90 px-3 py-2 text-center text-xs font-bold text-emerald-100 shadow-lg backdrop-blur-md">
+            انقر على الخريطة لتسجيل ضرر في هذا الموقع
+          </p>
+        </div>
+      ) : null}
 
       <LeafletMap
         pinDropMode={pinDropMode}
@@ -745,15 +807,24 @@ export default function ReconstructionMap({
                   position={[needLat, needLng]}
                   icon={needIcon}
                   opacity={isSelected ? 1 : 0.92}
+                  eventHandlers={
+                    immersiveChrome && onNeedInspect
+                      ? {
+                          click: () => onNeedInspect(need),
+                        }
+                      : undefined
+                  }
                 >
-                  <MapPopup>
-                    <NeedPopupContent
-                      need={need}
-                      onPledgeClick={onPledgeClick}
-                      onPledgeSuccess={onPledgeSuccess}
-                      onOpenFieldReport={onOpenFieldReport}
-                    />
-                  </MapPopup>
+                  {immersiveChrome && onNeedInspect ? null : (
+                    <MapPopup>
+                      <NeedPopupContent
+                        need={need}
+                        onPledgeClick={onPledgeClick}
+                        onPledgeSuccess={onPledgeSuccess}
+                        onOpenFieldReport={onOpenFieldReport}
+                      />
+                    </MapPopup>
+                  )}
                 </Marker>
               );
             })
@@ -779,7 +850,8 @@ export default function ReconstructionMap({
       {layers.needs && visibleNeeds.length === 0 ? (
         <div
           className={cn(
-            "pointer-events-none absolute inset-x-0 bottom-28 flex justify-center px-4 sm:bottom-8",
+            "pointer-events-none absolute inset-x-0 flex justify-center px-4",
+            immersiveChrome ? "bottom-28" : "bottom-28 sm:bottom-8",
             Z_MAP_LEGEND,
           )}
         >

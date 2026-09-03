@@ -42,24 +42,27 @@ body {
 }
 
 .map-viewport-shell {
-  display: flex;
+  position: relative;
+  display: block;
+  height: 100dvh;
   min-height: 0;
-  flex: 1;
-  flex-direction: column;
+  overflow: hidden;
   background: #020617;
 }
 
 .map-viewport-canvas {
-  position: relative;
-  height: calc(100dvh - 4rem);
-  min-height: 320px;
-  width: 100%;
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  height: 100dvh;
+  width: 100vw;
+  min-height: 0;
   overflow: hidden;
 }
 
 @media (max-width: 640px) {
   .map-viewport-canvas {
-    height: calc(100dvh - 3.5rem);
+    height: 100dvh;
   }
 }
 

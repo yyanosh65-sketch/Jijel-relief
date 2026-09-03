@@ -42,7 +42,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
       dir="rtl"
       className={`${cairo.variable} ${readexPro.variable} h-full antialiased`}
     >
-      <body dir="rtl" className="dashboard-canvas flex min-h-full flex-col bg-slate-950 font-sans leading-relaxed tracking-wide antialiased text-slate-100">
+      <body dir="rtl" className="dashboard-canvas flex min-h-full flex-col overflow-x-hidden bg-slate-950 font-sans leading-relaxed tracking-wide antialiased text-slate-100">
         <AppShell>{children}</AppShell>
         <AppFooter />
         <ServiceWorkerRegister />

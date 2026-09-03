@@ -1,6 +1,17 @@
+"use client";
+
+import { usePathname } from "next/navigation";
+
 import Logo from "@/components/ui/Logo";
 
 export function AppFooter() {
+  const pathname = usePathname();
+  const hideOnMap = pathname === "/" || pathname === "/map";
+
+  if (hideOnMap) {
+    return null;
+  }
+
   return (
     <footer
       dir="rtl"
