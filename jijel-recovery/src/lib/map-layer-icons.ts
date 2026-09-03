@@ -210,6 +210,41 @@ const WAYPOINT_ICONS: Record<string, string> = {
   reception: "🚩",
 };
 
+// ── Community facility icons ────────────────────────────────────────────────
+
+const COMMUNITY_FACILITY_COLORS: Record<string, string> = {
+  mosque_operational: "#16a34a",
+  mosque_damaged: "#dc2626",
+  zawiya_sanctuary: "#7c3aed",
+  water_spring: "#0ea5e9",
+  oxygen_generator: "#f59e0b",
+  cold_chain_pharma: "#06b6d4",
+};
+
+const COMMUNITY_FACILITY_SYMBOLS: Record<string, string> = {
+  mosque_operational: "🕌",
+  mosque_damaged: "🕌",
+  zawiya_sanctuary: "🏛",
+  water_spring: "💧",
+  oxygen_generator: "⚡",
+  cold_chain_pharma: "❄️",
+};
+
+export function createCommunityFacilityMarkerIcon(
+  facilityType: string,
+): L.DivIcon {
+  const color = COMMUNITY_FACILITY_COLORS[facilityType] ?? "#475569";
+  const symbol = COMMUNITY_FACILITY_SYMBOLS[facilityType] ?? "📍";
+
+  return L.divIcon({
+    className: "",
+    html: `<span style="display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:9999px;background:${color};color:#fff;font-size:12px;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35)">${symbol}</span>`,
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
+  });
+}
+
 export function createWaypointMarkerIcon(type: string): L.DivIcon {
   const color = WAYPOINT_COLORS[type] ?? "#475569";
   const symbol = WAYPOINT_ICONS[type] ?? "📍";

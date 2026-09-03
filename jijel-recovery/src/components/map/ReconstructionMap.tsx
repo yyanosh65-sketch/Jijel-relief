@@ -52,6 +52,8 @@ import {
 } from "@/lib/incident-share";
 import WaypointsLayer from "@/components/map/WaypointsLayer";
 import TrailClearanceLayer from "@/components/map/TrailClearanceLayer";
+import CommunityFacilitiesLayer from "@/components/map/CommunityFacilitiesLayer";
+import type { CommunityFacility } from "@/db/schema";
 import type { SerializedMountainTrail } from "@/lib/trail-clearance";
 import { cn } from "@/lib/utils";
 
@@ -77,6 +79,7 @@ type ReconstructionMapProps = {
   onNeedInspect?: (need: MapNeed) => void;
   onPointInspect?: (point: import("@/components/map/PointInspectionPanel").PointInspectionData) => void;
   onTrailInspect?: (trail: SerializedMountainTrail) => void;
+  onFacilityInspect?: (facility: CommunityFacility) => void;
   trailRefreshKey?: number;
   layoutEpoch?: unknown;
   responderBadgesByNeedId?: Map<number, import("@/lib/responders").ResponderBadgeCounts>;
@@ -92,6 +95,8 @@ const LAYER_TOGGLES: Array<{ key: MapLayerKey; labelAr: string }> = [
   { key: "facilities", labelAr: MAP_LAYER_LABELS.facilities },
   { key: "villages", labelAr: MAP_LAYER_LABELS.villages },
   { key: "waypoints", labelAr: MAP_LAYER_LABELS.waypoints },
+  { key: "mosques", labelAr: MAP_LAYER_LABELS.mosques },
+  { key: "springs", labelAr: MAP_LAYER_LABELS.springs },
 ];
 
 function getSosLabel(type: SosMapAlert["emergencyType"]): string {
@@ -350,6 +355,7 @@ export default function ReconstructionMap({
   onNeedInspect,
   onPointInspect,
   onTrailInspect,
+  onFacilityInspect,
   trailRefreshKey = 0,
   layoutEpoch,
   responderBadgesByNeedId,
@@ -362,6 +368,8 @@ export default function ReconstructionMap({
     facilities: true,
     villages: true,
     waypoints: true,
+    mosques: true,
+    springs: true,
   });
   const [internalPinDropMode, setInternalPinDropMode] = useState(false);
   const [clickPin, setClickPin] = useState<{ lat: number; lng: number } | null>(
@@ -834,6 +842,16 @@ export default function ReconstructionMap({
           refreshKey={trailRefreshKey}
           onTrailClick={
             immersiveChrome && onTrailInspect ? onTrailInspect : undefined
+          }
+        />
+
+        <CommunityFacilitiesLayer
+          showMosques={layers.mosques}
+          showSprings={layers.springs}
+          onFacilityClick={
+            immersiveChrome && onFacilityInspect
+              ? onFacilityInspect
+              : undefined
           }
         />
 

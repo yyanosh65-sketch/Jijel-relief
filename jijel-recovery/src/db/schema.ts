@@ -173,6 +173,25 @@ export const transferStatusEnum = pgEnum("transfer_status", [
   "received",
 ]);
 
+/** Granular settlement classification (mechta / dechra) */
+export const settlementTypeEnum = pgEnum("settlement_type", [
+  "daira_center",
+  "commune_center",
+  "mechta",
+  "dechra",
+  "hamlet_isolated",
+]);
+
+/** Community facilities — mosques, springs, shelters */
+export const communityFacilityTypeEnum = pgEnum("community_facility_type", [
+  "mosque_operational",
+  "mosque_damaged",
+  "zawiya_sanctuary",
+  "water_spring",
+  "oxygen_generator",
+  "cold_chain_pharma",
+]);
+
 /** Agro-pastoral burn recovery pledges */
 export const agroCategoryEnum = pgEnum("agro_category", [
   "olive_saplings",
@@ -462,6 +481,26 @@ export const agroRecoveryPledges = pgTable("agro_recovery_pledges", {
     .notNull(),
 });
 
+export const communityFacilities = pgTable("community_facilities", {
+  id: serial("id").primaryKey(),
+  name: text("name").notNull(),
+  nameAr: text("name_ar").notNull(),
+  facilityType: communityFacilityTypeEnum("facility_type").notNull(),
+  commune: varchar("commune", { length: 80 }).notNull(),
+  communeAr: varchar("commune_ar", { length: 80 }),
+  daira: varchar("daira", { length: 80 }),
+  lat: numeric("lat", { precision: 10, scale: 6 }).notNull(),
+  lng: numeric("lng", { precision: 10, scale: 6 }).notNull(),
+  hasWaterTank: boolean("has_water_tank").notNull().default(false),
+  hasPowerGenerator: boolean("has_power_generator").notNull().default(false),
+  shelterCapacityPeople: integer("shelter_capacity_people"),
+  coordinatorPhone: varchar("coordinator_phone", { length: 20 }),
+  notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const locationsRelations = relations(locations, ({ many }) => ({
   needs: many(needs),
 }));
@@ -540,3 +579,8 @@ export type TransferStatus = (typeof transferStatusEnum.enumValues)[number];
 export type AgroRecoveryPledge = typeof agroRecoveryPledges.$inferSelect;
 export type NewAgroRecoveryPledge = typeof agroRecoveryPledges.$inferInsert;
 export type AgroCategory = (typeof agroCategoryEnum.enumValues)[number];
+export type SettlementType = (typeof settlementTypeEnum.enumValues)[number];
+export type CommunityFacilityType =
+  (typeof communityFacilityTypeEnum.enumValues)[number];
+export type CommunityFacility = typeof communityFacilities.$inferSelect;
+export type NewCommunityFacility = typeof communityFacilities.$inferInsert;

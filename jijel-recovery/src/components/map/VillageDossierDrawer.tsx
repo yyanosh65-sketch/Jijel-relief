@@ -2,8 +2,12 @@
 
 import { useState } from "react";
 import {
+  AlertTriangle,
   Droplets,
+  Mountain,
   Package,
+  Phone,
+  Plus,
   Shield,
   ShieldCheck,
   Stethoscope,
@@ -12,19 +16,29 @@ import {
 
 import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import MapInspectionShell from "@/components/map/MapInspectionShell";
+import type { MapNeed } from "@/actions/needs";
+import type { VillageFieldReportTarget } from "@/lib/field-reports";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
 import {
   INFRASTRUCTURE_LABELS,
   ROAD_PASSABILITY_LABELS,
 } from "@/lib/intelligence";
+import { translateNeedTitle } from "@/lib/need-display";
 import { buildWhatsAppUrl } from "@/lib/phone";
 import { cn } from "@/lib/utils";
+import type { SerializedMountainTrail } from "@/lib/trail-clearance";
 
 type VillageDossierDrawerProps = {
   dossier: VillageDossier | null;
   facilities: EmergencyFacility[];
   open: boolean;
   onClose: () => void;
+  /** Active needs linked to this settlement's commune/village */
+  settlementNeeds?: MapNeed[];
+  /** Mountain trails leading to this settlement */
+  settlementTrails?: SerializedMountainTrail[];
+  /** Opens the field-report / "إضافة نداء" form */
+  onOpenFieldReport?: (target: VillageFieldReportTarget) => void;
 };
 
 function StatusBadge({
@@ -111,6 +125,9 @@ export default function VillageDossierDrawer({
   facilities,
   open,
   onClose,
+  settlementNeeds = [],
+  settlementTrails = [],
+  onOpenFieldReport,
 }: VillageDossierDrawerProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "emergency">(
     "overview",
@@ -130,6 +147,21 @@ export default function VillageDossierDrawer({
 
   const veterinary = facilities.filter((f) => f.type === "veterinary");
   const civilProtection = facilities.filter((f) => f.type === "civil_protection");
+
+  // Active (non-closed) needs linked to this settlement
+  const activeNeeds = settlementNeeds.filter((n) => n.status !== "closed");
+
+  // Build a VillageFieldReportTarget so the "إضافة نداء" button works
+  const fieldReportTarget: VillageFieldReportTarget = {
+    villageAr: dossier.name_ar,
+    commune: dossier.name,
+    communeAr: dossier.name_ar,
+    daira: dossier.daira,
+    dairaAr: dossier.daira_ar,
+    lat: dossier.lat,
+    lng: dossier.lng,
+  };
+
   const supplyCoverage =
     dossier.totalFamilies > 0
       ? Math.round(
@@ -167,6 +199,17 @@ export default function VillageDossierDrawer({
             tone={roadTone(dossier.roadPassability)}
           />
         </div>
+
+        {onOpenFieldReport ? (
+          <button
+            type="button"
+            onClick={() => onOpenFieldReport(fieldReportTarget)}
+            className="mt-3 flex w-full items-center justify-center gap-2 rounded-2xl border border-rose-400/40 bg-gradient-to-l from-rose-600/80 to-amber-600/80 px-3 py-2.5 text-sm font-extrabold text-white shadow-lg transition hover:brightness-110 active:scale-[0.98]"
+          >
+            <Plus className="h-4 w-4" />
+            إضافة نداء في هذه القرية
+          </button>
+        ) : null}
 
         <div className="mt-3 flex gap-2">
           <button
@@ -295,6 +338,119 @@ export default function VillageDossierDrawer({
               phone={dossier.coordinator.phone}
               whatsappUrl={coordinatorWhatsApp}
               className="mt-3"
+            />
+          </MetricTile>
+
+          {/* ── Active needs in this settlement ── */}
+          <MetricTile
+            title={`الاحتياجات المفتوحة (${activeNeeds.length})`}
+            icon={<AlertTriangle className="h-4 w-4" />}
+            accent="amber"
+          >
+            {activeNeeds.length === 0 ? (
+              <p className="text-xs text-slate-400">
+                لا توجد احتياجات مفتوحة مسجّلة في هذه القرية.
+              </p>
+            ) : (
+              <ul className="space-y-2">
+                {activeNeeds.slice(0, 6).map((need) => {
+                  const remaining = Math.max(
+                    0,
+                    need.quantityNeeded - need.quantityFulfilled,
+                  );
+                  const urgencyColor =
+                    need.urgency === "critical" || need.urgency === "high"
+                      ? "text-rose-300"
+                      : need.urgency === "medium"
+                        ? "text-amber-300"
+                        : "text-emerald-300";
+                  return (
+                    <li
+                      key={need.id}
+                      className="flex items-center justify-between gap-2 rounded-xl border border-white/5 bg-black/20 px-3 py-2"
+                    >
+                      <span
+                        className={cn(
+                          "truncate text-xs font-semibold",
+                          urgencyColor,
+                        )}
+                      >
+                        {translateNeedTitle(need.title)}
+                      </span>
+                      <span className="shrink-0 text-[11px] text-slate-400">
+                        {remaining.toLocaleString("ar-DZ")} متبقٍ
+                      </span>
+                    </li>
+                  );
+                })}
+                {activeNeeds.length > 6 ? (
+                  <li className="text-[11px] text-slate-500">
+                    + {activeNeeds.length - 6} احتياجات أخرى…
+                  </li>
+                ) : null}
+              </ul>
+            )}
+          </MetricTile>
+
+          {/* ── Mountain trails leading to this settlement ── */}
+          {settlementTrails.length > 0 ? (
+            <MetricTile
+              title="المسالك الجبلية المؤدية إليها"
+              icon={<Mountain className="h-4 w-4" />}
+              accent="sky"
+            >
+              <ul className="space-y-2">
+                {settlementTrails.map((trail) => {
+                  const clearanceTone =
+                    trail.clearanceLevel === "sedan_passable"
+                      ? "green"
+                      : trail.clearanceLevel === "completely_blocked"
+                        ? "red"
+                        : "amber";
+                  const clearanceLabel: Record<string, string> = {
+                    sedan_passable: "صالح للسيارات العادية",
+                    high_clearance_only: "4×4 فقط",
+                    strict_4x4_required: "4×4 إلزامي",
+                    completely_blocked: "مقطوع",
+                  };
+                  return (
+                    <li
+                      key={trail.id}
+                      className="flex items-center justify-between gap-2 rounded-xl border border-white/5 bg-black/20 px-3 py-2"
+                    >
+                      <span className="truncate text-xs font-semibold text-slate-200">
+                        {trail.roadCode}
+                      </span>
+                      <StatusBadge
+                        label={
+                          clearanceLabel[trail.clearanceLevel] ??
+                          trail.clearanceLevel
+                        }
+                        tone={clearanceTone}
+                      />
+                    </li>
+                  );
+                })}
+              </ul>
+            </MetricTile>
+          ) : null}
+
+          {/* ── Local contacts ── */}
+          <MetricTile
+            title="جهات الاتصال المحلية"
+            icon={<Phone className="h-4 w-4" />}
+            accent="slate"
+          >
+            <p className="mb-2 text-xs text-slate-300">
+              منسق القرية: {dossier.coordinator.name_ar}
+            </p>
+            <ContactActionButtons
+              phone={dossier.coordinator.phone}
+              whatsappUrl={buildWhatsAppUrl(
+                dossier.coordinator.phone,
+                `السلام عليكم، نحتاج تواصل بخصوص ${dossier.name_ar}.`,
+              )}
+              compact
             />
           </MetricTile>
         </div>

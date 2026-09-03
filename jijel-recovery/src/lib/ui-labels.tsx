@@ -75,6 +75,8 @@ export const MAP_LAYER_LABELS = {
   facilities: "ديار الإغاثة والبيطرة",
   villages: "البلديات والدواوير",
   waypoints: "دليل القوافل ومحطات الطريق",
+  mosques: "المساجد ومراكز الإيواء 🕌",
+  springs: "منابع المياه والطاقة 💧⚡",
 } as const;
 
 export const MAP_LEGEND_LABELS = {

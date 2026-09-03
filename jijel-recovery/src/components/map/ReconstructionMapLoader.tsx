@@ -15,6 +15,8 @@ import PointInspectionPanel, {
   type PointInspectionData,
 } from "@/components/map/PointInspectionPanel";
 import TrailDetailPanel from "@/components/map/TrailDetailPanel";
+import FacilityInspectionPanel from "@/components/map/FacilityInspectionPanel";
+import type { CommunityFacility } from "@/db/schema";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import VillageDetailDrawer from "@/components/map/VillageDetailDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
@@ -102,7 +104,10 @@ export default function ReconstructionMapLoader({
   const [isAgroOpen, setIsAgroOpen] = useState(false);
   const [inspectTrail, setInspectTrail] =
     useState<SerializedMountainTrail | null>(null);
+  const [inspectFacility, setInspectFacility] =
+    useState<CommunityFacility | null>(null);
   const [trailRefreshKey, setTrailRefreshKey] = useState(0);
+  const [allTrails, setAllTrails] = useState<SerializedMountainTrail[]>([]);
   const { badgesByNeedId } = useResponderStream();
 
   useEffect(() => {
@@ -179,6 +184,7 @@ export default function ReconstructionMapLoader({
     Boolean(inspectNeed) ||
     Boolean(inspectPoint) ||
     Boolean(inspectTrail) ||
+    Boolean(inspectFacility) ||
     isFieldReportOpen ||
     isPledgeModalOpen ||
     mapModalOpen ||
@@ -198,6 +204,20 @@ export default function ReconstructionMapLoader({
     setIsPledgeModalOpen(false);
     setSelectedNeed(null);
   }
+
+  // Load trails once so VillageDossierDrawer can show mountain-trail clearance
+  useEffect(() => {
+    void fetch("/api/trails")
+      .then((r) => r.json())
+      .then((json: { success?: boolean; data?: SerializedMountainTrail[] }) => {
+        if (json.success && Array.isArray(json.data)) {
+          setAllTrails(json.data);
+        }
+      })
+      .catch(() => {
+        // silently ignore – trails are best-effort
+      });
+  }, []);
 
   function openDossierFromNeed(need: MapNeed) {
     const dossier =
@@ -303,6 +323,7 @@ export default function ReconstructionMapLoader({
           onNeedInspect={fullViewportMap ? setInspectNeed : undefined}
           onPointInspect={fullViewportMap ? setInspectPoint : undefined}
           onTrailInspect={fullViewportMap ? setInspectTrail : undefined}
+          onFacilityInspect={fullViewportMap ? setInspectFacility : undefined}
           trailRefreshKey={trailRefreshKey}
           layoutEpoch={layoutEpoch}
           responderBadgesByNeedId={badgesByNeedId}
@@ -368,11 +389,36 @@ export default function ReconstructionMapLoader({
         }}
       />
 
+      <FacilityInspectionPanel
+        facility={inspectFacility}
+        open={Boolean(inspectFacility)}
+        onClose={() => setInspectFacility(null)}
+      />
+
       <VillageDossierDrawer
         dossier={selectedDossier}
         facilities={dossierFacilities}
         open={isDossierOpen}
         onClose={closeDossier}
+        settlementNeeds={
+          selectedDossier
+            ? needs.filter(
+                (n) =>
+                  n.status !== "closed" &&
+                  (n.location.name
+                    .toLowerCase()
+                    .includes(selectedDossier.name.toLowerCase()) ||
+                    selectedDossier.name
+                      .toLowerCase()
+                      .includes(n.location.name.toLowerCase()) ||
+                    n.location.address
+                      ?.toLowerCase()
+                      .includes(selectedDossier.name.toLowerCase())),
+              )
+            : []
+        }
+        settlementTrails={allTrails}
+        onOpenFieldReport={openFieldReportDrawer}
       />
 
       <VillageDetailDrawer

@@ -1,7 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import L from "leaflet";
+import { MapContainer, TileLayer, useMap } from "react-leaflet";
 
 import { MapClickHandler } from "@/components/map/MapClickHandler";
 import MapInvalidateSize from "@/components/map/MapInvalidateSize";
@@ -16,6 +17,21 @@ import {
 } from "@/lib/map-utils";
 
 import "leaflet/dist/leaflet.css";
+
+/**
+ * Patches the Leaflet Popup prototype so every popup that auto-pans
+ * clears the top HUD (≈ 80 px) and the side safe-area (≈ 20 px).
+ * This runs once when the map is mounted.
+ */
+function AutoPanPaddingConfig() {
+  useMap(); // must be called inside MapContainer
+  (L.Popup.prototype.options as Record<string, unknown>).autoPanPaddingTopLeft =
+    L.point(20, 80);
+  (
+    L.Popup.prototype.options as Record<string, unknown>
+  ).autoPanPaddingBottomRight = L.point(20, 20);
+  return null;
+}
 
 type LeafletMapProps = {
   children?: ReactNode;
@@ -51,6 +67,7 @@ export default function LeafletMap({
         url={MAP_TILE_LAYER.url}
         maxZoom={JIJEL_MAX_ZOOM}
       />
+      <AutoPanPaddingConfig />
       <MapZoomControl />
       <MapInvalidateSize trigger={layoutEpoch} />
       {onMapClick ? (
