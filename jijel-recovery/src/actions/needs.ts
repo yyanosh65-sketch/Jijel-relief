@@ -367,133 +367,62 @@ export async function getNeeds(
 
 export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
   try {
-    const rows = await db.execute<{
-      id: number;
-      location_id: number;
-      title: string;
-      description: string;
-      category: NeedCategory;
-      urgency: NeedUrgency;
-      status: NeedStatus;
-      quantity_needed: number;
-      quantity_fulfilled: number;
-      contact_name: string | null;
-      contact_phone: string | null;
-      contact_whatsapp: string | null;
-      media_urls: string[] | null;
-      facebook_url: string | null;
-      voice_note_data: string | null;
-      created_at: Date;
-      updated_at: Date;
-      location_id_join: number;
-      location_name: string;
-      location_daira: string;
-      location_address: string | null;
-      location_lat: string;
-      location_lng: string;
-      location_created_at: Date;
-      lat: number;
-      lng: number;
-    }>(sql`
-      SELECT
-        n.id,
-        n.location_id,
-        n.title,
-        n.description,
-        n.category,
-        n.urgency,
-        n.status,
-        n.quantity_needed,
-        n.quantity_fulfilled,
-        n.contact_name,
-        n.contact_phone,
-        n.contact_whatsapp,
-        n.media_urls,
-        n.facebook_url,
-        n.voice_note_data,
-        n.created_at,
-        n.updated_at,
-        l.id AS location_id_join,
-        l.name AS location_name,
-        l.daira AS location_daira,
-        l.address AS location_address,
-        l.lat AS location_lat,
-        l.lng AS location_lng,
-        l.created_at AS location_created_at,
-        l.lat::float8 AS lat,
-        l.lng::float8 AS lng
-      FROM ${needs} n
-      INNER JOIN ${locations} l ON n.location_id = l.id
-      WHERE n.status IN ('open', 'partial')
-      ORDER BY n.created_at DESC
-    `);
+    const rows = await db.query.needs.findMany({
+      where: (needsTable, { inArray }) =>
+        inArray(needsTable.status, ["open", "partial"]),
+      with: {
+        location: true,
+        pledges: true,
+      },
+      orderBy: (needsTable, { desc }) => [desc(needsTable.createdAt)],
+    });
 
-    const needIds = rows.rows.map((row) => row.id);
-    const pledgeRows =
-      needIds.length > 0
-        ? await db.query.pledges.findMany({
-            where: (pledgesTable, { inArray }) =>
-              inArray(pledgesTable.needId, needIds),
-          })
-        : [];
-
-    const pledgesByNeedId = new Map<number, Pledge[]>();
-
-    for (const pledge of pledgeRows) {
-      const existing = pledgesByNeedId.get(pledge.needId) ?? [];
-      existing.push(pledge);
-      pledgesByNeedId.set(pledge.needId, existing);
-    }
-
-    const data: MapNeed[] = rows.rows.map((row) => {
+    const data: MapNeed[] = rows.map((row) => {
       const verified = resolveVerifiedMapCoordinates({
-        name: row.location_name,
-        daira: row.location_daira,
-        address: row.location_address,
-        fallbackLat: Number(row.lat),
-        fallbackLng: Number(row.lng),
+        name: row.location.name,
+        daira: row.location.daira,
+        address: row.location.address,
+        fallbackLat: Number(row.location.lat),
+        fallbackLng: Number(row.location.lng),
       });
       const clamped = clampJijelLandCoordinates(verified.lat, verified.lng);
 
       return {
-      id: row.id,
-      locationId: row.location_id,
-      title: row.title,
-      description: row.description,
-      category: row.category,
-      urgency: row.urgency,
-      status: row.status,
-      quantityNeeded: row.quantity_needed,
-      quantityFulfilled: row.quantity_fulfilled,
-      contactName: row.contact_name,
-      contactPhone: row.contact_phone,
-      contactWhatsapp: row.contact_whatsapp,
-      mediaUrls: row.media_urls ?? [],
-      facebookUrl: row.facebook_url,
-      voiceNoteData: row.voice_note_data,
-      createdAt: row.created_at,
-      updatedAt: row.updated_at,
-      location: {
-        id: row.location_id_join,
-        name: row.location_name,
-        daira: row.location_daira,
-        address: row.location_address,
-        lat: row.location_lat,
-        lng: row.location_lng,
-        createdAt: row.location_created_at,
-      },
-      pledges: pledgesByNeedId.get(row.id) ?? [],
-      lat: clamped.lat,
-      lng: clamped.lng,
-    };
+        id: row.id,
+        locationId: row.locationId,
+        title: row.title,
+        description: row.description,
+        category: row.category,
+        urgency: row.urgency,
+        status: row.status,
+        quantityNeeded: row.quantityNeeded,
+        quantityFulfilled: row.quantityFulfilled,
+        contactName: row.contactName,
+        contactPhone: row.contactPhone,
+        contactWhatsapp: row.contactWhatsapp,
+        mediaUrls: row.mediaUrls ?? [],
+        facebookUrl: row.facebookUrl,
+        voiceNoteData: row.voiceNoteData,
+        createdAt: row.createdAt,
+        updatedAt: row.updatedAt,
+        location: row.location,
+        pledges: row.pledges,
+        lat: clamped.lat,
+        lng: clamped.lng,
+      };
     });
 
     return { success: true, data };
   } catch (error) {
+    const message =
+      error instanceof Error ? error.message : "Failed to fetch map needs.";
     console.error("getMapNeeds error:", error);
     return {
       success: false,
-      error: "Failed to fetch map needs.",
+      error:
+        process.env.NODE_ENV === "production"
+          ? "Failed to fetch map needs."
+          : `Failed to fetch map needs: ${message}`,
     };
   }
 }
@@ -595,7 +524,7 @@ export async function getNearbyNeeds(
       FROM ${needs} n
       INNER JOIN ${locations} l ON n.location_id = l.id
       WHERE ${distanceKmExpr} <= ${validRadiusKm}
-      ORDER BY distance_km ASC, n.created_at DESC
+      ORDER BY distance_km ASC, n.created_at ${sql.raw("DESC")}
     `);
 
     const needIds = rows.rows.map((row) => row.id);

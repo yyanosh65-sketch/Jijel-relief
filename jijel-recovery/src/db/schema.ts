@@ -8,6 +8,7 @@ import {
   serial,
   text,
   timestamp,
+  varchar,
 } from "drizzle-orm/pg-core";
 
 export const needCategoryEnum = pgEnum("need_category", [
@@ -139,6 +140,22 @@ export const charityInventoryStatusEnum = pgEnum("charity_inventory_status", [
   "pending",
   "approved",
   "rejected",
+]);
+
+export const responderRoleEnum = pgEnum("responder_role", [
+  "doctor",
+  "paramedic",
+  "psychologist",
+  "food_distribution",
+  "clearing_debris",
+  "logistics_driver",
+  "general_volunteer",
+]);
+
+export const responderStatusEnum = pgEnum("responder_status", [
+  "en_route",
+  "on_site",
+  "completed",
 ]);
 
 export const locations = pgTable("locations", {
@@ -360,6 +377,24 @@ export const charityInventories = pgTable("charity_inventories", {
     .notNull(),
 });
 
+export const activeResponders = pgTable("active_responders", {
+  id: serial("id").primaryKey(),
+  needId: integer("need_id").references(() => needs.id, {
+    onDelete: "set null",
+  }),
+  settlementId: integer("settlement_id"),
+  fullName: varchar("full_name", { length: 120 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  role: responderRoleEnum("role").notNull(),
+  organizationName: varchar("organization_name", { length: 150 }),
+  status: responderStatusEnum("status").notNull().default("on_site"),
+  etaMinutes: integer("eta_minutes"),
+  suppliesBrought: text("supplies_brought"),
+  checkedInAt: timestamp("checked_in_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 export const locationsRelations = relations(locations, ({ many }) => ({
   needs: many(needs),
 }));
@@ -370,6 +405,7 @@ export const needsRelations = relations(needs, ({ one, many }) => ({
     references: [locations.id],
   }),
   pledges: many(pledges),
+  activeResponders: many(activeResponders),
 }));
 
 export const pledgesRelations = relations(pledges, ({ one }) => ({
@@ -379,9 +415,22 @@ export const pledgesRelations = relations(pledges, ({ one }) => ({
   }),
 }));
 
+export const activeRespondersRelations = relations(
+  activeResponders,
+  ({ one }) => ({
+    need: one(needs, {
+      fields: [activeResponders.needId],
+      references: [needs.id],
+    }),
+  }),
+);
+
 export type Location = typeof locations.$inferSelect;
 export type Need = typeof needs.$inferSelect;
 export type Pledge = typeof pledges.$inferSelect;
+export type ActiveResponder = typeof activeResponders.$inferSelect;
+export type ResponderRole = (typeof responderRoleEnum.enumValues)[number];
+export type ResponderStatus = (typeof responderStatusEnum.enumValues)[number];
 export type NeedCategory = (typeof needCategoryEnum.enumValues)[number];
 export type NeedUrgency = (typeof needUrgencyEnum.enumValues)[number];
 export type NeedStatus = (typeof needStatusEnum.enumValues)[number];

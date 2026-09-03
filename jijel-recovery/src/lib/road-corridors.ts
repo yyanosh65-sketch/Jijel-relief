@@ -34,6 +34,14 @@ export const JIJEL_ENTRY_CORRIDORS: RoadCorridor[] = [
     status: "difficult_4x4",
     noteAr: "صعبة للمركبات الثقيلة — يُنصح بمرافق 4x4",
   },
+  {
+    id: "cw135-texenna",
+    route: "CW135",
+    labelAr: "محور تكسنة الجبلي",
+    axisAr: "المدخل الجنوبي / تكسنة",
+    status: "difficult_4x4",
+    noteAr: "مسلك جبلي ضيق — شاحنات ثقيلة غير مستحسنة، فضّل 4x4 خفيفة",
+  },
 ];
 
 export const ROAD_STATUS_LABELS: Record<RoadCorridorStatus, string> = {

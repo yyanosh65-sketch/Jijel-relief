@@ -45,7 +45,7 @@ export default function MapInspectionShell({
         className={cn(
           "fixed inset-x-0 bottom-0 z-50 flex max-h-[75dvh] flex-col rounded-t-3xl border-t border-slate-700 bg-slate-900/95 shadow-2xl backdrop-blur-xl",
           "pb-[max(1.5rem,env(safe-area-inset-bottom))]",
-          "md:inset-x-auto md:bottom-8 md:right-8 md:top-auto md:max-h-[80vh] md:w-96 md:rounded-2xl md:border md:border-slate-700 md:bg-slate-900/90 md:pb-0 md:shadow-2xl",
+          "md:inset-x-auto md:bottom-6 md:right-6 md:top-auto md:max-h-[calc(100vh-6rem)] md:w-96 md:rounded-2xl md:border md:border-slate-700 md:bg-slate-900/90 md:pb-0 md:shadow-2xl",
           className,
         )}
       >
@@ -63,7 +63,7 @@ export default function MapInspectionShell({
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5">
+        <div className="inspection-shell-scroll min-h-0 flex-1 overflow-y-auto overscroll-contain px-5 pb-5">
           {children}
         </div>
       </aside>

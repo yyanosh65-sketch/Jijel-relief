@@ -17,6 +17,7 @@ import {
   isAgentTransportError,
   isDeepSeekConfigured,
 } from "@/lib/agent/deepseek";
+import { buildFieldCoordinationBrief } from "@/lib/agent/field-coordination";
 import {
   findHighestDeficitZone,
   getReliefStatsSummary,
@@ -310,8 +311,70 @@ function buildDispatch(savedAlert: SavedAlertPayload, prompt: string) {
 
 export async function POST(req: Request) {
   try {
+    const body = await req.json();
+
+    // Field coordination / Smart Dispatch sheet prompts
+    if (
+      body &&
+      typeof body === "object" &&
+      typeof body.query === "string" &&
+      (body.needId != null || body.settlementId != null || body.query)
+    ) {
+      const needId =
+        body.needId != null && Number.isFinite(Number(body.needId))
+          ? Number(body.needId)
+          : null;
+      const settlementId =
+        body.settlementId != null && Number.isFinite(Number(body.settlementId))
+          ? Number(body.settlementId)
+          : null;
+      const query = String(body.query || "").trim();
+
+      if (query && (needId || settlementId || /طريق|شكون|واش يخص/i.test(query))) {
+        const text = await buildFieldCoordinationBrief({
+          needId,
+          settlementId,
+          query,
+        });
+
+        // Optionally enrich with DeepSeek when configured
+        if (isDeepSeekConfigured() && (needId || settlementId)) {
+          try {
+            const enriched = await generateText({
+              model: deepseek(DEEPSEEK_CHAT_MODEL),
+              abortSignal: createAgentAbortSignal(12_000),
+              system: `أنت وكيل تنسيق ميداني لإغاثة جيجل. جاوب بالدارجة الجزائرية فقط.
+
+قواعد إلزامية:
+1) أسماء الأماكن بالعربية فقط (مثال: بوراعي بلهادف، العنصر، تكسنة) — ممنوع كتابة الأسماء اللاتينية مثل Bouraoui Belhadef أو El Ancer.
+2) الإجابة قصيرة وقابلة للمسح: قسمها إلى 2–3 أقسام كحد أقصى بالشكل التالي بالضبط:
+🚨 العجز المتبقي:
+• نقطة واحدة أو اثنتين
+🚛 المسالك المفتوحة:
+• نقطة واحدة أو اثنتين
+⚠️ تنبيه هام:
+• نقطة واحدة فقط إن لزم
+3) لا تكتب فقرات طويلة ولا جدران نص. كل نقطة سطر قصير (أقل من ~20 كلمة).
+4) ركّز على الفراغات، منع تكرار الأدوار، ومسالك RN43 / RN77 / CW135.`,
+              prompt: `السؤال: ${query}\n\nمعطيات النظام (بالعربية):\n${text}`,
+            });
+            if (enriched.text?.trim()) {
+              return Response.json({ text: enriched.text.trim(), mode: "field" });
+            }
+          } catch (error) {
+            console.error("Field agent DeepSeek fallback to brief:", error);
+          }
+        }
+
+        return Response.json({ text, mode: "field", fallback: true });
+      }
+    }
+
     if (!isDeepSeekConfigured()) {
-      const { userPrompt, postText } = await req.json();
+      const { userPrompt, postText } = body as {
+        userPrompt?: string;
+        postText?: string;
+      };
       const prompt = String(postText || userPrompt || "").trim();
       if (!prompt) {
         return Response.json({ error: "النص فارغ." }, { status: 400 });
@@ -329,7 +392,10 @@ export async function POST(req: Request) {
       });
     }
 
-    const { userPrompt, postText } = await req.json();
+    const { userPrompt, postText } = body as {
+      userPrompt?: string;
+      postText?: string;
+    };
     const prompt = (postText || userPrompt || "").trim();
 
     if (!prompt) {

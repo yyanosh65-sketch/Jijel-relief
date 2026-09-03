@@ -3,33 +3,55 @@ import {
   subscribeEmergencyNotifications,
   type EmergencyNotificationPayload,
 } from "@/lib/emergency-notifications";
+import {
+  getRecentResponderUpdates,
+  subscribeResponderUpdates,
+  type ResponderUpdatePayload,
+} from "@/lib/responder-events";
 
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
-function formatSse(event: EmergencyNotificationPayload): string {
+function formatEmergencySse(event: EmergencyNotificationPayload): string {
   return `event: emergency\ndata: ${JSON.stringify(event)}\n\n`;
+}
+
+function formatResponderSse(event: ResponderUpdatePayload): string {
+  return `event: responder_update\ndata: ${JSON.stringify(event)}\n\n`;
 }
 
 export async function GET(): Promise<Response> {
   const encoder = new TextEncoder();
-  let cleanup: (() => void) | null = null;
+  let cleanupEmergency: (() => void) | null = null;
+  let cleanupResponders: (() => void) | null = null;
   let heartbeat: ReturnType<typeof setInterval> | null = null;
 
   const stream = new ReadableStream({
     start(controller) {
       const send = (chunk: string) => {
-        controller.enqueue(encoder.encode(chunk));
+        try {
+          controller.enqueue(encoder.encode(chunk));
+        } catch {
+          // Client disconnected mid-write.
+        }
       };
 
       send(`event: connected\ndata: ${JSON.stringify({ ok: true })}\n\n`);
 
       for (const event of getRecentEmergencyNotifications()) {
-        send(formatSse(event));
+        send(formatEmergencySse(event));
       }
 
-      cleanup = subscribeEmergencyNotifications((event) => {
-        send(formatSse(event));
+      for (const event of getRecentResponderUpdates()) {
+        send(formatResponderSse(event));
+      }
+
+      cleanupEmergency = subscribeEmergencyNotifications((event) => {
+        send(formatEmergencySse(event));
+      });
+
+      cleanupResponders = subscribeResponderUpdates((event) => {
+        send(formatResponderSse(event));
       });
 
       heartbeat = setInterval(() => {
@@ -37,7 +59,8 @@ export async function GET(): Promise<Response> {
       }, 25_000);
     },
     cancel() {
-      cleanup?.();
+      cleanupEmergency?.();
+      cleanupResponders?.();
       if (heartbeat) clearInterval(heartbeat);
     },
   });

@@ -4,7 +4,9 @@ import { Package, Phone } from "lucide-react";
 
 import type { MapNeed } from "@/actions/needs";
 import ContactActionButtons from "@/components/ui/ContactActionButtons";
+import FieldCoordinationPanel from "@/components/map/FieldCoordinationPanel";
 import MapInspectionShell from "@/components/map/MapInspectionShell";
+import SmartDispatchAgent from "@/components/map/SmartDispatchAgent";
 import { findVillageByName } from "@/lib/locations";
 import {
   resolveLocationMapDetails,
@@ -21,6 +23,7 @@ type NeedInspectionDrawerProps = {
   onClose: () => void;
   onPledge: (need: MapNeed) => void;
   onOpenSettlement?: (need: MapNeed) => void;
+  onResponderCreated?: () => void;
 };
 
 export default function NeedInspectionDrawer({
@@ -29,6 +32,7 @@ export default function NeedInspectionDrawer({
   onClose,
   onPledge,
   onOpenSettlement,
+  onResponderCreated,
 }: NeedInspectionDrawerProps) {
   if (!open || !need) {
     return null;
@@ -188,6 +192,15 @@ export default function NeedInspectionDrawer({
             </button>
           ) : null}
         </div>
+
+        <FieldCoordinationPanel
+          needId={need.id}
+          settlementId={need.locationId}
+          locationLabel={villageRecord?.name_ar ?? need.location.name}
+          onResponderCreated={() => onResponderCreated?.()}
+        />
+
+        <SmartDispatchAgent needId={need.id} settlementId={need.locationId} />
       </div>
     </MapInspectionShell>
   );

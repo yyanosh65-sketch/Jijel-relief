@@ -1,9 +1,6 @@
 "use server";
 
-import { sql } from "drizzle-orm";
-
 import { db } from "@/db";
-import { urgentAlerts } from "@/db/schema";
 import {
   buildVillagePins,
   getDossierById,
@@ -75,51 +72,24 @@ export async function submitSosAlert(
 
 export async function getActiveSosAlerts(): Promise<ActionResult<SosMapAlert[]>> {
   try {
-    const rows = await db.execute<{
-      id: number;
-      emergency_type: SosMapAlert["emergencyType"];
-      description: string;
-      reporter_name: string;
-      reporter_phone: string | null;
-      daira: string;
-      commune: string;
-      village: string | null;
-      facebook_url: string | null;
-      created_at: Date;
-      lat: number;
-      lng: number;
-    }>(sql`
-      SELECT
-        id,
-        emergency_type,
-        description,
-        reporter_name,
-        reporter_phone,
-        daira,
-        commune,
-        village,
-        facebook_url,
-        created_at,
-        lat::float8 AS lat,
-        lng::float8 AS lng
-      FROM ${urgentAlerts}
-      WHERE status = 'active'
-      ORDER BY created_at DESC
-    `);
+    const rows = await db.query.urgentAlerts.findMany({
+      where: (table, { eq }) => eq(table.status, "active"),
+      orderBy: (table, { desc }) => [desc(table.createdAt)],
+    });
 
-    const data: SosMapAlert[] = rows.rows.map((row) => ({
+    const data: SosMapAlert[] = rows.map((row) => ({
       id: row.id,
-      emergencyType: row.emergency_type,
+      emergencyType: row.emergencyType,
       description: row.description,
-      reporterName: row.reporter_name,
-      reporterPhone: row.reporter_phone,
+      reporterName: row.reporterName,
+      reporterPhone: row.reporterPhone,
       daira: row.daira,
       commune: row.commune,
       village: row.village,
       lat: Number(row.lat),
       lng: Number(row.lng),
-      facebookUrl: row.facebook_url,
-      createdAt: row.created_at,
+      facebookUrl: row.facebookUrl,
+      createdAt: row.createdAt,
     }));
 
     return { success: true, data };

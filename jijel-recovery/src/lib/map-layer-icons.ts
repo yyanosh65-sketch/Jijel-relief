@@ -2,6 +2,10 @@ import L from "leaflet";
 
 import type { NeedCategory, NeedUrgency } from "@/db/schema";
 import type { RoadPassability } from "@/lib/intelligence";
+import {
+  formatResponderBadgeHtml,
+  type ResponderBadgeCounts,
+} from "@/lib/responders";
 
 export type NeedMarkerVariant = "sos" | "logistics" | "hub" | "default";
 
@@ -11,10 +15,40 @@ const ROAD_COLORS: Record<RoadPassability, string> = {
   closed: "#dc2626",
 };
 
+function pinCoreHtml(color: string, size: number, radius = "9999px"): string {
+  return `<span class="need-marker-core" style="display:block;width:${size}px;height:${size}px;border-radius:${radius};background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,0.35)"></span>`;
+}
+
+function wrapNeedMarkerHtml(options: {
+  coreHtml: string;
+  urgency?: NeedUrgency | string;
+  badges?: ResponderBadgeCounts | null;
+  size: number;
+}): string {
+  const pulse =
+    options.urgency === "critical" || options.urgency === "high"
+      ? `<span class="radar-pulse" aria-hidden="true"></span><span class="radar-pulse radar-pulse-delay" aria-hidden="true"></span>`
+      : "";
+
+  const badgeText = options.badges
+    ? formatResponderBadgeHtml(options.badges)
+    : "";
+  const badge =
+    badgeText.length > 0
+      ? `<span class="need-responder-badge">${badgeText}</span>`
+      : "";
+
+  return `<div class="need-marker-anchor" style="width:${options.size}px;height:${options.size}px">${pulse}${badge}${options.coreHtml}</div>`;
+}
+
 export function createSosMarkerIcon(): L.DivIcon {
   return L.divIcon({
-    className: "",
-    html: `<span class="sos-marker-pulse" style="display:block;width:24px;height:24px;border-radius:9999px;background:#e11d48;border:3px solid #fff;box-shadow:0 0 0 0 rgba(225,29,72,0.75)"></span>`,
+    className: "need-marker-icon",
+    html: wrapNeedMarkerHtml({
+      coreHtml: `<span class="sos-marker-pulse need-marker-core" style="display:block;width:24px;height:24px;border-radius:9999px;background:#e11d48;border:3px solid #fff"></span>`,
+      urgency: "critical",
+      size: 24,
+    }),
     iconSize: [24, 24],
     iconAnchor: [12, 12],
     popupAnchor: [0, -12],
@@ -54,15 +88,40 @@ export function resolveNeedMarkerVariant(input: {
   return "default";
 }
 
-export function createNeedMarkerIcon(variant: NeedMarkerVariant): L.DivIcon {
+export function createNeedMarkerIcon(
+  variant: NeedMarkerVariant,
+  options?: {
+    urgency?: NeedUrgency | string;
+    badges?: ResponderBadgeCounts | null;
+  },
+): L.DivIcon {
+  const urgency = options?.urgency;
+  const badges = options?.badges ?? null;
+
   if (variant === "sos") {
-    return createSosMarkerIcon();
+    return L.divIcon({
+      className: "need-marker-icon",
+      html: wrapNeedMarkerHtml({
+        coreHtml: pinCoreHtml("#e11d48", 24),
+        urgency: urgency ?? "critical",
+        badges,
+        size: 24,
+      }),
+      iconSize: [24, 24],
+      iconAnchor: [12, 12],
+      popupAnchor: [0, -12],
+    });
   }
 
   if (variant === "logistics") {
     return L.divIcon({
-      className: "",
-      html: `<span style="display:block;width:20px;height:20px;border-radius:9999px;background:#f59e0b;border:3px solid #fff;box-shadow:0 2px 8px rgba(245,158,11,0.55)"></span>`,
+      className: "need-marker-icon",
+      html: wrapNeedMarkerHtml({
+        coreHtml: pinCoreHtml("#f59e0b", 20),
+        urgency,
+        badges,
+        size: 20,
+      }),
       iconSize: [20, 20],
       iconAnchor: [10, 10],
       popupAnchor: [0, -10],
@@ -71,8 +130,13 @@ export function createNeedMarkerIcon(variant: NeedMarkerVariant): L.DivIcon {
 
   if (variant === "hub") {
     return L.divIcon({
-      className: "",
-      html: `<span style="display:block;width:22px;height:22px;border-radius:6px;background:#10b981;border:3px solid #fff;box-shadow:0 2px 8px rgba(16,185,129,0.45)"></span>`,
+      className: "need-marker-icon",
+      html: wrapNeedMarkerHtml({
+        coreHtml: pinCoreHtml("#10b981", 22, "6px"),
+        urgency,
+        badges,
+        size: 22,
+      }),
       iconSize: [22, 22],
       iconAnchor: [11, 11],
       popupAnchor: [0, -11],
@@ -80,8 +144,13 @@ export function createNeedMarkerIcon(variant: NeedMarkerVariant): L.DivIcon {
   }
 
   return L.divIcon({
-    className: "",
-    html: `<span style="display:block;width:18px;height:18px;border-radius:9999px;background:#64748b;border:2px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,0.35)"></span>`,
+    className: "need-marker-icon",
+    html: wrapNeedMarkerHtml({
+      coreHtml: pinCoreHtml("#64748b", 18),
+      urgency,
+      badges,
+      size: 18,
+    }),
     iconSize: [18, 18],
     iconAnchor: [9, 9],
     popupAnchor: [0, -9],
@@ -111,7 +180,9 @@ export function createRoadMarkerIcon(passability: RoadPassability): L.DivIcon {
   });
 }
 
-export function createFacilityMarkerIcon(type: "veterinary" | "civil_protection"): L.DivIcon {
+export function createFacilityMarkerIcon(
+  type: "veterinary" | "civil_protection",
+): L.DivIcon {
   const color = type === "veterinary" ? "#7c3aed" : "#c2410c";
   const symbol = type === "veterinary" ? "✚" : "🛡";
 

@@ -17,6 +17,7 @@ import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import VillageDetailDrawer from "@/components/map/VillageDetailDrawer";
 import PledgeModal from "@/components/pledges/PledgeModal";
 import { useNeedSearchFilters } from "@/hooks/useNeedSearchFilters";
+import { useResponderStream } from "@/hooks/useResponderStream";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
 import {
   getDossierById,
@@ -76,6 +77,7 @@ export default function ReconstructionMapLoader({
   const [communityReportSignal, setCommunityReportSignal] = useState(0);
   const [pinDropActive, setPinDropActive] = useState(false);
   const [layersPanelOpen, setLayersPanelOpen] = useState(false);
+  const { badgesByNeedId } = useResponderStream();
 
   const sheetOpen =
     isDossierOpen ||
@@ -174,6 +176,7 @@ export default function ReconstructionMapLoader({
           onNeedInspect={fullViewportMap ? setInspectNeed : undefined}
           onPointInspect={fullViewportMap ? setInspectPoint : undefined}
           layoutEpoch={layoutEpoch}
+          responderBadgesByNeedId={badgesByNeedId}
         />
       </div>
 

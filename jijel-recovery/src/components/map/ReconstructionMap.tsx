@@ -75,6 +75,7 @@ type ReconstructionMapProps = {
   onNeedInspect?: (need: MapNeed) => void;
   onPointInspect?: (point: import("@/components/map/PointInspectionPanel").PointInspectionData) => void;
   layoutEpoch?: unknown;
+  responderBadgesByNeedId?: Map<number, import("@/lib/responders").ResponderBadgeCounts>;
 };
 
 type MapLayerKey = keyof typeof MAP_LAYER_LABELS;
@@ -344,6 +345,7 @@ export default function ReconstructionMap({
   onNeedInspect,
   onPointInspect,
   layoutEpoch,
+  responderBadgesByNeedId,
 }: ReconstructionMapProps) {
   const [layers, setLayers] = useState<Record<MapLayerKey, boolean>>({
     needs: true,
@@ -835,8 +837,14 @@ export default function ReconstructionMap({
               });
               const needIcon =
                 color === "green"
-                  ? createNeedMarkerIcon("hub")
-                  : createNeedMarkerIcon(markerVariant);
+                  ? createNeedMarkerIcon("hub", {
+                      urgency: need.urgency,
+                      badges: responderBadgesByNeedId?.get(need.id) ?? null,
+                    })
+                  : createNeedMarkerIcon(markerVariant, {
+                      urgency: need.urgency,
+                      badges: responderBadgesByNeedId?.get(need.id) ?? null,
+                    });
 
               return (
                 <Marker
