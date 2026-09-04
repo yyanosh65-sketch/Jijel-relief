@@ -9,7 +9,6 @@ import AdvancedNeedSearch from "@/components/search/AdvancedNeedSearch";
 import HeaderBrand from "@/components/layout/HeaderBrand";
 import CommuneFilterBar from "@/components/map/CommuneFilterBar";
 import MacroSummaryRibbon from "@/components/map/MacroSummaryRibbon";
-import MapFilterRibbon from "@/components/map/MapFilterRibbon";
 import WilayaSwitcher from "@/components/map/WilayaSwitcher";
 import PushSubscriptionBtn from "@/components/notifications/PushSubscriptionBtn";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
@@ -18,8 +17,6 @@ import { cn } from "@/lib/utils";
 type MapTopHudProps = {
   showSearch?: boolean;
   needs?: MapNeed[];
-  onOpenAgroOlive?: () => void;
-  onOpenAgroLivestock?: () => void;
   onOpenVolunteerRegister?: () => void;
   onOpenEmergencyDial?: () => void;
 };
@@ -31,8 +28,6 @@ type MapTopHudProps = {
 export default function MapTopHud({
   showSearch = true,
   needs = [],
-  onOpenAgroOlive,
-  onOpenAgroLivestock,
   onOpenVolunteerRegister,
   onOpenEmergencyDial,
 }: MapTopHudProps) {
@@ -164,30 +159,11 @@ export default function MapTopHud({
         </div>
       ) : null}
 
-      {/* Unified commune + urgency/tag swipe rail */}
-      <div className="pointer-events-auto w-full max-w-2xl shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-950/80 shadow-lg backdrop-blur-xl">
-        <div
-          className={cn(
-            "flex max-h-9 flex-nowrap items-center gap-1 overflow-x-auto px-1.5 py-0.5",
-            "scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-          )}
-        >
-          <Suspense fallback={null}>
-            <CommuneFilterBar needs={needs} stripOnly />
-          </Suspense>
-          <span
-            aria-hidden
-            className="mx-0.5 h-3.5 w-px shrink-0 self-center bg-white/15"
-          />
-          <Suspense fallback={null}>
-            <MapFilterRibbon
-              embedded
-              stripOnly
-              onOpenAgroOlive={onOpenAgroOlive}
-              onOpenAgroLivestock={onOpenAgroLivestock}
-            />
-          </Suspense>
-        </div>
+      {/* Single commune filter rail (one instance only) */}
+      <div className="pointer-events-auto w-full max-w-2xl shrink-0 overflow-hidden rounded-xl border border-white/10 bg-slate-950/80 px-1.5 py-0.5 shadow-lg backdrop-blur-xl">
+        <Suspense fallback={null}>
+          <CommuneFilterBar needs={needs} />
+        </Suspense>
       </div>
     </div>
   );

@@ -1,50 +1,58 @@
 "use client";
 
-import { Bot } from "lucide-react";
+import { createPortal } from "react-dom";
+import { useEffect, useState } from "react";
 
 import { cn } from "@/lib/utils";
 
 type ReliefAssistantFabProps = {
-  onOpen: () => void;
-  /** Hide while the drawer is open or another sheet covers the map */
+  /** Toggle smart-dispatch drawer open/closed */
+  onToggle: () => void;
+  /** Hide while another sheet covers the map (keep visible when agent drawer is open so it can toggle closed) */
   hidden?: boolean;
   className?: string;
 };
 
+function stopMapEventBubble(
+  event: React.MouseEvent | React.PointerEvent,
+) {
+  event.stopPropagation();
+}
+
 /**
- * Single floating glass trigger for Smart Dispatch / غرفة التوجيه.
- * Anchored above the bottom dock so the map stays clear when collapsed.
+ * Single 48px glass FAB for Smart Dispatch.
+ * Portaled to body so Leaflet / overflow parents never trap clicks or stacking.
  */
 export default function ReliefAssistantFab({
-  onOpen,
+  onToggle,
   hidden = false,
   className,
 }: ReliefAssistantFabProps) {
-  if (hidden) return null;
+  const [mounted, setMounted] = useState(false);
 
-  return (
-    <div
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (hidden || !mounted) return null;
+
+  return createPortal(
+    <button
+      type="button"
+      data-ighata-assistant-fab
+      onClick={(event) => {
+        stopMapEventBubble(event);
+        onToggle();
+      }}
+      onPointerDown={stopMapEventBubble}
+      aria-label="مساعد الإغاثة"
       className={cn(
-        "pointer-events-none fixed bottom-24 right-4 z-[36] pb-[env(safe-area-inset-bottom)]",
+        "fixed bottom-24 right-4 z-[2000] flex h-12 w-12 items-center justify-center rounded-full border border-slate-700 bg-slate-900/90 text-emerald-400 shadow-xl backdrop-blur transition hover:scale-105 active:scale-95",
         className,
       )}
     >
-      <button
-        type="button"
-        onClick={onOpen}
-        aria-label="مساعد الإغاثة"
-        title="مساعد الإغاثة — غرفة التوجيه الذكي"
-        className="pointer-events-auto relative flex h-14 w-14 items-center justify-center rounded-full border border-emerald-400/40 bg-slate-950/80 text-emerald-100 shadow-[0_0_28px_rgba(16,185,129,0.35)] backdrop-blur-xl transition hover:border-emerald-300/60 hover:bg-emerald-950/70 hover:text-white active:scale-95"
-      >
-        <span className="sr-only">مساعد الإغاثة</span>
-        <Bot className="h-6 w-6" aria-hidden />
-        <span
-          aria-hidden
-          className="absolute -bottom-5 whitespace-nowrap rounded-full bg-slate-950/80 px-2 py-0.5 text-[9px] font-bold text-emerald-200/90 backdrop-blur"
-        >
-          🤖 مساعد الإغاثة
-        </span>
-      </button>
-    </div>
+      🤖
+    </button>,
+    document.body,
   );
 }

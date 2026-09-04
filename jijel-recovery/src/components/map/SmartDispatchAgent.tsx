@@ -133,6 +133,8 @@ type SmartDispatchAgentProps = {
   settlementId?: number | null;
   /** `wilaya` = global Jijel coordinator (no point required) */
   scope?: "field" | "wilaya";
+  /** Hide chrome when parent drawer already shows the title */
+  hideHeader?: boolean;
   className?: string;
 };
 
@@ -140,6 +142,7 @@ export default function SmartDispatchAgent({
   needId,
   settlementId,
   scope = "field",
+  hideHeader = false,
   className,
 }: SmartDispatchAgentProps) {
   const [answer, setAnswer] = useState<string | null>(null);
@@ -161,6 +164,9 @@ export default function SmartDispatchAgent({
     setActiveChip(query);
     setAnswer(null);
 
+    const offlineFallback =
+      "تعذر الاتصال بمركز التوجيه الآلي حالياً. يرجى الاتصال مباشرة بالحماية المدنية (14) أو مراجعة قائمة الاحتياجات الميدانية.";
+
     try {
       const response = await fetch("/api/agent", {
         method: "POST",
@@ -178,14 +184,22 @@ export default function SmartDispatchAgent({
         error?: string;
       };
 
-      if (!response.ok || !json.text) {
-        setError(json.error ?? "الوكيل ما قدرش يجاوب دوكا.");
+      if (!response.ok && !json.text) {
+        console.error("Agent query failed:", json.error ?? response.statusText);
+        setError(json.error ?? offlineFallback);
+        return;
+      }
+
+      if (!json.text) {
+        console.error("Agent query failed: empty response body");
+        setError(json.error ?? offlineFallback);
         return;
       }
 
       setAnswer(json.text);
-    } catch {
-      setError("فشل الاتصال بالوكيل.");
+    } catch (err) {
+      console.error("Agent query failed:", err);
+      setError(offlineFallback);
     } finally {
       setLoading(false);
     }
@@ -195,24 +209,27 @@ export default function SmartDispatchAgent({
     <section
       className={cn(
         "mt-4 space-y-3 rounded-2xl border border-violet-500/25 bg-violet-950/30 p-4 shadow-lg shadow-black/20 backdrop-blur-md",
+        hideHeader && "mt-0 border-0 bg-transparent p-0 shadow-none",
         className,
       )}
     >
-      <div className="flex items-center gap-2">
-        <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500/20 text-violet-200">
-          <Bot className="h-4 w-4" />
-        </span>
-        <div>
-          <h3 className="text-sm font-bold text-white">
-            {isWilaya ? "مساعد إغاثة الولاية" : "وكيل التوجيه الميداني"}
-          </h3>
-          <p className="text-[11px] text-violet-200/80">
-            {isWilaya
-              ? "تنسيق على مستوى ولاية جيجل — عجز، محاور، وأولويات"
-              : "تحليل فوري للفراغات والطرق والتنسيق"}
-          </p>
+      {hideHeader ? null : (
+        <div className="flex items-center gap-2">
+          <span className="flex h-8 w-8 items-center justify-center rounded-xl bg-violet-500/20 text-violet-200">
+            <Bot className="h-4 w-4" />
+          </span>
+          <div>
+            <h3 className="text-sm font-bold text-white">
+              {isWilaya ? "مساعد إغاثة الولاية" : "وكيل التوجيه الميداني"}
+            </h3>
+            <p className="text-[11px] text-violet-200/80">
+              {isWilaya
+                ? "تنسيق على مستوى ولاية جيجل — عجز، محاور، وأولويات"
+                : "تحليل فوري للفراغات والطرق والتنسيق"}
+            </p>
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="flex flex-wrap gap-1.5">
         {prompts.map((prompt) => (
@@ -220,7 +237,11 @@ export default function SmartDispatchAgent({
             key={prompt}
             type="button"
             disabled={loading}
-            onClick={() => void ask(prompt)}
+            onClick={(event) => {
+              event.stopPropagation();
+              void ask(prompt);
+            }}
+            onPointerDown={(event) => event.stopPropagation()}
             className={cn(
               "rounded-full border px-2.5 py-1.5 text-[11px] font-semibold transition",
               activeChip === prompt
@@ -243,7 +264,12 @@ export default function SmartDispatchAgent({
       ) : null}
 
       {error ? (
-        <p className="text-xs font-semibold text-rose-300">{error}</p>
+        <div
+          role="alert"
+          className="rounded-2xl border border-rose-500/40 bg-rose-950/50 px-3 py-2.5 text-xs font-semibold leading-relaxed text-rose-100"
+        >
+          {error}
+        </div>
       ) : null}
 
       {sections.length > 0 ? (

@@ -62,6 +62,7 @@ export const WILAYA_DEFINITIONS: Record<WilayaCode, WilayaDefinition> = {
       { name: "Ziama Mansouriah", nameAr: "زيامة منصورية", lat: 36.67, lng: 5.48 },
       { name: "Emir Abdelkader", nameAr: "الأمير عبد القادر", lat: 36.76, lng: 6.03 },
       { name: "Selma Benziada", nameAr: "سلمى بن زيادة", lat: 36.68, lng: 5.62 },
+      { name: "Ghezala", nameAr: "غزالة", lat: 36.62, lng: 5.72 },
     ],
   },
   "06_bejaia": {
@@ -193,10 +194,8 @@ export const WILAYA_FILTER_RAIL_AR: Record<WilayaCode, readonly string[]> = {
     "بوراوي بلهادف",
     "أولاد عسكر",
     "أولاد رابح",
-    "السطارة",
-    "سيدي معروف",
-    "الشقفة",
-    "زيامة منصورية",
+    "سلمى بن زيادة",
+    "غزالة",
   ],
   "06_bejaia": [
     "خراطة",
@@ -206,6 +205,7 @@ export const WILAYA_FILTER_RAIL_AR: Record<WilayaCode, readonly string[]> = {
     "أقبو",
     "صدوق",
     "برباشة",
+    "درقينة",
   ],
   "21_skikda": [
     "القل",
@@ -235,9 +235,28 @@ export function getFilterRailCommunes(code: WilayaCode): WilayaCommune[] {
     .filter((c): c is WilayaCommune => Boolean(c));
 }
 
-/** Reject oceanic / out-of-belt latitudes that pull clusters mid-sea. */
+/**
+ * Reject oceanic / out-of-belt latitudes that pull clusters mid-sea.
+ * Belt: 35.8 ≤ lat ≤ 37.02 (stricter north cut drops Mediterranean floaters).
+ */
 export function isClusterSafeLatitude(lat: number): boolean {
-  return Number.isFinite(lat) && lat >= 36.1 && lat <= 37.05;
+  return Number.isFinite(lat) && lat >= 35.8 && lat <= 37.02;
+}
+
+/** Normalize inverted lat/lng pairs, then drop out-of-belt pins. */
+export function sanitizeClusterPosition(
+  lat: number,
+  lng: number,
+): { lat: number; lng: number } | null {
+  let safeLat = lat;
+  let safeLng = lng;
+  if (safeLat < 10 && safeLng > 30) {
+    safeLat = lng;
+    safeLng = lat;
+  }
+  if (!isClusterSafeLatitude(safeLat)) return null;
+  if (!Number.isFinite(safeLng)) return null;
+  return { lat: safeLat, lng: safeLng };
 }
 
 export function parseWilayaParam(

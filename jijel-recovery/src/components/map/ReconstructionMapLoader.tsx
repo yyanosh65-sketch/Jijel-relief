@@ -186,10 +186,10 @@ export default function ReconstructionMapLoader({
     return () => window.removeEventListener("online", onOnline);
   }, []);
 
-  // Empty map tap: close Smart Assistant + secondary overlays; sheets snap to peek via MapInspectionShell
+  // Empty map tap: close secondary overlays. Assistant peeks via MapInspectionShell
+  // (do not force-close it here — that raced with the FAB open click).
   useEffect(() => {
     function onMapBackgroundClick() {
-      setIsGlobalAgentOpen(false);
       setIsBarterOpen(false);
       setIsAgroOpen(false);
     }
@@ -301,6 +301,14 @@ export default function ReconstructionMapLoader({
     setIsGlobalAgentOpen(false);
   }
 
+  function toggleGlobalAgent() {
+    if (isGlobalAgentOpen) {
+      closeGlobalAgent();
+      return;
+    }
+    openGlobalAgent();
+  }
+
   function openBarter() {
     setIsBarterOpen(true);
   }
@@ -359,8 +367,6 @@ export default function ReconstructionMapLoader({
           <MapTopHud
             showSearch={showSearchBar}
             needs={filteredNeeds}
-            onOpenAgroOlive={() => openAgro("olive")}
-            onOpenAgroLivestock={() => openAgro("livestock")}
             onOpenVolunteerRegister={() => setIsVolunteerRegisterOpen(true)}
             onOpenEmergencyDial={() => setIsEmergencyDialOpen(true)}
           />
@@ -378,8 +384,8 @@ export default function ReconstructionMapLoader({
             layersPanelOpen={layersPanelOpen}
           />
           <ReliefAssistantFab
-            onOpen={openGlobalAgent}
-            hidden={sheetOpen}
+            onToggle={toggleGlobalAgent}
+            hidden={sheetOpen && !isGlobalAgentOpen}
           />
         </>
       ) : null}

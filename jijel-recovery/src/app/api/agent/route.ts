@@ -309,6 +309,9 @@ function buildDispatch(savedAlert: SavedAlertPayload, prompt: string) {
   };
 }
 
+const AGENT_OFFLINE_FALLBACK_AR =
+  "تعذر الاتصال بمركز التوجيه الآلي حالياً. يرجى الاتصال مباشرة بالحماية المدنية (14) أو مراجعة قائمة الاحتياجات الميدانية.";
+
 export async function POST(req: Request) {
   try {
     const body = await req.json();
@@ -341,21 +344,22 @@ export async function POST(req: Request) {
         );
 
       if (query && isFieldMode) {
-        const text = await buildFieldCoordinationBrief({
-          needId,
-          settlementId,
-          query,
-        });
-        const isWilayaScope = needId == null && settlementId == null;
+        try {
+          const text = await buildFieldCoordinationBrief({
+            needId,
+            settlementId,
+            query,
+          });
+          const isWilayaScope = needId == null && settlementId == null;
 
-        // Optionally enrich with DeepSeek when configured
-        if (isDeepSeekConfigured()) {
-          try {
-            const enriched = await generateText({
-              model: deepseek(DEEPSEEK_CHAT_MODEL),
-              abortSignal: createAgentAbortSignal(12_000),
-              system: isWilayaScope
-                ? `أنت منسّق إغاثة على مستوى ولاية جيجل. جاوب بالدارجة الجزائرية فقط.
+          // Optionally enrich with DeepSeek when configured
+          if (isDeepSeekConfigured()) {
+            try {
+              const enriched = await generateText({
+                model: deepseek(DEEPSEEK_CHAT_MODEL),
+                abortSignal: createAgentAbortSignal(12_000),
+                system: isWilayaScope
+                  ? `أنت منسّق إغاثة على مستوى ولاية جيجل. جاوب بالدارجة الجزائرية فقط.
 
 قواعد إلزامية:
 1) أسماء الأماكن بالعربية فقط (مثال: بوراعي بلهادف، العنصر، تكسنة، الميلية) — ممنوع الأسماء اللاتينية.
@@ -368,7 +372,7 @@ export async function POST(req: Request) {
 • نقطة توجيه واحدة فقط
 3) لا جدران نص. كل نقطة أقل من ~20 كلمة.
 4) ركّز على أولويات الولاية ومنع تكرار القوافل.`
-                : `أنت وكيل تنسيق ميداني لإغاثة جيجل. جاوب بالدارجة الجزائرية فقط.
+                  : `أنت وكيل تنسيق ميداني لإغاثة جيجل. جاوب بالدارجة الجزائرية فقط.
 
 قواعد إلزامية:
 1) أسماء الأماكن بالعربية فقط (مثال: بوراعي بلهادف، العنصر، تكسنة) — ممنوع كتابة الأسماء اللاتينية مثل Bouraoui Belhadef أو El Ancer.
@@ -381,24 +385,35 @@ export async function POST(req: Request) {
 • نقطة واحدة فقط إن لزم
 3) لا تكتب فقرات طويلة ولا جدران نص. كل نقطة سطر قصير (أقل من ~20 كلمة).
 4) ركّز على الفراغات، منع تكرار الأدوار، ومسالك RN43 / RN77 / CW135.`,
-              prompt: `السؤال: ${query}\n\nمعطيات النظام (بالعربية):\n${text}`,
-            });
-            if (enriched.text?.trim()) {
-              return Response.json({
-                text: enriched.text.trim(),
-                mode: isWilayaScope ? "wilaya" : "field",
+                prompt: `السؤال: ${query}\n\nمعطيات النظام (بالعربية):\n${text}`,
               });
+              if (enriched.text?.trim()) {
+                return Response.json({
+                  text: enriched.text.trim(),
+                  mode: isWilayaScope ? "wilaya" : "field",
+                });
+              }
+            } catch (error) {
+              console.error("Field agent DeepSeek fallback to brief:", error);
             }
-          } catch (error) {
-            console.error("Field agent DeepSeek fallback to brief:", error);
           }
-        }
 
-        return Response.json({
-          text,
-          mode: isWilayaScope ? "wilaya" : "field",
-          fallback: true,
-        });
+          return Response.json({
+            text,
+            mode: isWilayaScope ? "wilaya" : "field",
+            fallback: !isDeepSeekConfigured(),
+          });
+        } catch (error) {
+          console.error("Field/wilaya agent brief failed:", error);
+          return Response.json(
+            {
+              text: AGENT_OFFLINE_FALLBACK_AR,
+              mode: "wilaya",
+              fallback: true,
+            },
+            { status: 200 },
+          );
+        }
       }
     }
 
@@ -489,8 +504,13 @@ export async function POST(req: Request) {
     }
   } catch (error: unknown) {
     console.error("Agent API Error:", error);
-    const message =
-      error instanceof Error ? error.message : "Internal Agent Error";
-    return Response.json({ error: message }, { status: 500 });
+    return Response.json(
+      {
+        text: AGENT_OFFLINE_FALLBACK_AR,
+        error: AGENT_OFFLINE_FALLBACK_AR,
+        fallback: true,
+      },
+      { status: 200 },
+    );
   }
 }

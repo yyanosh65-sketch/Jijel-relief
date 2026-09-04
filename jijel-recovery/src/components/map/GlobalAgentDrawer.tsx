@@ -19,6 +19,8 @@ export default function GlobalAgentDrawer({
       open={open}
       onClose={onClose}
       titleId="global-agent-title"
+      initialSnap="expanded"
+      peekOnMapClick
     >
       <header className="mb-4">
         <div className="flex items-center gap-2">
@@ -39,7 +41,7 @@ export default function GlobalAgentDrawer({
         </div>
       </header>
 
-      <SmartDispatchAgent scope="wilaya" />
+      <SmartDispatchAgent scope="wilaya" hideHeader />
     </MapInspectionShell>
   );
 }

@@ -6,7 +6,9 @@ export const Z_MAP_CTA = "z-[35]";
 export const Z_MAP_HINT = "z-[300]";
 export const Z_DRAWER = "z-40";
 export const Z_MAP_PRIMARY_ACTION = "z-[400]";
-export const Z_MODAL = "z-50";
+/** Map inspection / AI assistant drawers (above Leaflet panes ~200–700). */
+export const Z_MODAL = "z-[2000]";
+export const Z_ASSISTANT = "z-[2000]";
 
 export const MODAL_BACKDROP_CLASS =
   "fixed inset-0 z-[9000] flex items-center justify-center bg-slate-950/80 p-4 backdrop-blur-md";
