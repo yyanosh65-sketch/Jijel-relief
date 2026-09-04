@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
+import type { DivIcon } from "leaflet";
 import { Marker } from "react-leaflet";
 
+import MapMarkerCluster from "@/components/map/MapMarkerCluster";
 import { createCommunityFacilityMarkerIcon } from "@/lib/map-layer-icons";
 import { clampJijelLandCoordinates } from "@/lib/geo";
 import type { CommunityFacility } from "@/db/schema";
@@ -67,7 +69,7 @@ export default function CommunityFacilitiesLayer({
   }, [facilities, showMosques, showSprings]);
 
   const iconCache = useMemo(() => {
-    const cache = new Map<string, L.DivIcon>();
+    const cache = new Map<string, DivIcon>();
     for (const type of [
       "mosque_operational",
       "mosque_damaged",
@@ -83,28 +85,32 @@ export default function CommunityFacilitiesLayer({
 
   return (
     <>
-      {visible.map((facility) => {
-        const { lat, lng } = clampJijelLandCoordinates(
-          Number(facility.lat),
-          Number(facility.lng),
-        );
-        const icon =
-          iconCache.get(facility.facilityType) ??
-          createCommunityFacilityMarkerIcon(facility.facilityType);
+      {visible.length === 0 ? null : (
+        <MapMarkerCluster accent="emerald">
+          {visible.map((facility) => {
+            const { lat, lng } = clampJijelLandCoordinates(
+              Number(facility.lat),
+              Number(facility.lng),
+            );
+            const icon =
+              iconCache.get(facility.facilityType) ??
+              createCommunityFacilityMarkerIcon(facility.facilityType);
 
-        return (
-          <Marker
-            key={`cf-${facility.id}`}
-            position={[lat, lng]}
-            icon={icon}
-            eventHandlers={
-              onFacilityClick
-                ? { click: () => onFacilityClick(facility) }
-                : undefined
-            }
-          />
-        );
-      })}
+            return (
+              <Marker
+                key={`cf-${facility.id}`}
+                position={[lat, lng]}
+                icon={icon}
+                eventHandlers={
+                  onFacilityClick
+                    ? { click: () => onFacilityClick(facility) }
+                    : undefined
+                }
+              />
+            );
+          })}
+        </MapMarkerCluster>
+      )}
     </>
   );
 }

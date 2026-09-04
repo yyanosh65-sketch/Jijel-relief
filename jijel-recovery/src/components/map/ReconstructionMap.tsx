@@ -53,6 +53,7 @@ import {
 import WaypointsLayer from "@/components/map/WaypointsLayer";
 import TrailClearanceLayer from "@/components/map/TrailClearanceLayer";
 import CommunityFacilitiesLayer from "@/components/map/CommunityFacilitiesLayer";
+import MapMarkerCluster from "@/components/map/MapMarkerCluster";
 import type { CommunityFacility } from "@/db/schema";
 import type { SerializedMountainTrail } from "@/lib/trail-clearance";
 import { cn } from "@/lib/utils";
@@ -577,8 +578,9 @@ export default function ReconstructionMap({
         layoutEpoch={layoutEpoch}
         className="relative z-10 h-full w-full touch-pan-x touch-pan-y"
       >
-        {layers.villages
-          ? intelligence.villagePins.map((pin) => {
+        {layers.villages ? (
+          <MapMarkerCluster accent="sky">
+            {intelligence.villagePins.map((pin) => {
               const isDouarPin = pin.id.startsWith("village-");
               const mapDetails = resolveLocationMapDetails(
                 pin.name,
@@ -668,8 +670,9 @@ export default function ReconstructionMap({
                 )}
               </Marker>
             );
-            })
-          : null}
+            })}
+          </MapMarkerCluster>
+        ) : null}
 
         {layers.roads
           ? intelligence.roads.map((road) => {
@@ -731,8 +734,9 @@ export default function ReconstructionMap({
             })
           : null}
 
-        {layers.facilities
-          ? intelligence.facilities.map((facility) => {
+        {layers.facilities ? (
+          <MapMarkerCluster accent="amber">
+            {intelligence.facilities.map((facility) => {
               const [facilityLat, facilityLng] = clampJijelLandPosition(
                 facility.lat,
                 facility.lng,
@@ -767,8 +771,9 @@ export default function ReconstructionMap({
                 </MapPopup>
               </Marker>
             );
-            })
-          : null}
+            })}
+          </MapMarkerCluster>
+        ) : null}
 
         {layers.sos
           ? intelligence.sosAlerts.map((alert) => {
@@ -859,8 +864,9 @@ export default function ReconstructionMap({
           <Marker position={[clickPin.lat, clickPin.lng]} icon={tempPinIcon} />
         ) : null}
 
-        {layers.needs
-          ? visibleNeeds.map((need) => {
+        {layers.needs ? (
+          <MapMarkerCluster accent="emerald">
+            {visibleNeeds.map((need) => {
               const color = getMarkerColor(need);
               const isSelected = selectedNeedId === need.id;
               const [needLat, needLng] = clampJijelLandPosition(need.lat, need.lng);
@@ -906,8 +912,9 @@ export default function ReconstructionMap({
                   )}
                 </Marker>
               );
-            })
-          : null}
+            })}
+          </MapMarkerCluster>
+        ) : null}
       </LeafletMap>
 
       <MapClickReportModal

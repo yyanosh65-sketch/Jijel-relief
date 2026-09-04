@@ -4,7 +4,7 @@ import { db } from "@/db";
 import { locations, needs } from "@/db/schema";
 import type { ConvoyCargoType, NeedCategory } from "@/db/schema";
 import { CONVOY_CARGO_OPTIONS, CONVOY_ENTRY_OPTIONS } from "@/lib/convoys";
-import { getDairaForCommune } from "@/lib/locations";
+import { getCommuneArabicName, getDairaForCommune } from "@/lib/locations";
 
 export type DeficitZone = {
   daira: string;
@@ -227,6 +227,68 @@ export async function getReliefStatsSummary(): Promise<{
       deficitUnits: Number(row.deficit),
     })),
   };
+}
+
+/** Per-commune fulfillment trackers for the Smart Dispatch UI. */
+export type CommuneDeficitTracker = {
+  commune: string;
+  communeAr: string;
+  daira: string;
+  totalRequired: number;
+  fulfilled: number;
+  remaining: number;
+  /** 0–1 fraction still unmet */
+  remainingRatio: number;
+  categories: string[];
+};
+
+export async function getCommuneDeficitTrackers(
+  limit = 8,
+): Promise<CommuneDeficitTracker[]> {
+  const rows = (
+    await db.execute<{
+      commune: string;
+      daira: string;
+      total_required: string;
+      fulfilled: string;
+      remaining: string;
+      categories: string | null;
+    }>(sql`
+      SELECT
+        l.name AS commune,
+        l.daira AS daira,
+        SUM(n.quantity_needed)::text AS total_required,
+        SUM(n.quantity_fulfilled)::text AS fulfilled,
+        SUM(GREATEST(n.quantity_needed - n.quantity_fulfilled, 0))::text AS remaining,
+        string_agg(DISTINCT n.category, ',') AS categories
+      FROM ${needs} n
+      INNER JOIN ${locations} l ON n.location_id = l.id
+      WHERE n.status IN ('open', 'partial')
+      GROUP BY l.name, l.daira
+      HAVING SUM(GREATEST(n.quantity_needed - n.quantity_fulfilled, 0)) > 0
+      ORDER BY SUM(GREATEST(n.quantity_needed - n.quantity_fulfilled, 0)) DESC
+      LIMIT ${limit}
+    `)
+  ).rows;
+
+  return rows.map((row) => {
+    const totalRequired = Number(row.total_required) || 0;
+    const fulfilled = Number(row.fulfilled) || 0;
+    const remaining = Number(row.remaining) || 0;
+    return {
+      commune: row.commune,
+      communeAr: getCommuneArabicName(row.commune) || row.commune,
+      daira: row.daira,
+      totalRequired,
+      fulfilled,
+      remaining,
+      remainingRatio: totalRequired > 0 ? remaining / totalRequired : 1,
+      categories: (row.categories ?? "")
+        .split(",")
+        .map((c) => c.trim())
+        .filter(Boolean),
+    };
+  });
 }
 
 export function resolveDairaForCommune(commune: string): string {

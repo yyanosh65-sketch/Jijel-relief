@@ -1,5 +1,7 @@
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+@import "leaflet.markercluster/dist/MarkerCluster.css";
+@import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 
 :root {
   --background: #ffffff;
@@ -564,4 +566,77 @@ textarea::placeholder {
   border-radius: 0.25rem;
   padding: 0.1rem 0.35rem;
   font-size: 0.8em;
+}
+
+/* ── Marker clustering (custom dark glass theme) ── */
+.marker-cluster,
+.map-cluster-icon {
+  background: transparent !important;
+  border: none !important;
+}
+
+.marker-cluster div,
+.map-cluster-bubble {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9999px;
+  border: 1px solid rgb(16 185 129 / 0.4);
+  background: rgb(15 23 42 / 0.9) !important;
+  color: #34d399;
+  font-weight: 700;
+  font-size: 0.75rem;
+  line-height: 1;
+  box-shadow:
+    0 4px 16px rgb(0 0 0 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  transition: transform 0.15s ease;
+}
+
+.map-cluster-icon:hover .map-cluster-bubble {
+  transform: scale(1.06);
+}
+
+/* Strip default MarkerCluster.Default white/orange blobs */
+.marker-cluster-small,
+.marker-cluster-medium,
+.marker-cluster-large {
+  background-color: transparent !important;
+}
+
+.marker-cluster-small div,
+.marker-cluster-medium div,
+.marker-cluster-large div {
+  background-color: rgb(15 23 42 / 0.9) !important;
+  color: #34d399 !important;
+  border: 1px solid rgb(16 185 129 / 0.4);
+  box-shadow: 0 4px 16px rgb(0 0 0 / 0.45);
+}
+
+/* Prevent horizontal overflow / layout shift during spiderfy */
+.leaflet-marker-icon.map-cluster-icon,
+.leaflet-marker-icon.marker-cluster {
+  margin-left: 0 !important;
+}
+
+.leaflet-cluster-anim .leaflet-marker-icon,
+.leaflet-cluster-anim .leaflet-marker-shadow {
+  transition:
+    transform 0.25s ease-out,
+    opacity 0.25s ease-in;
+}
+
+/* Mobile inspection shell snap helpers */
+.inspection-shell-peek {
+  max-height: 28dvh;
+}
+
+.inspection-shell-expanded {
+  max-height: 75dvh;
+}
+
+.pb-safe {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
 }

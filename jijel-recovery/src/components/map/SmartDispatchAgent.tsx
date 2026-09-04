@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { Bot, Loader2, Sparkles } from "lucide-react";
 
+import FieldDispatchPanel from "@/components/intel/FieldDispatchPanel";
 import { cn } from "@/lib/utils";
 
 const FIELD_PROMPTS = [
@@ -233,6 +234,8 @@ export default function SmartDispatchAgent({
         ))}
       </div>
 
+      <FieldDispatchPanel />
+
       {loading ? (
         <p className="flex items-center gap-2 text-xs text-violet-200">
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> قاعد نحلّل الوضع...
@@ -266,17 +269,26 @@ export default function SmartDispatchAgent({
                   </span>
                 </div>
                 <ul className="space-y-1.5">
-                  {section.items.map((item, index) => (
-                    <li
-                      key={`${index}-${item.slice(0, 18)}`}
-                      className="flex gap-2 text-slate-100"
-                    >
-                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-300/80" />
-                      <span className="min-w-0 flex-1 leading-relaxed">
-                        {item}
-                      </span>
-                    </li>
-                  ))}
+                  {section.kind === "gaps"
+                    ? section.items.map((item, index) => (
+                        <li
+                          key={`${index}-${item.slice(0, 18)}`}
+                          className="rounded-lg border border-slate-700/40 bg-slate-950/50 px-2.5 py-2 text-xs leading-relaxed text-slate-100"
+                        >
+                          {item}
+                        </li>
+                      ))
+                    : section.items.map((item, index) => (
+                        <li
+                          key={`${index}-${item.slice(0, 18)}`}
+                          className="flex gap-2 text-slate-100"
+                        >
+                          <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-violet-300/80" />
+                          <span className="min-w-0 flex-1 leading-relaxed">
+                            {item}
+                          </span>
+                        </li>
+                      ))}
                 </ul>
               </div>
             );
