@@ -10,6 +10,7 @@ import HeaderBrand from "@/components/layout/HeaderBrand";
 import CommuneFilterBar from "@/components/map/CommuneFilterBar";
 import MacroSummaryRibbon from "@/components/map/MacroSummaryRibbon";
 import MapFilterRibbon from "@/components/map/MapFilterRibbon";
+import WilayaSwitcher from "@/components/map/WilayaSwitcher";
 import PushSubscriptionBtn from "@/components/notifications/PushSubscriptionBtn";
 import SiteNav from "@/components/SiteNav";
 import FeedImporterButton from "@/components/admin/FeedImporterButton";
@@ -112,6 +113,8 @@ export default function MapTopHud({
             </button>
           </div>
         </header>
+
+        <WilayaSwitcher className="border-t border-white/5" />
 
         <MacroSummaryRibbon />
 

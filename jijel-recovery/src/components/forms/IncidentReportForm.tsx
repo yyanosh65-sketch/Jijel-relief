@@ -2,6 +2,8 @@
 
 import { Minus, Plus } from "lucide-react";
 
+import WilayaCommuneFields from "@/components/forms/WilayaCommuneFields";
+import type { WilayaCode } from "@/lib/wilaya";
 import { cn } from "@/lib/utils";
 
 export const INCIDENT_URGENCY_OPTIONS = [
@@ -62,6 +64,10 @@ type IncidentReportFieldsProps = {
   onUrgencyChange: (u: IncidentUrgency) => void;
   aidTags: IncidentAidTagId[];
   onAidTagsChange: (tags: IncidentAidTagId[]) => void;
+  wilaya?: WilayaCode;
+  onWilayaChange?: (code: WilayaCode) => void;
+  commune?: string;
+  onCommuneChange?: (commune: string) => void;
   className?: string;
 };
 
@@ -72,6 +78,10 @@ export function IncidentReportFields({
   onUrgencyChange,
   aidTags,
   onAidTagsChange,
+  wilaya,
+  onWilayaChange,
+  commune,
+  onCommuneChange,
   className,
 }: IncidentReportFieldsProps) {
   function bumpFamilies(delta: number) {
@@ -88,6 +98,15 @@ export function IncidentReportFields({
 
   return (
     <div className={cn("space-y-4", className)} dir="rtl">
+      {wilaya != null && onWilayaChange && commune != null && onCommuneChange ? (
+        <WilayaCommuneFields
+          wilaya={wilaya}
+          onWilayaChange={onWilayaChange}
+          commune={commune}
+          onCommuneChange={onCommuneChange}
+        />
+      ) : null}
+
       {/* Group 1 — affected families stepper */}
       <div className="space-y-2">
         <label className="block text-xs font-semibold text-slate-300">

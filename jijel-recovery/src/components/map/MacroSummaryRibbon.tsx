@@ -2,6 +2,8 @@
 
 import useSWR from "swr";
 
+import { useWilayaOptional } from "@/components/map/WilayaProvider";
+import { DEFAULT_WILAYA } from "@/lib/wilaya";
 import { cn } from "@/lib/utils";
 
 type MacroStats = {
@@ -34,19 +36,26 @@ async function fetchMacroStats(url: string): Promise<MacroStats> {
   };
 }
 
-/** Ultra-compact one-line ticker (~26px) for the top HUD — live-polled. */
+/** Ultra-compact one-line ticker (~26px) for the top HUD — live-polled per wilaya. */
 export default function MacroSummaryRibbon({
   className,
 }: MacroSummaryRibbonProps) {
-  const { data: stats } = useSWR("/api/map-macro-stats", fetchMacroStats, {
-    revalidateOnFocus: true,
-    refreshInterval: 30_000,
-    fallbackData: {
-      inIntervention: 0,
-      registered4x4: 0,
-      blockedTrails: 0,
+  const wilayaCtx = useWilayaOptional();
+  const wilaya = wilayaCtx?.wilaya ?? DEFAULT_WILAYA;
+
+  const { data: stats } = useSWR(
+    `/api/map-macro-stats?wilaya=${wilaya}`,
+    fetchMacroStats,
+    {
+      revalidateOnFocus: true,
+      refreshInterval: 30_000,
+      fallbackData: {
+        inIntervention: 0,
+        registered4x4: 0,
+        blockedTrails: 0,
+      },
     },
-  });
+  );
 
   return (
     <div

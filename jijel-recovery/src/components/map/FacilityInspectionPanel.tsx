@@ -3,6 +3,7 @@
 import { Phone } from "lucide-react";
 
 import MapInspectionShell from "@/components/map/MapInspectionShell";
+import NavigateInMapsButton from "@/components/map/NavigateInMapsButton";
 import type { CommunityFacility } from "@/db/schema";
 
 const FACILITY_TYPE_LABELS: Record<string, string> = {
@@ -106,6 +107,11 @@ export default function FacilityInspectionPanel({
             اتصل بالمنسق: {facility.coordinatorPhone}
           </a>
         ) : null}
+
+        <NavigateInMapsButton
+          lat={Number(facility.lat)}
+          lng={Number(facility.lng)}
+        />
       </div>
     </MapInspectionShell>
   );

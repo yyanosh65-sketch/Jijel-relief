@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Loader2, MapPin, X } from "lucide-react";
 
 import { submitDamageReport } from "@/actions/needs";
@@ -20,6 +20,13 @@ import {
   isLikelyNetworkError,
   type EmergencySmsDraft,
 } from "@/lib/offline-storage";
+import {
+  DEFAULT_WILAYA,
+  findCommuneInWilaya,
+  getWilayaDefinition,
+  resolveWilayaForCommune,
+  type WilayaCode,
+} from "@/lib/wilaya";
 import {
   MODAL_BACKDROP_CLASS,
   MODAL_BODY_SCROLL_CLASS,
@@ -56,6 +63,8 @@ export default function MapClickReportModal({
   const [affectedFamilies, setAffectedFamilies] = useState(1);
   const [urgency, setUrgency] = useState<IncidentUrgency>("high");
   const [aidTags, setAidTags] = useState<IncidentAidTagId[]>([]);
+  const [wilaya, setWilaya] = useState<WilayaCode>(DEFAULT_WILAYA);
+  const [commune, setCommune] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [smsDraft, setSmsDraft] = useState<EmergencySmsDraft | null>(null);
@@ -63,13 +72,36 @@ export default function MapClickReportModal({
 
   const nearest = resolveNearestLocation(lat, lng);
 
+  useEffect(() => {
+    if (!open) return;
+    const resolvedWilaya = resolveWilayaForCommune(
+      nearest.name || nearest.name_ar,
+      DEFAULT_WILAYA,
+    );
+    setWilaya(resolvedWilaya);
+    const match =
+      findCommuneInWilaya(resolvedWilaya, nearest.name) ??
+      findCommuneInWilaya(resolvedWilaya, nearest.name_ar);
+    setCommune(match?.name ?? "");
+  }, [open, lat, lng, nearest.name, nearest.name_ar]);
+
   if (!open) return null;
+
+  const communeMeta =
+    findCommuneInWilaya(wilaya, commune) ??
+    getWilayaDefinition(wilaya).communes[0];
+  const communeLabelAr = communeMeta?.nameAr ?? nearest.name_ar;
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
     setError(null);
 
-    const locationLabel = nearest.name_ar || nearest.landmark || "جيجل";
+    if (!commune) {
+      setError("اختر الولاية والبلدية.");
+      return;
+    }
+
+    const locationLabel = communeLabelAr || nearest.landmark || "جيجل";
     const aidLine = formatAidTagsForDescription(aidTags);
     const urgencyLabel =
       urgency === "critical"
@@ -98,8 +130,9 @@ export default function MapClickReportModal({
       reporterName: contactName,
       contactPhone,
       daira: nearest.daira,
-      commune: nearest.name_ar,
+      commune: communeLabelAr,
       village: nearest.landmark,
+      wilaya,
       lat,
       lng,
       affectedFamilies,
@@ -118,12 +151,14 @@ export default function MapClickReportModal({
     try {
       if (mode === "sos" || urgency === "critical") {
         const result = await submitUrgentAlert({
-          emergencyType: aidTags.includes("medical") ? "medical" : "water_cutoff",
+          emergencyType: aidTags.includes("medical")
+            ? "medical"
+            : "water_cutoff",
           description: composedDescription,
           reporterName: contactName.trim() || "مواطن",
           reporterPhone: contactPhone.trim() || undefined,
           daira: nearest.daira,
-          commune: nearest.name_ar,
+          commune: communeLabelAr,
           village: nearest.landmark,
           lat,
           lng,
@@ -141,9 +176,10 @@ export default function MapClickReportModal({
         formData.set("description", composedDescription);
         formData.set("contactName", contactName.trim() || "منسق ميداني");
         formData.set("contactPhone", contactPhone.trim() || "0500000000");
-        formData.set("commune", nearest.name_ar);
+        formData.set("commune", communeLabelAr);
         formData.set("village", nearest.landmark);
         formData.set("daira", nearest.daira_ar);
+        formData.set("wilaya", wilaya);
         formData.set("lat", String(lat));
         formData.set("lng", String(lng));
 
@@ -189,7 +225,7 @@ export default function MapClickReportModal({
                   سجل حدث طارئ جديد
                 </h2>
                 <p className="mt-1.5 text-xs text-slate-300">
-                  أقرب بلدية: {nearest.name_ar} — {nearest.landmark}
+                  أقرب نقطة: {nearest.name_ar} — {nearest.landmark}
                 </p>
               </div>
               <button
@@ -242,6 +278,10 @@ export default function MapClickReportModal({
                 onUrgencyChange={setUrgency}
                 aidTags={aidTags}
                 onAidTagsChange={setAidTags}
+                wilaya={wilaya}
+                onWilayaChange={setWilaya}
+                commune={commune}
+                onCommuneChange={setCommune}
               />
 
               <textarea

@@ -22,6 +22,11 @@ import { getDairaForCommune, resolveVerifiedMapCoordinates } from "@/lib/locatio
 import { haversineKmSql } from "@/lib/geo";
 import { normalizeAlgerianPhone } from "@/lib/phone";
 import type { ActionResult } from "@/lib/types";
+import {
+  DEFAULT_WILAYA,
+  isWilayaCode,
+  resolveWilayaForCommune,
+} from "@/lib/wilaya";
 
 const createNeedSchema = z.object({
   title: z.string().trim().min(1, "Title is required"),
@@ -58,6 +63,11 @@ const damageReportSchema = z.object({
   commune: z.string().trim().min(1).max(120),
   village: z.string().trim().max(120).optional(),
   daira: z.string().trim().min(1).max(120),
+  wilaya: z
+    .string()
+    .trim()
+    .optional()
+    .transform((value) => (value && isWilayaCode(value) ? value : undefined)),
   lat: z.coerce.number().min(-90).max(90),
   lng: z.coerce.number().min(-180).max(180),
   mediaUrls: z.array(z.string().max(2_000_000)).max(5).optional(),
@@ -159,6 +169,7 @@ export async function submitDamageReport(
   const commune = String(formData.get("commune") ?? "").trim();
   const dairaFromForm = String(formData.get("daira") ?? "").trim();
   const resolvedDaira = dairaFromForm || getDairaForCommune(commune) || "";
+  const wilayaRaw = String(formData.get("wilaya") ?? "").trim();
 
   const parsed = damageReportSchema.safeParse({
     intakeCategory: formData.get("intakeCategory"),
@@ -171,6 +182,7 @@ export async function submitDamageReport(
     commune,
     village: formData.get("village") || undefined,
     daira: resolvedDaira,
+    wilaya: wilayaRaw || undefined,
     lat: formData.get("lat"),
     lng: formData.get("lng"),
     mediaUrls: mediaUrls.length > 0 ? mediaUrls : undefined,
@@ -186,6 +198,8 @@ export async function submitDamageReport(
   }
 
   const input = parsed.data;
+  const wilaya =
+    input.wilaya ?? resolveWilayaForCommune(input.commune, DEFAULT_WILAYA);
   const mapping = INTAKE_CATEGORY_MAP[input.intakeCategory];
   const locationLabel = input.village
     ? `${input.commune} — ${input.village}`
@@ -208,6 +222,7 @@ export async function submitDamageReport(
           address: input.village ?? null,
           lat: String(input.lat),
           lng: String(input.lng),
+          wilaya,
         })
         .returning();
 
@@ -225,6 +240,7 @@ export async function submitDamageReport(
           contactWhatsapp: input.contactWhatsapp ?? null,
           mediaUrls: input.mediaUrls?.length ? input.mediaUrls : [],
           voiceNoteData: input.voiceNoteData ?? null,
+          wilaya,
         })
         .returning({ id: needs.id });
 
@@ -403,6 +419,7 @@ export async function getMapNeeds(): Promise<ActionResult<MapNeed[]>> {
         mediaUrls: row.mediaUrls ?? [],
         facebookUrl: row.facebookUrl,
         voiceNoteData: row.voiceNoteData,
+        wilaya: row.wilaya,
         createdAt: row.createdAt,
         updatedAt: row.updatedAt,
         location: row.location,
@@ -484,6 +501,7 @@ export async function getNearbyNeeds(
       media_urls: string[] | null;
       facebook_url: string | null;
       voice_note_data: string | null;
+      wilaya: "18_jijel" | "06_bejaia" | "21_skikda" | "19_setif";
       created_at: Date;
       updated_at: Date;
       location_id_join: number;
@@ -492,6 +510,7 @@ export async function getNearbyNeeds(
       location_address: string | null;
       location_lat: string;
       location_lng: string;
+      location_wilaya: "18_jijel" | "06_bejaia" | "21_skikda" | "19_setif";
       location_created_at: Date;
       distance_km: number;
     }>(sql`
@@ -511,6 +530,7 @@ export async function getNearbyNeeds(
         n.media_urls,
         n.facebook_url,
         n.voice_note_data,
+        n.wilaya,
         n.created_at,
         n.updated_at,
         l.id AS location_id_join,
@@ -519,6 +539,7 @@ export async function getNearbyNeeds(
         l.address AS location_address,
         l.lat AS location_lat,
         l.lng AS location_lng,
+        l.wilaya AS location_wilaya,
         l.created_at AS location_created_at,
         ${distanceKmExpr} AS distance_km
       FROM ${needs} n
@@ -560,6 +581,7 @@ export async function getNearbyNeeds(
       mediaUrls: row.media_urls ?? [],
       facebookUrl: row.facebook_url,
       voiceNoteData: row.voice_note_data,
+      wilaya: row.wilaya,
       createdAt: row.created_at,
       updatedAt: row.updated_at,
       location: {
@@ -569,6 +591,7 @@ export async function getNearbyNeeds(
         address: row.location_address,
         lat: row.location_lat,
         lng: row.location_lng,
+        wilaya: row.location_wilaya,
         createdAt: row.location_created_at,
       },
       pledges: pledgesByNeedId.get(row.id) ?? [],

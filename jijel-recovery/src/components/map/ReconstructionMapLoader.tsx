@@ -19,6 +19,7 @@ import FacilityInspectionPanel from "@/components/map/FacilityInspectionPanel";
 import EmergencySpeedDialModal from "@/components/emergency/EmergencySpeedDialModal";
 import VolunteerRegisterModal from "@/components/forms/VolunteerRegisterModal";
 import { MAP_BACKGROUND_CLICK_EVENT } from "@/components/map/MapClickHandler";
+import { WilayaProvider } from "@/components/map/WilayaProvider";
 import type { CommunityFacility } from "@/db/schema";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import VillageDetailDrawer from "@/components/map/VillageDetailDrawer";
@@ -318,6 +319,7 @@ export default function ReconstructionMapLoader({
   }
 
   return (
+    <WilayaProvider>
     <>
       <div
         className={cn(
@@ -470,5 +472,6 @@ export default function ReconstructionMapLoader({
         focusTag={agroFocusTag}
       />
     </>
+    </WilayaProvider>
   );
 }

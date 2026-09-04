@@ -7,6 +7,7 @@ import {
   volunteerSpecialtyEnum,
   volunteerVehicleEnum,
   volunteers,
+  wilayaCodeEnum,
 } from "@/db/schema";
 import { isValidAlgerianPhone, normalizeAlgerianPhone } from "@/lib/phone";
 
@@ -19,6 +20,7 @@ const insertSchema = z.object({
   commune: z.string().trim().min(1).max(80),
   vehicleType: z.enum(volunteerVehicleEnum.enumValues),
   specialty: z.enum(volunteerSpecialtyEnum.enumValues),
+  wilaya: z.enum(wilayaCodeEnum.enumValues).optional(),
 });
 
 export async function GET() {
@@ -84,6 +86,7 @@ export async function POST(request: Request) {
         specialty: parsed.data.specialty,
         status: "pending",
         isAvailable: true,
+        wilaya: parsed.data.wilaya ?? "18_jijel",
       })
       .returning();
 

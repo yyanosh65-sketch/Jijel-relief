@@ -11,11 +11,11 @@ import MapZoomControl from "@/components/map/MapZoomControl";
 import {
   DEFAULT_MAP_ZOOM,
   JIJEL_CENTER,
-  JIJEL_MAX_BOUNDS,
   JIJEL_MAX_ZOOM,
   JIJEL_MIN_ZOOM,
   MAP_TILE_LAYER,
 } from "@/lib/map-utils";
+import { MULTI_WILAYA_MAX_BOUNDS } from "@/lib/wilaya";
 
 import "leaflet/dist/leaflet.css";
 
@@ -55,8 +55,8 @@ export default function LeafletMap({
       zoom={DEFAULT_MAP_ZOOM}
       minZoom={JIJEL_MIN_ZOOM}
       maxZoom={JIJEL_MAX_ZOOM}
-      maxBounds={JIJEL_MAX_BOUNDS}
-      maxBoundsViscosity={1.0}
+      maxBounds={MULTI_WILAYA_MAX_BOUNDS}
+      maxBoundsViscosity={0.85}
       className={className}
       scrollWheelZoom
       zoomControl={false}

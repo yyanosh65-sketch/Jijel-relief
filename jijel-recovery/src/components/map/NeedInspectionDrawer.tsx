@@ -6,6 +6,7 @@ import type { MapNeed } from "@/actions/needs";
 import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import FieldCoordinationPanel from "@/components/map/FieldCoordinationPanel";
 import MapInspectionShell from "@/components/map/MapInspectionShell";
+import NavigateInMapsButton from "@/components/map/NavigateInMapsButton";
 import SmartDispatchAgent from "@/components/map/SmartDispatchAgent";
 import { findVillageByName } from "@/lib/locations";
 import {
@@ -166,6 +167,7 @@ export default function NeedInspectionDrawer({
           <p className="mt-1 text-[11px] text-slate-500" dir="ltr">
             {lat.toFixed(5)}, {lng.toFixed(5)}
           </p>
+          <NavigateInMapsButton lat={lat} lng={lng} className="mt-3" />
         </section>
 
         <div className="flex flex-col gap-2 sm:flex-row">

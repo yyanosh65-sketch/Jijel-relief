@@ -16,6 +16,7 @@ import {
 
 import ContactActionButtons from "@/components/ui/ContactActionButtons";
 import MapInspectionShell from "@/components/map/MapInspectionShell";
+import NavigateInMapsButton from "@/components/map/NavigateInMapsButton";
 import type { MapNeed } from "@/actions/needs";
 import type { VillageFieldReportTarget } from "@/lib/field-reports";
 import type { EmergencyFacility, VillageDossier } from "@/lib/intelligence";
@@ -210,6 +211,12 @@ export default function VillageDossierDrawer({
             إضافة نداء في هذه القرية
           </button>
         ) : null}
+
+        <NavigateInMapsButton
+          lat={dossier.lat}
+          lng={dossier.lng}
+          className="mt-3"
+        />
 
         <div className="mt-3 flex gap-2">
           <button

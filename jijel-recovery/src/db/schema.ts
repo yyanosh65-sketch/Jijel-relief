@@ -182,6 +182,17 @@ export const settlementTypeEnum = pgEnum("settlement_type", [
   "hamlet_isolated",
 ]);
 
+/** Eastern relief-belt wilaya tenancy */
+export const wilayaCodeEnum = pgEnum("wilaya_code", [
+  "18_jijel",
+  "06_bejaia",
+  "21_skikda",
+  "19_setif",
+]);
+
+/** @deprecated Prefer wilayaCodeEnum */
+export const wilayaEnum = wilayaCodeEnum;
+
 /** Community facilities — mosques, springs, shelters */
 export const communityFacilityTypeEnum = pgEnum("community_facility_type", [
   "mosque_operational",
@@ -208,6 +219,8 @@ export const locations = pgTable("locations", {
   address: text("address"),
   lat: numeric("lat", { precision: 10, scale: 6 }).notNull(),
   lng: numeric("lng", { precision: 10, scale: 6 }).notNull(),
+  /** Regional tenant — settlements / locations */
+  wilaya: wilayaCodeEnum("wilaya").notNull().default("18_jijel"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -231,6 +244,7 @@ export const needs = pgTable("needs", {
   mediaUrls: text("media_urls").array().notNull().default([]),
   facebookUrl: text("facebook_url"),
   voiceNoteData: text("voice_note_data"),
+  wilaya: wilayaCodeEnum("wilaya").notNull().default("18_jijel"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -526,6 +540,7 @@ export const volunteers = pgTable("volunteers", {
   status: varchar("status", { length: 30 }).notNull().default("pending"),
   /** Available for field dispatch (counted in macro 4x4 ticker) */
   isAvailable: boolean("is_available").notNull().default(true),
+  wilaya: wilayaCodeEnum("wilaya").notNull().default("18_jijel"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -570,6 +585,7 @@ export type ResponderStatus = (typeof responderStatusEnum.enumValues)[number];
 export type NeedCategory = (typeof needCategoryEnum.enumValues)[number];
 export type NeedUrgency = (typeof needUrgencyEnum.enumValues)[number];
 export type NeedStatus = (typeof needStatusEnum.enumValues)[number];
+export type WilayaCodeDb = (typeof wilayaCodeEnum.enumValues)[number];
 export type PledgeStatus = (typeof pledgeStatusEnum.enumValues)[number];
 export type SosEmergencyType = (typeof sosEmergencyTypeEnum.enumValues)[number];
 export type SosAlertStatus = (typeof sosAlertStatusEnum.enumValues)[number];

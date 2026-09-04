@@ -4,6 +4,7 @@ import { useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import type { MapNeed } from "@/actions/needs";
+import { useWilayaOptional } from "@/components/map/WilayaProvider";
 import { dispatchFlyToBounds } from "@/lib/map-fly-to";
 import { useNeedSearchFilters } from "@/hooks/useNeedSearchFilters";
 import {
@@ -15,21 +16,8 @@ import {
   buildNeedSearchParams,
   type NeedSearchFilters,
 } from "@/lib/need-search";
+import { DEFAULT_WILAYA, getWilayaDefinition } from "@/lib/wilaya";
 import { cn } from "@/lib/utils";
-
-/** Priority relief-belt communes shown in the horizontal filter strip */
-const PRIORITY_COMMUNE_NAMES = [
-  "Texenna",
-  "El Ancer",
-  "Taher",
-  "El Milia",
-  "Djimla",
-  "Ouled Rabah",
-  "Settara",
-  "Sidi Maarouf",
-  "Chekfa",
-  "Ziama Mansouriah",
-] as const;
 
 type CommuneFilterBarProps = {
   needs: MapNeed[];
@@ -67,20 +55,28 @@ export default function CommuneFilterBar({
   const router = useRouter();
   const pathname = usePathname();
   const filters = useNeedSearchFilters();
+  const wilayaCtx = useWilayaOptional();
+  const wilaya = wilayaCtx?.wilaya ?? DEFAULT_WILAYA;
 
   const communes = useMemo(() => {
+    const def = getWilayaDefinition(wilaya);
+    if (wilaya !== "18_jijel") {
+      return def.communes;
+    }
+
+    // Prefer live Jijel JSON coords when available
     const all = getAllCommunes();
     const byName = new Map(all.map((c) => [c.name, c]));
-    return PRIORITY_COMMUNE_NAMES.map((name) => {
-      const found = byName.get(name);
+    return def.communes.map((entry) => {
+      const found = byName.get(entry.name);
       return {
-        name,
-        nameAr: found?.name_ar ?? name,
-        lat: found?.lat,
-        lng: found?.lng,
+        name: entry.name,
+        nameAr: found?.name_ar ?? entry.nameAr,
+        lat: found?.lat ?? entry.lat,
+        lng: found?.lng ?? entry.lng,
       };
-    }).filter((c) => c.lat != null && c.lng != null);
-  }, []);
+    });
+  }, [wilaya]);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
@@ -104,8 +100,13 @@ export default function CommuneFilterBar({
       scroll: false,
     });
 
-    const villages = getVillagesByCommune(communeName);
-    const center = getCommuneCoordinates(communeName);
+    const villages =
+      wilaya === "18_jijel" ? getVillagesByCommune(communeName) : [];
+    const center =
+      wilaya === "18_jijel"
+        ? getCommuneCoordinates(communeName)
+        : communes.find((c) => c.name === communeName);
+
     const points =
       villages.length > 0
         ? villages.map((v) => ({ lat: v.lat, lng: v.lng }))

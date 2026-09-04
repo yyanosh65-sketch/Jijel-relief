@@ -1,9 +1,9 @@
 "use client";
 
-import { Navigation, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 
+import NavigateInMapsButton from "@/components/map/NavigateInMapsButton";
 import {
-  buildGoogleMapsDirectionsUrl,
   formatPopupHierarchyTag,
   isRedundantExactAddress,
   type RoadAccessibility,
@@ -75,7 +75,6 @@ export default function MapPopupShell({
       ? formatPopupHierarchyTag({ dairaAr, communeAr, villageAr })
       : addressHierarchy;
 
-  const mapsUrl = buildGoogleMapsDirectionsUrl(lat, lng);
   const showExactAddress =
     exactAddressAr &&
     hierarchyTag &&
@@ -181,15 +180,7 @@ export default function MapPopupShell({
           </button>
         ) : null}
 
-        <a
-          href={mapsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className={mapActionPrimaryClass}
-        >
-          <Navigation className="h-4 w-4 shrink-0" aria-hidden />
-          فتح في Google Maps للملاحة
-        </a>
+        <NavigateInMapsButton lat={lat} lng={lng} />
 
         {shareWhatsAppUrl ? (
           <a

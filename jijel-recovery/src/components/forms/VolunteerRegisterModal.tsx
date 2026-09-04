@@ -1,15 +1,18 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { Loader2, Truck, X } from "lucide-react";
 
 import type { VolunteerSpecialty, VolunteerVehicleType } from "@/db/schema";
-import { getAllCommunes } from "@/lib/locations";
+import WilayaCommuneFields from "@/components/forms/WilayaCommuneFields";
 import { formatAlgerianPhoneHint } from "@/lib/phone";
 import {
+  DEFAULT_WILAYA,
+  type WilayaCode,
+} from "@/lib/wilaya";
+import {
   darkFormInputClass,
-  darkSelectClass,
   primaryNextButtonClass,
 } from "@/lib/ui-labels";
 import {
@@ -51,6 +54,7 @@ const SPECIALTY_OPTIONS: Array<{
 type FormState = {
   fullName: string;
   phone: string;
+  wilaya: WilayaCode;
   commune: string;
   vehicleType: VolunteerVehicleType | "";
   specialty: VolunteerSpecialty | "";
@@ -59,6 +63,7 @@ type FormState = {
 const INITIAL: FormState = {
   fullName: "",
   phone: "",
+  wilaya: DEFAULT_WILAYA,
   commune: "",
   vehicleType: "",
   specialty: "",
@@ -78,14 +83,6 @@ export default function VolunteerRegisterModal({
   const [success, setSuccess] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [mounted, setMounted] = useState(false);
-
-  const communes = useMemo(
-    () =>
-      getAllCommunes()
-        .slice()
-        .sort((a, b) => a.name_ar.localeCompare(b.name_ar, "ar")),
-    [],
-  );
 
   const handleClose = useCallback(() => {
     setForm(INITIAL);
@@ -135,6 +132,7 @@ export default function VolunteerRegisterModal({
           commune: form.commune,
           vehicleType: form.vehicleType,
           specialty: form.specialty,
+          wilaya: form.wilaya,
         }),
       });
       const json = (await response.json()) as {
@@ -243,26 +241,16 @@ export default function VolunteerRegisterModal({
                 />
               </div>
 
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-300">
-                  بلدية الإقامة أو التواجد الحالي
-                </label>
-                <select
-                  required
-                  value={form.commune}
-                  onChange={(e) =>
-                    setForm((c) => ({ ...c, commune: e.target.value }))
-                  }
-                  className={darkSelectClass}
-                >
-                  <option value="">اختر البلدية</option>
-                  {communes.map((commune) => (
-                    <option key={commune.name} value={commune.name}>
-                      {commune.name_ar}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              <WilayaCommuneFields
+                wilaya={form.wilaya}
+                onWilayaChange={(wilaya) =>
+                  setForm((c) => ({ ...c, wilaya, commune: "" }))
+                }
+                commune={form.commune}
+                onCommuneChange={(commune) =>
+                  setForm((c) => ({ ...c, commune }))
+                }
+              />
 
               <div className="space-y-2">
                 <p className="text-xs font-semibold text-slate-300">

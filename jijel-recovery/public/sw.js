@@ -1,6 +1,13 @@
 const APP_SHELL_CACHE = "ighata-app-shell-v1";
-const MAP_TILE_CACHE = "ighata-map-tiles-v1";
-const MAX_TILE_ENTRIES = 800;
+const MAP_TILE_CACHE = "ighata-map-tiles-v2";
+const MAX_TILE_ENTRIES = 1600;
+const WILAYA_TILE_REGION_MESSAGE = "ighata:set-tile-region";
+
+/** Active wilaya envelope [[south, west], [north, east]] — prefers keeping these tiles when trimming. */
+let preferredTileBounds = [
+  [36.45, 5.35],
+  [37.05, 6.55],
+];
 
 const OFFLINE_ASSETS = [
   "/",
@@ -23,12 +30,72 @@ function isMapTileRequest(url) {
   );
 }
 
+/** Parse /{z}/{x}/{y}.png style tile URLs */
+function parseTileXYZ(url) {
+  const match = url.pathname.match(/\/(\d+)\/(\d+)\/(\d+)(?:@2x)?\.(?:png|jpg|jpeg|webp)$/i);
+  if (!match) return null;
+  return {
+    z: Number(match[1]),
+    x: Number(match[2]),
+    y: Number(match[3]),
+  };
+}
+
+function tileCenterLatLng(z, x, y) {
+  const n = Math.PI - (2 * Math.PI * y) / Math.pow(2, z);
+  const lat = (180 / Math.PI) * Math.atan(0.5 * (Math.exp(n) - Math.exp(-n)));
+  const lng = (x / Math.pow(2, z)) * 360 - 180;
+  return { lat, lng };
+}
+
+function isInsidePreferredBounds(lat, lng) {
+  const [[south, west], [north, east]] = preferredTileBounds;
+  return lat >= south && lat <= north && lng >= west && lng <= east;
+}
+
+function requestInPreferredRegion(request) {
+  try {
+    const url = new URL(request.url);
+    const xyz = parseTileXYZ(url);
+    if (!xyz || xyz.z < 8) return true; // keep low-zoom overview tiles
+    const { lat, lng } = tileCenterLatLng(xyz.z, xyz.x, xyz.y);
+    return isInsidePreferredBounds(lat, lng);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Prefer deleting tiles outside the active wilaya so Babor / Collo /
+ * Kherrata grids stay warm after a regional switch.
+ */
 async function trimTileCache(cache, maxEntries) {
   const keys = await cache.keys();
   if (keys.length <= maxEntries) return;
+
   const overflow = keys.length - maxEntries;
-  await Promise.all(keys.slice(0, overflow).map((key) => cache.delete(key)));
+  const outside = [];
+  const inside = [];
+
+  for (const key of keys) {
+    if (requestInPreferredRegion(key)) {
+      inside.push(key);
+    } else {
+      outside.push(key);
+    }
+  }
+
+  const toDelete = [...outside, ...inside].slice(0, overflow);
+  await Promise.all(toDelete.map((key) => cache.delete(key)));
 }
+
+self.addEventListener("message", (event) => {
+  const data = event.data;
+  if (!data || data.type !== WILAYA_TILE_REGION_MESSAGE) return;
+  if (Array.isArray(data.maxBounds) && data.maxBounds.length === 2) {
+    preferredTileBounds = data.maxBounds;
+  }
+});
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
@@ -58,7 +125,7 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // ── Map tiles: cache-first + SWR, LRU-capped (Djimla / Texenna offline) ──
+  // ── Map tiles: cache-first + SWR, region-aware trim (multi-wilaya) ──
   if (isMapTileRequest(url)) {
     event.respondWith(
       caches.open(MAP_TILE_CACHE).then(async (cache) => {
