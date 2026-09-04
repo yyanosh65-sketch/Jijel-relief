@@ -19,6 +19,12 @@ import {
 } from "@/lib/agent/deepseek";
 import { buildFieldCoordinationBrief } from "@/lib/agent/field-coordination";
 import {
+  AMI_RABAH_SYSTEM_PROMPT,
+  buildAmiRabahIntentReply,
+  formatAmiRabahContextBlock,
+  getAmiRabahOperationalContext,
+} from "@/lib/agent/ami-rabah";
+import {
   findHighestDeficitZone,
   getReliefStatsSummary,
 } from "@/lib/agent/deficit";
@@ -339,18 +345,32 @@ export async function POST(req: Request) {
         body.mode === "field" ||
         needId != null ||
         settlementId != null ||
-        /طريق|شكون|واش يخص|ولاية|المحاور|تضررا|ملخص وضع|RN43|RN27|RN77/i.test(
+        /طريق|شكون|واش يخص|ولاية|المحاور|تضررا|ملخص وضع|RN43|RN27|RN77|عجز|4x4|مسالك|تقرير|واتساب|فك عزلة|عمي رابح/i.test(
           query,
         );
 
       if (query && isFieldMode) {
         try {
+          // Ami Rabah high-yield intents (deficit / 4x4 / sitrep / routes)
+          const intentReply = await buildAmiRabahIntentReply(query);
+          if (intentReply) {
+            return Response.json({
+              text: intentReply.text,
+              sitrep: intentReply.sitrep,
+              mode: "ami_rabah",
+              intent: intentReply.intent,
+            });
+          }
+
+          const operationalCtx = await getAmiRabahOperationalContext();
+          const contextBlock = formatAmiRabahContextBlock(operationalCtx);
           const text = await buildFieldCoordinationBrief({
             needId,
             settlementId,
             query,
           });
           const isWilayaScope = needId == null && settlementId == null;
+          const enrichedBrief = `${text}\n\n${contextBlock}`;
 
           // Optionally enrich with DeepSeek when configured
           if (isDeepSeekConfigured()) {
@@ -358,39 +378,13 @@ export async function POST(req: Request) {
               const enriched = await generateText({
                 model: deepseek(DEEPSEEK_CHAT_MODEL),
                 abortSignal: createAgentAbortSignal(12_000),
-                system: isWilayaScope
-                  ? `أنت منسّق إغاثة على مستوى ولاية جيجل. جاوب بالدارجة الجزائرية فقط.
-
-قواعد إلزامية:
-1) أسماء الأماكن بالعربية فقط (مثال: بوراعي بلهادف، العنصر، تكسنة، الميلية) — ممنوع الأسماء اللاتينية.
-2) الإجابة قصيرة: 2–3 أقسام بالشكل:
-🚨 العجز المتبقي:
-• نقطة أو اثنتين (احتياجات معلّقة مقابل المغطّاة، وأهم البلديات)
-🚛 المسالك المفتوحة:
-• حالة RN43 / RN27 / RN77 باختصار
-⚠️ تنبيه هام:
-• نقطة توجيه واحدة فقط
-3) لا جدران نص. كل نقطة أقل من ~20 كلمة.
-4) ركّز على أولويات الولاية ومنع تكرار القوافل.`
-                  : `أنت وكيل تنسيق ميداني لإغاثة جيجل. جاوب بالدارجة الجزائرية فقط.
-
-قواعد إلزامية:
-1) أسماء الأماكن بالعربية فقط (مثال: بوراعي بلهادف، العنصر، تكسنة) — ممنوع كتابة الأسماء اللاتينية مثل Bouraoui Belhadef أو El Ancer.
-2) الإجابة قصيرة وقابلة للمسح: قسمها إلى 2–3 أقسام كحد أقصى بالشكل التالي بالضبط:
-🚨 العجز المتبقي:
-• نقطة واحدة أو اثنتين
-🚛 المسالك المفتوحة:
-• نقطة واحدة أو اثنتين
-⚠️ تنبيه هام:
-• نقطة واحدة فقط إن لزم
-3) لا تكتب فقرات طويلة ولا جدران نص. كل نقطة سطر قصير (أقل من ~20 كلمة).
-4) ركّز على الفراغات، منع تكرار الأدوار، ومسالك RN43 / RN77 / CW135.`,
-                prompt: `السؤال: ${query}\n\nمعطيات النظام (بالعربية):\n${text}`,
+                system: AMI_RABAH_SYSTEM_PROMPT,
+                prompt: `السؤال: ${query}\n\nمعطيات النظام (بالعربية):\n${enrichedBrief}`,
               });
               if (enriched.text?.trim()) {
                 return Response.json({
                   text: enriched.text.trim(),
-                  mode: isWilayaScope ? "wilaya" : "field",
+                  mode: isWilayaScope ? "ami_rabah" : "field",
                 });
               }
             } catch (error) {
@@ -398,9 +392,21 @@ export async function POST(req: Request) {
             }
           }
 
+          // Attach a FLY_TO to the top critical need when available
+          const top = operationalCtx.criticalNeeds[0];
+          const withAction =
+            top && Number.isFinite(top.lat) && Number.isFinite(top.lng)
+              ? `${enrichedBrief}\n<<<ACTION:${JSON.stringify({
+                  type: "FLY_TO",
+                  lat: top.lat,
+                  lng: top.lng,
+                  zoom: 12,
+                })}>>>`
+              : enrichedBrief;
+
           return Response.json({
-            text,
-            mode: isWilayaScope ? "wilaya" : "field",
+            text: withAction,
+            mode: isWilayaScope ? "ami_rabah" : "field",
             fallback: !isDeepSeekConfigured(),
           });
         } catch (error) {
