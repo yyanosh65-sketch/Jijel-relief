@@ -86,7 +86,7 @@ export default function CommunityFacilitiesLayer({
   return (
     <>
       {visible.length === 0 ? null : (
-        <MapMarkerCluster accent="emerald">
+        <MapMarkerCluster accent="amber">
           {visible.map((facility) => {
             const { lat, lng } = clampJijelLandCoordinates(
               Number(facility.lat),

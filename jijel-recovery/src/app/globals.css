@@ -591,18 +591,53 @@ textarea::placeholder {
   align-items: center;
   justify-content: center;
   border-radius: 9999px;
-  border: 1px solid rgb(16 185 129 / 0.4);
-  background: rgb(15 23 42 / 0.9) !important;
-  color: #34d399;
+  border: 2px solid rgb(14 165 233 / 0.8);
+  background: rgb(2 6 23 / 0.9) !important;
+  color: #7dd3fc;
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   line-height: 1;
   box-shadow:
+    0 0 12px rgb(14 165 233 / 0.4),
     0 4px 16px rgb(0 0 0 / 0.45),
     inset 0 1px 0 rgb(255 255 255 / 0.06);
   backdrop-filter: blur(8px);
   -webkit-backdrop-filter: blur(8px);
   transition: transform 0.15s ease;
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.85);
+}
+
+/* Needs & emergency clusters */
+.map-cluster-bubble--rose {
+  border-color: rgb(244 63 94 / 0.8) !important;
+  color: #fda4af !important;
+  background: rgb(2 6 23 / 0.9) !important;
+  box-shadow:
+    0 0 12px rgb(244 63 94 / 0.4),
+    0 4px 16px rgb(0 0 0 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* Emergency & community facilities */
+.map-cluster-bubble--amber {
+  border-color: rgb(245 158 11 / 0.8) !important;
+  color: #fcd34d !important;
+  background: rgb(2 6 23 / 0.9) !important;
+  box-shadow:
+    0 0 12px rgb(245 158 11 / 0.4),
+    0 4px 16px rgb(0 0 0 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
+}
+
+/* Settlements & villages */
+.map-cluster-bubble--sky {
+  border-color: rgb(14 165 233 / 0.8) !important;
+  color: #7dd3fc !important;
+  background: rgb(2 6 23 / 0.9) !important;
+  box-shadow:
+    0 0 12px rgb(14 165 233 / 0.4),
+    0 4px 16px rgb(0 0 0 / 0.45),
+    inset 0 1px 0 rgb(255 255 255 / 0.06);
 }
 
 .map-cluster-icon:hover .map-cluster-bubble {
@@ -619,10 +654,7 @@ textarea::placeholder {
 .marker-cluster-small div,
 .marker-cluster-medium div,
 .marker-cluster-large div {
-  background-color: rgb(15 23 42 / 0.9) !important;
-  color: #34d399 !important;
-  border: 1px solid rgb(16 185 129 / 0.4);
-  box-shadow: 0 4px 16px rgb(0 0 0 / 0.45);
+  background-color: rgb(2 6 23 / 0.9) !important;
 }
 
 /* Prevent horizontal overflow / layout shift during spiderfy */

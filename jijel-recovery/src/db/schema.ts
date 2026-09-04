@@ -524,6 +524,8 @@ export const volunteers = pgTable("volunteers", {
   vehicleType: volunteerVehicleEnum("vehicle_type").notNull(),
   specialty: volunteerSpecialtyEnum("specialty").notNull(),
   status: varchar("status", { length: 30 }).notNull().default("pending"),
+  /** Available for field dispatch (counted in macro 4x4 ticker) */
+  isAvailable: boolean("is_available").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),

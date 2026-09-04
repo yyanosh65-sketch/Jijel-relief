@@ -184,11 +184,12 @@ export default function ReconstructionMapLoader({
     return () => window.removeEventListener("online", onOnline);
   }, []);
 
-  // Empty map tap: close floating station / facility cards (sheet snaps via MapInspectionShell)
+  // Empty map tap: close Smart Assistant + secondary overlays; sheets snap to peek via MapInspectionShell
   useEffect(() => {
     function onMapBackgroundClick() {
-      setInspectPoint(null);
-      setInspectFacility(null);
+      setIsGlobalAgentOpen(false);
+      setIsBarterOpen(false);
+      setIsAgroOpen(false);
     }
     window.addEventListener(MAP_BACKGROUND_CLICK_EVENT, onMapBackgroundClick);
     return () => {

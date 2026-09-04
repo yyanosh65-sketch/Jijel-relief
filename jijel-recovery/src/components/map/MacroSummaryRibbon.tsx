@@ -1,46 +1,52 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 
 import { cn } from "@/lib/utils";
 
 type MacroStats = {
-  settlementsUnderIntervention: number;
-  fourByFourVehicles: number;
-  blockedRoads: number;
+  inIntervention: number;
+  registered4x4: number;
+  blockedTrails: number;
 };
 
 type MacroSummaryRibbonProps = {
   className?: string;
 };
 
-/** Ultra-compact one-line ticker (~26px) for the top HUD. */
+async function fetchMacroStats(url: string): Promise<MacroStats> {
+  const res = await fetch(url);
+  const json = (await res.json()) as {
+    success?: boolean;
+    data?: Partial<MacroStats> & {
+      settlementsUnderIntervention?: number;
+      fourByFourVehicles?: number;
+      blockedRoads?: number;
+    };
+  };
+
+  const data = json.data ?? {};
+  return {
+    inIntervention:
+      data.inIntervention ?? data.settlementsUnderIntervention ?? 0,
+    registered4x4: data.registered4x4 ?? data.fourByFourVehicles ?? 0,
+    blockedTrails: data.blockedTrails ?? data.blockedRoads ?? 0,
+  };
+}
+
+/** Ultra-compact one-line ticker (~26px) for the top HUD — live-polled. */
 export default function MacroSummaryRibbon({
   className,
 }: MacroSummaryRibbonProps) {
-  const [stats, setStats] = useState<MacroStats>({
-    settlementsUnderIntervention: 0,
-    fourByFourVehicles: 0,
-    blockedRoads: 0,
+  const { data: stats } = useSWR("/api/map-macro-stats", fetchMacroStats, {
+    revalidateOnFocus: true,
+    refreshInterval: 30_000,
+    fallbackData: {
+      inIntervention: 0,
+      registered4x4: 0,
+      blockedTrails: 0,
+    },
   });
-
-  useEffect(() => {
-    let cancelled = false;
-    const timer = window.setTimeout(() => {
-      void fetch("/api/map-macro-stats")
-        .then((r) => r.json())
-        .then((json: { success?: boolean; data?: MacroStats }) => {
-          if (!cancelled && json.success && json.data) {
-            setStats(json.data);
-          }
-        })
-        .catch(() => undefined);
-    }, 0);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(timer);
-    };
-  }, []);
 
   return (
     <div
@@ -48,9 +54,8 @@ export default function MacroSummaryRibbon({
       role="status"
       aria-label="ملخص ميداني"
       className={cn(
-        "map-macro-ticker max-h-[26px] w-full overflow-x-auto whitespace-nowrap border-t border-white/5 bg-slate-950/50 text-[11px] font-semibold leading-[26px] text-slate-300",
-        "scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        "px-2 py-0",
+        "map-macro-ticker max-h-[26px] w-full overflow-x-auto whitespace-nowrap border-t border-white/5 bg-slate-950/50 py-1 px-2 text-[11px] font-semibold leading-[18px] text-slate-300",
+        "no-scrollbar scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
         className,
       )}
     >
@@ -58,7 +63,7 @@ export default function MacroSummaryRibbon({
         <span>
           📍 مشاتي:{" "}
           <span className="tabular-nums text-emerald-300">
-            {stats.settlementsUnderIntervention}
+            {stats.inIntervention}
           </span>
         </span>
         <span className="text-slate-600" aria-hidden>
@@ -67,7 +72,7 @@ export default function MacroSummaryRibbon({
         <span>
           🚙 4x4:{" "}
           <span className="tabular-nums text-sky-300">
-            {stats.fourByFourVehicles}
+            {stats.registered4x4}
           </span>
         </span>
         <span className="text-slate-600" aria-hidden>
@@ -76,7 +81,7 @@ export default function MacroSummaryRibbon({
         <span>
           🚧 مسالك:{" "}
           <span className="tabular-nums text-amber-300">
-            {stats.blockedRoads}
+            {stats.blockedTrails}
           </span>
         </span>
       </span>

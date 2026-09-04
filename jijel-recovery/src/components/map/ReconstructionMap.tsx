@@ -516,9 +516,10 @@ export default function ReconstructionMap({
       <RoadTracker
         forceCollapsed={collapseRoadTracker}
         className={cn(
-          "pointer-events-auto absolute z-30 hidden sm:block",
+          "pointer-events-auto absolute z-30",
+          collapseRoadTracker && "pointer-events-none invisible opacity-0",
           immersiveChrome
-            ? "bottom-28 right-6 mb-2 max-w-[min(20rem,calc(100vw-3rem))]"
+            ? "bottom-20 right-3 max-w-[min(18rem,calc(100vw-1.5rem))] md:bottom-24 md:right-6 md:max-w-[min(20rem,calc(100vw-3rem))]"
             : "bottom-6 right-4",
           Z_MAP_FLOATING,
         )}
@@ -887,7 +888,7 @@ export default function ReconstructionMap({
         ) : null}
 
         {layers.needs ? (
-          <MapMarkerCluster accent="emerald">
+          <MapMarkerCluster accent="rose">
             {visibleNeeds.map((need) => {
               const color = getMarkerColor(need);
               const isSelected = selectedNeedId === need.id;

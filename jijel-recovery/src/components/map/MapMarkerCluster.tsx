@@ -4,33 +4,38 @@ import { useCallback, type ReactNode } from "react";
 import L from "leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
 
+type ClusterAccent = "rose" | "amber" | "sky" | "emerald";
+
 type MapMarkerClusterProps = {
   children: ReactNode;
-  /** Optional accent for severity-tinted clusters */
-  accent?: "emerald" | "rose" | "sky" | "amber";
+  /**
+   * Layer accent:
+   * - rose: needs & emergency
+   * - amber: emergency/community facilities
+   * - sky: settlements & villages
+   */
+  accent?: ClusterAccent;
   maxClusterRadius?: number;
 };
 
-const ACCENT_TEXT: Record<
-  NonNullable<MapMarkerClusterProps["accent"]>,
-  string
-> = {
-  emerald: "text-emerald-400 border-emerald-500/40",
-  rose: "text-rose-400 border-rose-500/40",
-  sky: "text-sky-400 border-sky-500/40",
-  amber: "text-amber-400 border-amber-500/40",
+/** CSS modifier classes defined in globals.css (Tailwind not applied inside DivIcon HTML). */
+const ACCENT_MODIFIER: Record<ClusterAccent, string> = {
+  rose: "map-cluster-bubble--rose",
+  amber: "map-cluster-bubble--amber",
+  sky: "map-cluster-bubble--sky",
+  emerald: "map-cluster-bubble--sky",
 };
 
 function createClusterIcon(
   cluster: { getChildCount: () => number },
-  accent: NonNullable<MapMarkerClusterProps["accent"]>,
+  accent: ClusterAccent,
 ): L.DivIcon {
   const count = cluster.getChildCount();
   const size = count < 10 ? 36 : count < 50 ? 44 : 52;
-  const accentClasses = ACCENT_TEXT[accent];
+  const modifier = ACCENT_MODIFIER[accent];
 
   return L.divIcon({
-    html: `<div class="map-cluster-bubble bg-slate-900/90 border rounded-full shadow-lg font-bold flex items-center justify-center ${accentClasses}" style="width:${size}px;height:${size}px">${count}</div>`,
+    html: `<div class="map-cluster-bubble ${modifier}" style="width:${size}px;height:${size}px">${count}</div>`,
     className: "map-cluster-icon marker-cluster",
     iconSize: L.point(size, size, true),
   });
@@ -42,7 +47,7 @@ function createClusterIcon(
  */
 export default function MapMarkerCluster({
   children,
-  accent = "emerald",
+  accent = "sky",
   maxClusterRadius = 45,
 }: MapMarkerClusterProps) {
   const iconCreateFunction = useCallback(

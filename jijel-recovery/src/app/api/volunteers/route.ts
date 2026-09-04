@@ -34,6 +34,7 @@ export async function GET() {
         SELECT COUNT(*)::text AS count
         FROM ${volunteers}
         WHERE vehicle_type = 'suv_4x4'
+          AND is_available = true
       `)
     ).rows;
 
@@ -82,6 +83,7 @@ export async function POST(request: Request) {
         vehicleType: parsed.data.vehicleType,
         specialty: parsed.data.specialty,
         status: "pending",
+        isAvailable: true,
       })
       .returning();
 
