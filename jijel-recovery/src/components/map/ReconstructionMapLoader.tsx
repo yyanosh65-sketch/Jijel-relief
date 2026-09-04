@@ -10,6 +10,7 @@ import type { MapNeed } from "@/actions/needs";
 import MapActionDock from "@/components/map/MapActionDock";
 import MapTopHud from "@/components/map/MapTopHud";
 import GlobalAgentDrawer from "@/components/map/GlobalAgentDrawer";
+import ReliefAssistantFab from "@/components/map/ReliefAssistantFab";
 import NeedInspectionDrawer from "@/components/map/NeedInspectionDrawer";
 import PointInspectionPanel, {
   type PointInspectionData,
@@ -358,10 +359,10 @@ export default function ReconstructionMapLoader({
           <MapTopHud
             showSearch={showSearchBar}
             needs={filteredNeeds}
-            onOpenGlobalAgent={openGlobalAgent}
             onOpenAgroOlive={() => openAgro("olive")}
             onOpenAgroLivestock={() => openAgro("livestock")}
             onOpenVolunteerRegister={() => setIsVolunteerRegisterOpen(true)}
+            onOpenEmergencyDial={() => setIsEmergencyDialOpen(true)}
           />
           <MapActionDock
             hidden={sheetOpen}
@@ -370,12 +371,15 @@ export default function ReconstructionMapLoader({
             }
             onToggleLayers={() => setLayersPanelOpen((open) => !open)}
             onTogglePinDrop={() => setPinDropActive((active) => !active)}
-            onOpenGlobalAgent={openGlobalAgent}
             onOpenBarter={openBarter}
             onOpenEmergencyDial={() => setIsEmergencyDialOpen(true)}
             onOpenVolunteerRegister={() => setIsVolunteerRegisterOpen(true)}
             pinDropActive={pinDropActive}
             layersPanelOpen={layersPanelOpen}
+          />
+          <ReliefAssistantFab
+            onOpen={openGlobalAgent}
+            hidden={sheetOpen}
           />
         </>
       ) : null}

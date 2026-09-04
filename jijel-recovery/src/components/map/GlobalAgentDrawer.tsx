@@ -30,10 +30,10 @@ export default function GlobalAgentDrawer({
               id="global-agent-title"
               className="text-base font-bold text-white"
             >
-              غرفة التوجيه الذكي
+              مساعد الإغاثة
             </h2>
             <p className="text-xs text-slate-400">
-              منسّق ولاية جيجل — ملخص شامل بدون نقطة محددة
+              غرفة التوجيه الذكي — ملخص ولائي شامل بدون نقطة محددة
             </p>
           </div>
         </div>

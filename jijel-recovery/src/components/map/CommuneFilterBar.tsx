@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import { usePathname, useRouter } from "next/navigation";
 
 import type { MapNeed } from "@/actions/needs";
@@ -16,7 +16,10 @@ import {
   buildNeedSearchParams,
   type NeedSearchFilters,
 } from "@/lib/need-search";
-import { DEFAULT_WILAYA, getWilayaDefinition } from "@/lib/wilaya";
+import {
+  DEFAULT_WILAYA,
+  getFilterRailCommunes,
+} from "@/lib/wilaya";
 import { cn } from "@/lib/utils";
 
 type CommuneFilterBarProps = {
@@ -43,7 +46,14 @@ function countOpenNeedsForCommune(
   return needs.filter((need) => {
     if (need.status !== "open" && need.status !== "partial") return false;
     const locName = normalizeKey(need.location?.name ?? "");
-    return keys.has(locName) || locName.includes(normalizeKey(communeName));
+    const address = normalizeKey(need.location?.address ?? "");
+    return (
+      keys.has(locName) ||
+      keys.has(address) ||
+      locName.includes(normalizeKey(communeName)) ||
+      locName.includes(normalizeKey(communeAr)) ||
+      address.includes(normalizeKey(communeAr))
+    );
   }).length;
 }
 
@@ -59,16 +69,15 @@ export default function CommuneFilterBar({
   const wilaya = wilayaCtx?.wilaya ?? DEFAULT_WILAYA;
 
   const communes = useMemo(() => {
-    const def = getWilayaDefinition(wilaya);
-    if (wilaya !== "18_jijel") {
-      return def.communes;
-    }
+    const rail = getFilterRailCommunes(wilaya);
+    if (wilaya !== "18_jijel") return rail;
 
-    // Prefer live Jijel JSON coords when available
     const all = getAllCommunes();
     const byName = new Map(all.map((c) => [c.name, c]));
-    return def.communes.map((entry) => {
-      const found = byName.get(entry.name);
+    const byAr = new Map(all.map((c) => [c.name_ar, c]));
+
+    return rail.map((entry) => {
+      const found = byName.get(entry.name) ?? byAr.get(entry.nameAr);
       return {
         name: entry.name,
         nameAr: found?.name_ar ?? entry.nameAr,
@@ -77,6 +86,25 @@ export default function CommuneFilterBar({
       };
     });
   }, [wilaya]);
+
+  // Reset commune chip to "الكل" whenever the active wilaya changes
+  useEffect(() => {
+    if (!filters.commune) return;
+    const stillValid = communes.some(
+      (c) =>
+        c.name === filters.commune ||
+        c.nameAr === filters.commune ||
+        normalizeKey(c.name) === normalizeKey(filters.commune) ||
+        normalizeKey(c.nameAr) === normalizeKey(filters.commune),
+    );
+    if (stillValid) return;
+
+    const params = buildNeedSearchParams({ ...filters, commune: "" });
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, {
+      scroll: false,
+    });
+  }, [wilaya, communes, filters, pathname, router]);
 
   const counts = useMemo(() => {
     const map = new Map<string, number>();
@@ -89,16 +117,27 @@ export default function CommuneFilterBar({
     return map;
   }, [communes, needs]);
 
-  function selectCommune(communeName: string) {
+  function patchCommune(communeName: string) {
     const next: NeedSearchFilters = {
       ...filters,
-      commune: filters.commune === communeName ? "" : communeName,
+      commune: communeName,
     };
     const params = buildNeedSearchParams(next);
     const query = params.toString();
     router.replace(query ? `${pathname}?${query}` : pathname, {
       scroll: false,
     });
+  }
+
+  function selectAll() {
+    patchCommune("");
+  }
+
+  function selectCommune(communeName: string) {
+    const nextName = filters.commune === communeName ? "" : communeName;
+    patchCommune(nextName);
+
+    if (!nextName) return;
 
     const villages =
       wilaya === "18_jijel" ? getVillagesByCommune(communeName) : [];
@@ -119,6 +158,8 @@ export default function CommuneFilterBar({
     }
   }
 
+  const allActive = !filters.commune;
+
   return (
     <div
       className={cn(
@@ -130,13 +171,26 @@ export default function CommuneFilterBar({
       aria-label="تصفية حسب البلدية"
       dir="rtl"
     >
+      <button
+        type="button"
+        onClick={selectAll}
+        className={cn(
+          "inline-flex shrink-0 items-center rounded-full border px-2 py-1 text-[10px] font-bold transition",
+          allActive
+            ? "border-emerald-400/60 bg-emerald-500/25 text-emerald-50 shadow-[0_0_14px_rgba(16,185,129,0.35)]"
+            : "border-white/10 bg-slate-950/60 text-slate-300 hover:border-emerald-500/30 hover:text-emerald-100",
+        )}
+      >
+        الكل
+      </button>
+
       {communes.map((commune) => {
         const count = counts.get(commune.name) ?? 0;
         const active = filters.commune === commune.name;
 
         return (
           <button
-            key={commune.name}
+            key={`${wilaya}-${commune.name}`}
             type="button"
             onClick={() => selectCommune(commune.name)}
             className={cn(

@@ -1,8 +1,16 @@
 "use client";
 
-import { useCallback, type ReactNode } from "react";
+import {
+  Children,
+  isValidElement,
+  useCallback,
+  type ReactElement,
+  type ReactNode,
+} from "react";
 import L from "leaflet";
 import MarkerClusterGroup from "react-leaflet-cluster";
+
+import { isClusterSafeLatitude } from "@/lib/wilaya";
 
 type ClusterAccent = "rose" | "amber" | "sky" | "emerald";
 
@@ -41,6 +49,32 @@ function createClusterIcon(
   });
 }
 
+function readMarkerLat(child: ReactElement): number | null {
+  const position = (child.props as { position?: unknown }).position;
+  if (Array.isArray(position) && typeof position[0] === "number") {
+    return position[0];
+  }
+  if (
+    position &&
+    typeof position === "object" &&
+    "lat" in position &&
+    typeof (position as { lat: unknown }).lat === "number"
+  ) {
+    return (position as { lat: number }).lat;
+  }
+  return null;
+}
+
+/** Drop oceanic / out-of-belt pins so clusters never anchor mid-sea. */
+function sanitizeClusterChildren(children: ReactNode): ReactNode[] {
+  return Children.toArray(children).filter((child) => {
+    if (!isValidElement(child)) return true;
+    const lat = readMarkerLat(child);
+    if (lat == null) return true;
+    return isClusterSafeLatitude(lat);
+  });
+}
+
 /**
  * Dark glassmorphic marker cluster group for dense point layers.
  * Zooming into a cluster expands bounds; spiderfy at max zoom.
@@ -56,6 +90,8 @@ export default function MapMarkerCluster({
     [accent],
   );
 
+  const safeChildren = sanitizeClusterChildren(children);
+
   return (
     <MarkerClusterGroup
       chunkedLoading
@@ -64,10 +100,11 @@ export default function MapMarkerCluster({
       zoomToBoundsOnClick
       maxClusterRadius={maxClusterRadius}
       animate
+      animateAddingMarkers={false}
       removeOutsideVisibleBounds
       iconCreateFunction={iconCreateFunction}
     >
-      {children}
+      {safeChildren}
     </MarkerClusterGroup>
   );
 }

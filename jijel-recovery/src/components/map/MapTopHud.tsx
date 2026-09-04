@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Menu, Search, Sparkles, X } from "lucide-react";
+import { Menu, Phone, Search, Truck, Users, X } from "lucide-react";
 import { Suspense, useState } from "react";
 
 import type { MapNeed } from "@/actions/needs";
@@ -12,21 +12,16 @@ import MacroSummaryRibbon from "@/components/map/MacroSummaryRibbon";
 import MapFilterRibbon from "@/components/map/MapFilterRibbon";
 import WilayaSwitcher from "@/components/map/WilayaSwitcher";
 import PushSubscriptionBtn from "@/components/notifications/PushSubscriptionBtn";
-import SiteNav from "@/components/SiteNav";
-import FeedImporterButton from "@/components/admin/FeedImporterButton";
-import RegisterConvoyButton from "@/components/convoys/RegisterConvoyButton";
-import CharityInventoryNavButton from "@/components/charity/CharityInventoryNavButton";
-import RegisterHelperButton from "@/components/helpers/RegisterHelperButton";
 import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { cn } from "@/lib/utils";
 
 type MapTopHudProps = {
   showSearch?: boolean;
   needs?: MapNeed[];
-  onOpenGlobalAgent?: () => void;
   onOpenAgroOlive?: () => void;
   onOpenAgroLivestock?: () => void;
   onOpenVolunteerRegister?: () => void;
+  onOpenEmergencyDial?: () => void;
 };
 
 /**
@@ -36,10 +31,10 @@ type MapTopHudProps = {
 export default function MapTopHud({
   showSearch = true,
   needs = [],
-  onOpenGlobalAgent,
   onOpenAgroOlive,
   onOpenAgroLivestock,
   onOpenVolunteerRegister,
+  onOpenEmergencyDial,
 }: MapTopHudProps) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
@@ -90,18 +85,6 @@ export default function MapTopHud({
             <div className="hidden sm:block">
               <PushSubscriptionBtn />
             </div>
-            {onOpenGlobalAgent ? (
-              <button
-                type="button"
-                onClick={onOpenGlobalAgent}
-                className="inline-flex h-8 w-8 items-center justify-center rounded-xl border border-emerald-500/40 bg-emerald-600/25 text-emerald-100 transition hover:bg-emerald-600/35 sm:w-auto sm:gap-1 sm:px-2"
-                aria-label="غرفة التوجيه الذكي"
-                title="غرفة التوجيه الذكي"
-              >
-                <Sparkles className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline text-[10px] font-bold">AI</span>
-              </button>
-            ) : null}
             <button
               type="button"
               aria-expanded={menuOpen}
@@ -119,46 +102,52 @@ export default function MapTopHud({
         <MacroSummaryRibbon />
 
         {menuOpen ? (
-          <div className="max-h-[40dvh] space-y-2 overflow-y-auto border-t border-white/5 p-2.5 sm:max-h-none">
-            <SiteNav />
-            <div className="flex flex-wrap items-center gap-2 border-t border-white/5 pt-2">
-              {onOpenGlobalAgent ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onOpenGlobalAgent();
-                  }}
-                  className="inline-flex items-center gap-2 rounded-full border border-violet-500/40 bg-violet-600/20 px-3 py-1.5 text-xs font-semibold text-violet-100 hover:bg-violet-600/30"
-                >
-                  <Sparkles className="h-3.5 w-3.5" />
-                  غرفة التوجيه الذكي
-                </button>
-              ) : null}
-              <FeedImporterButton variant="navbar" />
-              <RegisterConvoyButton variant="navbar" />
-              <CharityInventoryNavButton />
-              <RegisterHelperButton variant="navbar" />
-              {onOpenVolunteerRegister ? (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setMenuOpen(false);
-                    onOpenVolunteerRegister();
-                  }}
-                  className="rounded-full border border-emerald-500/40 bg-emerald-950/50 px-3 py-1.5 text-xs font-semibold text-emerald-100 hover:bg-emerald-900/50"
-                >
-                  🚙 تسجيل أسطول / متطوعين
-                </button>
-              ) : null}
-              <Link
-                href="/guide"
-                className="rounded-full border border-slate-700/80 bg-slate-900/60 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800"
+          <nav
+            aria-label="قائمة التشغيل"
+            className="max-h-[40dvh] space-y-1.5 overflow-y-auto border-t border-white/5 p-2.5 sm:max-h-none"
+          >
+            <Link
+              href="/map"
+              onClick={() => setMenuOpen(false)}
+              className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2.5 text-sm font-semibold text-slate-100 hover:bg-slate-800"
+            >
+              🗺️ خريطة التدخل
+            </Link>
+            <Link
+              href="/guide"
+              onClick={() => setMenuOpen(false)}
+              className="flex w-full items-center gap-2 rounded-xl border border-white/10 bg-slate-900/70 px-3 py-2.5 text-sm font-semibold text-slate-100 hover:bg-slate-800"
+            >
+              <Truck className="h-4 w-4 text-emerald-300" />
+              دليل القوافل
+            </Link>
+            {onOpenVolunteerRegister ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onOpenVolunteerRegister();
+                }}
+                className="flex w-full items-center gap-2 rounded-xl border border-emerald-500/30 bg-emerald-950/40 px-3 py-2.5 text-sm font-semibold text-emerald-100 hover:bg-emerald-900/50"
               >
-                دليل القوافل
-              </Link>
-            </div>
-          </div>
+                <Users className="h-4 w-4" />
+                تسجيل وسيلة 4x4
+              </button>
+            ) : null}
+            {onOpenEmergencyDial ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setMenuOpen(false);
+                  onOpenEmergencyDial();
+                }}
+                className="flex w-full items-center gap-2 rounded-xl border border-rose-500/35 bg-rose-950/40 px-3 py-2.5 text-sm font-semibold text-rose-100 hover:bg-rose-900/50"
+              >
+                <Phone className="h-4 w-4" />
+                أرقام الطوارئ
+              </button>
+            ) : null}
+          </nav>
         ) : null}
       </div>
 

@@ -182,6 +182,64 @@ export function getWilayaDefinition(code: WilayaCode): WilayaDefinition {
   return WILAYA_DEFINITIONS[code];
 }
 
+/** Priority Arabic commune names shown in the map filter rail (ordered). */
+export const WILAYA_FILTER_RAIL_AR: Record<WilayaCode, readonly string[]> = {
+  "18_jijel": [
+    "تكسنة",
+    "العنصر",
+    "الطاهير",
+    "الميلية",
+    "جيملة",
+    "بوراوي بلهادف",
+    "أولاد عسكر",
+    "أولاد رابح",
+    "السطارة",
+    "سيدي معروف",
+    "الشقفة",
+    "زيامة منصورية",
+  ],
+  "06_bejaia": [
+    "خراطة",
+    "أوقاس",
+    "أميزور",
+    "تيشي",
+    "أقبو",
+    "صدوق",
+    "برباشة",
+  ],
+  "21_skikda": [
+    "القل",
+    "تمالوس",
+    "الحروش",
+    "عزابة",
+    "عين قشرة",
+    "الزيتونة",
+  ],
+  "19_setif": [
+    "بابور",
+    "عموشة",
+    "بني ورتيلان",
+    "عين الكبيرة",
+    "بوعنداس",
+  ],
+};
+
+export function getFilterRailCommunes(code: WilayaCode): WilayaCommune[] {
+  const def = WILAYA_DEFINITIONS[code];
+  const order = WILAYA_FILTER_RAIL_AR[code];
+  const byAr = new Map(
+    def.communes.map((c) => [c.nameAr.trim(), c] as const),
+  );
+  return order
+    .map((nameAr) => byAr.get(nameAr))
+    .filter((c): c is WilayaCommune => Boolean(c));
+}
+
+/** Reject oceanic / out-of-belt latitudes that pull clusters mid-sea. */
+export function isClusterSafeLatitude(lat: number): boolean {
+  return Number.isFinite(lat) && lat >= 36.1 && lat <= 37.05;
+}
+
 export function parseWilayaParam(
   value: string | null | undefined,
 ): WilayaCode {
