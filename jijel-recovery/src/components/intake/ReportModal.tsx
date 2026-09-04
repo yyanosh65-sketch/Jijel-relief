@@ -6,7 +6,6 @@ import { Loader2, MapPin, X } from "lucide-react";
 
 import {
   getCommunesByDaira,
-  getCommuneArabicName,
   getDairas,
 } from "@/lib/locations";
 import { MODAL_BACKDROP_CLASS, MODAL_BODY_SCROLL_CLASS, MODAL_HEADER_CLASS, MODAL_SHELL_CLASS } from "@/lib/z-index";
@@ -235,29 +234,47 @@ export default function ReportModal({
               />
 
               <div className="grid gap-3 sm:grid-cols-2">
-                <input
-                  required
-                  type="tel"
-                  value={contactPhone}
-                  onChange={(event) => setContactPhone(event.target.value)}
-                  placeholder="رقم الهاتف"
-                  className={darkFormInputClass}
-                />
-                <select
-                  value={urgency}
-                  onChange={(event) =>
-                    setUrgency(
-                      event.target.value as (typeof URGENCY_OPTIONS)[number]["value"],
-                    )
-                  }
-                  className={darkSelectClass}
-                >
-                  {URGENCY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.label}
-                    </option>
-                  ))}
-                </select>
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="report-contact-phone"
+                    className="block text-xs font-semibold text-slate-300"
+                  >
+                    رقم الهاتف
+                  </label>
+                  <input
+                    id="report-contact-phone"
+                    required
+                    type="tel"
+                    value={contactPhone}
+                    onChange={(event) => setContactPhone(event.target.value)}
+                    placeholder="رقم الهاتف"
+                    className={darkFormInputClass}
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <label
+                    htmlFor="report-urgency"
+                    className="block text-xs font-semibold text-slate-300"
+                  >
+                    درجة الاستعجال
+                  </label>
+                  <select
+                    id="report-urgency"
+                    value={urgency}
+                    onChange={(event) =>
+                      setUrgency(
+                        event.target.value as (typeof URGENCY_OPTIONS)[number]["value"],
+                      )
+                    }
+                    className={darkSelectClass}
+                  >
+                    {URGENCY_OPTIONS.map((option) => (
+                      <option key={option.value} value={option.value}>
+                        {option.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
               </div>
 
               <input
@@ -283,9 +300,11 @@ export default function ReportModal({
               </button>
 
               {lat != null && lng != null ? (
-                <p className="text-center font-mono text-[11px] text-emerald-300/90" dir="ltr">
-                  {lat.toFixed(5)}, {lng.toFixed(5)}
-                  {commune ? ` — ${getCommuneArabicName(commune)}` : ""}
+                <p className="inline-flex w-full items-center justify-center gap-1.5 rounded-full border border-emerald-500/35 bg-emerald-950/50 px-2.5 py-1.5 text-[11px] font-semibold text-emerald-200">
+                  <span aria-hidden>📍</span>
+                  <span dir="ltr">
+                    تم تثبيت الإحداثيات: {lat.toFixed(4)}, {lng.toFixed(4)}
+                  </span>
                 </p>
               ) : null}
 

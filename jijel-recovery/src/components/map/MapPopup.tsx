@@ -4,11 +4,11 @@ import { Popup, type PopupProps } from "react-leaflet";
 
 /** Keeps popups below floating filters but above map tiles. */
 export const MAP_POPUP_PROPS = {
-  offset: [0, -25] as [number, number],
+  offset: [0, -28] as [number, number],
   autoPan: true,
-  autoPanPaddingTopLeft: [30, 160] as [number, number],
-  autoPanPaddingBottomRight: [30, 120] as [number, number],
-  className: "custom-jijel-popup",
+  autoPanPaddingTopLeft: [28, 200] as [number, number],
+  autoPanPaddingBottomRight: [28, 130] as [number, number],
+  className: "custom-jijel-popup facility-safe-popup",
   maxWidth: 340,
   minWidth: 280,
 } as const;

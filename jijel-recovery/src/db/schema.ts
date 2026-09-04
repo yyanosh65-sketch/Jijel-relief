@@ -467,6 +467,21 @@ export const inventoryTransfers = pgTable("inventory_transfers", {
     .notNull(),
 });
 
+/** Volunteer / fleet registration */
+export const volunteerVehicleEnum = pgEnum("volunteer_vehicle", [
+  "suv_4x4",
+  "truck",
+  "sedan",
+  "on_foot",
+]);
+
+export const volunteerSpecialtyEnum = pgEnum("volunteer_specialty", [
+  "general_relief",
+  "medical",
+  "veterinary",
+  "debris_clearing",
+]);
+
 export const agroRecoveryPledges = pgTable("agro_recovery_pledges", {
   id: serial("id").primaryKey(),
   donorOrganization: varchar("donor_organization", { length: 150 }).notNull(),
@@ -496,6 +511,19 @@ export const communityFacilities = pgTable("community_facilities", {
   shelterCapacityPeople: integer("shelter_capacity_people"),
   coordinatorPhone: varchar("coordinator_phone", { length: 20 }),
   notes: text("notes"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
+export const volunteers = pgTable("volunteers", {
+  id: serial("id").primaryKey(),
+  fullName: varchar("full_name", { length: 120 }).notNull(),
+  phone: varchar("phone", { length: 20 }).notNull(),
+  commune: varchar("commune", { length: 80 }).notNull(),
+  vehicleType: volunteerVehicleEnum("vehicle_type").notNull(),
+  specialty: volunteerSpecialtyEnum("specialty").notNull(),
+  status: varchar("status", { length: 30 }).notNull().default("pending"),
   createdAt: timestamp("created_at", { withTimezone: true })
     .defaultNow()
     .notNull(),
@@ -584,3 +612,9 @@ export type CommunityFacilityType =
   (typeof communityFacilityTypeEnum.enumValues)[number];
 export type CommunityFacility = typeof communityFacilities.$inferSelect;
 export type NewCommunityFacility = typeof communityFacilities.$inferInsert;
+export type VolunteerVehicleType =
+  (typeof volunteerVehicleEnum.enumValues)[number];
+export type VolunteerSpecialty =
+  (typeof volunteerSpecialtyEnum.enumValues)[number];
+export type Volunteer = typeof volunteers.$inferSelect;
+export type NewVolunteer = typeof volunteers.$inferInsert;

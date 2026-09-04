@@ -16,6 +16,9 @@ import PointInspectionPanel, {
 } from "@/components/map/PointInspectionPanel";
 import TrailDetailPanel from "@/components/map/TrailDetailPanel";
 import FacilityInspectionPanel from "@/components/map/FacilityInspectionPanel";
+import EmergencySpeedDialModal from "@/components/emergency/EmergencySpeedDialModal";
+import VolunteerRegisterModal from "@/components/forms/VolunteerRegisterModal";
+import { MAP_BACKGROUND_CLICK_EVENT } from "@/components/map/MapClickHandler";
 import type { CommunityFacility } from "@/db/schema";
 import VillageDossierDrawer from "@/components/map/VillageDossierDrawer";
 import VillageDetailDrawer from "@/components/map/VillageDetailDrawer";
@@ -106,6 +109,8 @@ export default function ReconstructionMapLoader({
     useState<SerializedMountainTrail | null>(null);
   const [inspectFacility, setInspectFacility] =
     useState<CommunityFacility | null>(null);
+  const [isEmergencyDialOpen, setIsEmergencyDialOpen] = useState(false);
+  const [isVolunteerRegisterOpen, setIsVolunteerRegisterOpen] = useState(false);
   const [trailRefreshKey, setTrailRefreshKey] = useState(0);
   const [allTrails, setAllTrails] = useState<SerializedMountainTrail[]>([]);
   const { badgesByNeedId } = useResponderStream();
@@ -177,6 +182,21 @@ export default function ReconstructionMapLoader({
       void flushPendingOfflineSubmissions();
     }
     return () => window.removeEventListener("online", onOnline);
+  }, []);
+
+  // Empty map tap: close floating station / facility cards (sheet snaps via MapInspectionShell)
+  useEffect(() => {
+    function onMapBackgroundClick() {
+      setInspectPoint(null);
+      setInspectFacility(null);
+    }
+    window.addEventListener(MAP_BACKGROUND_CLICK_EVENT, onMapBackgroundClick);
+    return () => {
+      window.removeEventListener(
+        MAP_BACKGROUND_CLICK_EVENT,
+        onMapBackgroundClick,
+      );
+    };
   }, []);
 
   const sheetOpen =
@@ -334,9 +354,11 @@ export default function ReconstructionMapLoader({
         <>
           <MapTopHud
             showSearch={showSearchBar}
+            needs={filteredNeeds}
             onOpenGlobalAgent={openGlobalAgent}
             onOpenAgroOlive={() => openAgro("olive")}
             onOpenAgroLivestock={() => openAgro("livestock")}
+            onOpenVolunteerRegister={() => setIsVolunteerRegisterOpen(true)}
           />
           <MapActionDock
             hidden={sheetOpen}
@@ -347,11 +369,23 @@ export default function ReconstructionMapLoader({
             onTogglePinDrop={() => setPinDropActive((active) => !active)}
             onOpenGlobalAgent={openGlobalAgent}
             onOpenBarter={openBarter}
+            onOpenEmergencyDial={() => setIsEmergencyDialOpen(true)}
+            onOpenVolunteerRegister={() => setIsVolunteerRegisterOpen(true)}
             pinDropActive={pinDropActive}
             layersPanelOpen={layersPanelOpen}
           />
         </>
       ) : null}
+
+      <EmergencySpeedDialModal
+        open={isEmergencyDialOpen}
+        onClose={() => setIsEmergencyDialOpen(false)}
+      />
+
+      <VolunteerRegisterModal
+        open={isVolunteerRegisterOpen}
+        onClose={() => setIsVolunteerRegisterOpen(false)}
+      />
 
       <PledgeModal
         need={selectedNeed}

@@ -4,6 +4,7 @@ import { Marker } from "react-leaflet";
 
 import MapPopup from "@/components/map/MapPopup";
 import MapPopupShell from "@/components/map/MapPopupShell";
+import type { PointInspectionData } from "@/components/map/PointInspectionPanel";
 import { WAYPOINT_TYPE_LABELS } from "@/lib/convoys";
 import type { ConvoyWaypoint } from "@/lib/convoy-waypoints";
 import { clampJijelLandPosition } from "@/lib/geo";
@@ -17,6 +18,7 @@ import { buildWhatsAppUrl } from "@/lib/phone";
 type WaypointsLayerProps = {
   waypoints: ConvoyWaypoint[];
   visible: boolean;
+  onWaypointInspect?: (point: PointInspectionData) => void;
 };
 
 function WaypointPopupContent({
@@ -64,6 +66,7 @@ function WaypointPopupContent({
 export default function WaypointsLayer({
   waypoints,
   visible,
+  onWaypointInspect,
 }: WaypointsLayerProps) {
   if (!visible) {
     return null;
@@ -76,22 +79,46 @@ export default function WaypointsLayer({
           waypoint.lat,
           waypoint.lng,
         );
+        const typeMeta = WAYPOINT_TYPE_LABELS[waypoint.type];
+        const whatsappPhone = waypoint.whatsapp ?? waypoint.phone;
+        const point: PointInspectionData = {
+          badgeTone: waypoint.type === "reception" ? "emerald" : "amber",
+          pointTypeLabel: getWaypointPointTypeLabel(waypoint.type),
+          title: `${getWaypointTypeIcon(waypoint.type)} ${waypoint.name_ar}`,
+          addressHierarchy: `ولاية جيجل > ${typeMeta.labelAr} > ${waypoint.name_ar}`,
+          exactAddressAr: waypoint.notes || undefined,
+          roadAccessibility: "paved_heavy_truck",
+          lat: waypointLat,
+          lng: waypointLng,
+          phone: waypoint.phone,
+          whatsappUrl: buildWhatsAppUrl(
+            whatsappPhone,
+            `السلام عليكم، نحتاج معلومات عن ${waypoint.name_ar}`,
+          ),
+        };
 
         return (
-        <Marker
-          key={waypoint.id}
-          position={[waypointLat, waypointLng]}
-          icon={createWaypointMarkerIcon(waypoint.type)}
-          zIndexOffset={500}
-        >
-          <MapPopup>
-            <WaypointPopupContent
-              waypoint={waypoint}
-              lat={waypointLat}
-              lng={waypointLng}
-            />
-          </MapPopup>
-        </Marker>
+          <Marker
+            key={waypoint.id}
+            position={[waypointLat, waypointLng]}
+            icon={createWaypointMarkerIcon(waypoint.type)}
+            zIndexOffset={500}
+            eventHandlers={
+              onWaypointInspect
+                ? { click: () => onWaypointInspect(point) }
+                : undefined
+            }
+          >
+            {onWaypointInspect ? null : (
+              <MapPopup>
+                <WaypointPopupContent
+                  waypoint={waypoint}
+                  lat={waypointLat}
+                  lng={waypointLng}
+                />
+              </MapPopup>
+            )}
+          </Marker>
         );
       })}
     </>

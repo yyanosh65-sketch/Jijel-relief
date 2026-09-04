@@ -5,6 +5,7 @@ import L from "leaflet";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 
 import { MapClickHandler } from "@/components/map/MapClickHandler";
+import MapFlyToController from "@/components/map/MapFlyToController";
 import MapInvalidateSize from "@/components/map/MapInvalidateSize";
 import MapZoomControl from "@/components/map/MapZoomControl";
 import {
@@ -20,16 +21,15 @@ import "leaflet/dist/leaflet.css";
 
 /**
  * Patches the Leaflet Popup prototype so every popup that auto-pans
- * clears the top HUD (≈ 80 px) and the side safe-area (≈ 20 px).
- * This runs once when the map is mounted.
+ * clears the top HUD + commune filter ribbon (≈ 168 px).
  */
 function AutoPanPaddingConfig() {
   useMap(); // must be called inside MapContainer
   (L.Popup.prototype.options as Record<string, unknown>).autoPanPaddingTopLeft =
-    L.point(20, 80);
+    L.point(24, 168);
   (
     L.Popup.prototype.options as Record<string, unknown>
-  ).autoPanPaddingBottomRight = L.point(20, 20);
+  ).autoPanPaddingBottomRight = L.point(24, 100);
   return null;
 }
 
@@ -68,11 +68,14 @@ export default function LeafletMap({
         maxZoom={JIJEL_MAX_ZOOM}
       />
       <AutoPanPaddingConfig />
+      <MapFlyToController />
       <MapZoomControl />
       <MapInvalidateSize trigger={layoutEpoch} />
-      {onMapClick ? (
-        <MapClickHandler enabled={pinDropMode} onMapClick={onMapClick} />
-      ) : null}
+      <MapClickHandler
+        enabled={Boolean(pinDropMode && onMapClick)}
+        onMapClick={onMapClick ?? (() => undefined)}
+        collapseOnBackgroundClick
+      />
       {children}
     </MapContainer>
   );

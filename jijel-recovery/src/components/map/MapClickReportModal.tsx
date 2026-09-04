@@ -6,6 +6,14 @@ import { Loader2, MapPin, X } from "lucide-react";
 import { submitDamageReport } from "@/actions/needs";
 import { submitUrgentAlert } from "@/actions/emergency";
 import OfflineSmsFallbackModal from "@/components/emergency/OfflineSmsFallbackModal";
+import {
+  IncidentCoordinatesBanner,
+  IncidentReportFields,
+  aidTagToIntakeCategory,
+  formatAidTagsForDescription,
+  type IncidentAidTagId,
+  type IncidentUrgency,
+} from "@/components/forms/IncidentReportForm";
 import { resolveNearestLocation } from "@/lib/locations";
 import {
   isBrowserOffline,
@@ -20,10 +28,8 @@ import {
 } from "@/lib/z-index";
 import {
   darkFormInputClass,
-  darkSelectClass,
   primaryNextButtonClass,
 } from "@/lib/ui-labels";
-import { SOS_EMERGENCY_OPTIONS } from "@/lib/intelligence";
 import { cn } from "@/lib/utils";
 
 type ReportMode = "need" | "sos";
@@ -47,10 +53,9 @@ export default function MapClickReportModal({
   const [contactName, setContactName] = useState("");
   const [contactPhone, setContactPhone] = useState("");
   const [description, setDescription] = useState("");
-  const [quantity, setQuantity] = useState("1");
-  const [emergencyType, setEmergencyType] = useState<
-    (typeof SOS_EMERGENCY_OPTIONS)[number]["value"]
-  >("medical");
+  const [affectedFamilies, setAffectedFamilies] = useState(1);
+  const [urgency, setUrgency] = useState<IncidentUrgency>("high");
+  const [aidTags, setAidTags] = useState<IncidentAidTagId[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [smsDraft, setSmsDraft] = useState<EmergencySmsDraft | null>(null);
@@ -65,16 +70,31 @@ export default function MapClickReportModal({
     setError(null);
 
     const locationLabel = nearest.name_ar || nearest.landmark || "جيجل";
+    const aidLine = formatAidTagsForDescription(aidTags);
+    const urgencyLabel =
+      urgency === "critical"
+        ? "حرجة جداً"
+        : urgency === "high"
+          ? "متوسطة"
+          : "عادية";
+    const composedDescription = [
+      description.trim() || "احتياج مسجّل من نقطة على الخريطة",
+      `عدد العائلات المتضررة: ${affectedFamilies}`,
+      `درجة الاستعجال: ${urgencyLabel}`,
+      aidLine || null,
+    ]
+      .filter(Boolean)
+      .join("\n");
+
     const offlineDraft: EmergencySmsDraft = {
-      type: mode === "sos" ? "SOS" : "ROAD",
+      type: mode === "sos" || urgency === "critical" ? "SOS" : "ROAD",
       locationCodeOrName: locationLabel,
-      urgency: mode === "sos" ? emergencyType : "need",
+      urgency: urgency === "critical" ? "critical" : urgency,
       contactPhone: contactPhone.trim() || "unknown",
     };
     const offlinePayload = {
       mode,
-      emergencyType,
-      description,
+      description: composedDescription,
       reporterName: contactName,
       contactPhone,
       daira: nearest.daira,
@@ -82,7 +102,9 @@ export default function MapClickReportModal({
       village: nearest.landmark,
       lat,
       lng,
-      quantity,
+      affectedFamilies,
+      urgency,
+      aidTags,
     };
 
     if (isBrowserOffline()) {
@@ -94,10 +116,10 @@ export default function MapClickReportModal({
     setIsSubmitting(true);
 
     try {
-      if (mode === "sos") {
+      if (mode === "sos" || urgency === "critical") {
         const result = await submitUrgentAlert({
-          emergencyType,
-          description: description.trim() || "نداء استغاثة من الخريطة",
+          emergencyType: aidTags.includes("medical") ? "medical" : "water_cutoff",
+          description: composedDescription,
           reporterName: contactName.trim() || "مواطن",
           reporterPhone: contactPhone.trim() || undefined,
           daira: nearest.daira,
@@ -111,14 +133,12 @@ export default function MapClickReportModal({
           throw new Error(result.error ?? "تعذر إرسال نداء SOS.");
         }
       } else {
+        const intakeCategory = aidTagToIntakeCategory(aidTags);
         const formData = new FormData();
-        formData.set("intakeCategory", "olive");
-        formData.set("quantity", quantity);
-        formData.set("unit", "وحدة");
-        formData.set(
-          "description",
-          description.trim() || "احتياج مسجّل من نقطة على الخريطة",
-        );
+        formData.set("intakeCategory", intakeCategory);
+        formData.set("quantity", String(affectedFamilies));
+        formData.set("unit", "عائلة");
+        formData.set("description", composedDescription);
         formData.set("contactName", contactName.trim() || "منسق ميداني");
         formData.set("contactPhone", contactPhone.trim() || "0500000000");
         formData.set("commune", nearest.name_ar);
@@ -166,15 +186,9 @@ export default function MapClickReportModal({
               <div className="min-w-0">
                 <h2 className="flex items-center gap-2 text-base font-bold text-white">
                   <MapPin className="h-5 w-5 text-emerald-400" />
-                  تسجيل في هذا الموقع
+                  سجل حدث طارئ جديد
                 </h2>
-                <p
-                  className="mt-1 font-mono text-[11px] text-slate-400"
-                  dir="ltr"
-                >
-                  {lat.toFixed(4)}, {lng.toFixed(4)}
-                </p>
-                <p className="mt-1 text-xs text-slate-300">
+                <p className="mt-1.5 text-xs text-slate-300">
                   أقرب بلدية: {nearest.name_ar} — {nearest.landmark}
                 </p>
               </div>
@@ -221,33 +235,14 @@ export default function MapClickReportModal({
                 </button>
               </div>
 
-              {mode === "sos" ? (
-                <select
-                  value={emergencyType}
-                  onChange={(e) =>
-                    setEmergencyType(
-                      e.target
-                        .value as (typeof SOS_EMERGENCY_OPTIONS)[number]["value"],
-                    )
-                  }
-                  className={darkSelectClass}
-                >
-                  {SOS_EMERGENCY_OPTIONS.map((option) => (
-                    <option key={option.value} value={option.value}>
-                      {option.labelAr}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  type="number"
-                  min={1}
-                  value={quantity}
-                  onChange={(e) => setQuantity(e.target.value)}
-                  placeholder="الكمية المطلوبة"
-                  className={darkFormInputClass}
-                />
-              )}
+              <IncidentReportFields
+                affectedFamilies={affectedFamilies}
+                onAffectedFamiliesChange={setAffectedFamilies}
+                urgency={urgency}
+                onUrgencyChange={setUrgency}
+                aidTags={aidTags}
+                onAidTagsChange={setAidTags}
+              />
 
               <textarea
                 rows={3}
@@ -285,7 +280,8 @@ export default function MapClickReportModal({
               ) : null}
             </div>
 
-            <div className="shrink-0 border-t border-slate-800 bg-slate-900 p-5">
+            <div className="shrink-0 space-y-3 border-t border-slate-800 bg-slate-900 p-5">
+              <IncidentCoordinatesBanner lat={lat} lng={lng} />
               <button
                 type="submit"
                 disabled={isSubmitting}

@@ -745,13 +745,34 @@ export default function ReconstructionMap({
                 facility.commune,
                 facility.daira,
               );
+              const facilityPoint = {
+                badgeTone: "emerald" as const,
+                pointTypeLabel: MAP_POINT_TYPE_LABELS.facility,
+                title: facility.name_ar,
+                dairaAr: facilityDetails.dairaAr,
+                communeAr: facilityDetails.communeAr,
+                roadAccessibility: facilityDetails.roadAccessibility,
+                lat: facilityLat,
+                lng: facilityLng,
+                phone: facility.phone,
+                whatsappUrl: buildWhatsAppUrl(
+                  facility.phone,
+                  `السلام عليكم، نحتاج مساعدة من ${facility.name_ar}`,
+                ),
+              };
 
               return (
               <Marker
                 key={facility.id}
                 position={[facilityLat, facilityLng]}
                 icon={createFacilityMarkerIcon(facility.type)}
+                eventHandlers={
+                  immersiveChrome && onPointInspect
+                    ? { click: () => onPointInspect(facilityPoint) }
+                    : undefined
+                }
               >
+                {immersiveChrome && onPointInspect ? null : (
                 <MapPopup>
                   <MapPopupShell
                     badgeTone="emerald"
@@ -763,12 +784,10 @@ export default function ReconstructionMap({
                     lat={facilityLat}
                     lng={facilityLng}
                     phone={facility.phone}
-                    whatsappUrl={buildWhatsAppUrl(
-                      facility.phone,
-                      `السلام عليكم، نحتاج مساعدة من ${facility.name_ar}`,
-                    )}
+                    whatsappUrl={facilityPoint.whatsappUrl}
                   />
                 </MapPopup>
+                )}
               </Marker>
             );
             })}
@@ -840,6 +859,9 @@ export default function ReconstructionMap({
         <WaypointsLayer
           waypoints={intelligence.waypoints}
           visible={layers.waypoints}
+          onWaypointInspect={
+            immersiveChrome && onPointInspect ? onPointInspect : undefined
+          }
         />
 
         <TrailClearanceLayer

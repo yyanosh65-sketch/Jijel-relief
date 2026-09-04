@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X } from "lucide-react";
 
+import { MAP_BACKGROUND_CLICK_EVENT } from "@/components/map/MapClickHandler";
 import { Z_MODAL } from "@/lib/z-index";
 import { cn } from "@/lib/utils";
 
@@ -40,6 +41,23 @@ export default function MapInspectionShell({
       setSnap(initialSnap);
     }
   }, [open, initialSnap]);
+
+  // Empty map canvas tap → snap to peek (keep sheet usable, clear overlap)
+  useEffect(() => {
+    if (!open) return;
+
+    function onMapBackgroundClick() {
+      setSnap("peek");
+    }
+
+    window.addEventListener(MAP_BACKGROUND_CLICK_EVENT, onMapBackgroundClick);
+    return () => {
+      window.removeEventListener(
+        MAP_BACKGROUND_CLICK_EVENT,
+        onMapBackgroundClick,
+      );
+    };
+  }, [open]);
 
   const expand = useCallback(() => setSnap("expanded"), []);
   const collapse = useCallback(() => setSnap("peek"), []);
@@ -83,12 +101,10 @@ export default function MapInspectionShell({
       className={cn(
         "fixed inset-0",
         Z_MODAL,
-        // Peek: shell sits above map but backdrop must not steal map gestures
         isPeek ? "pointer-events-none md:pointer-events-auto" : "",
       )}
       role="presentation"
     >
-      {/* Backdrop — blocks map only when expanded (or always on desktop) */}
       <button
         type="button"
         aria-label="إغلاق"

@@ -210,6 +210,11 @@ textarea::placeholder {
   color: #f8fafc !important;
 }
 
+/* Keep facility / station popups clear of the top commune filter HUD */
+.facility-safe-popup.leaflet-popup {
+  margin-top: 4.5rem;
+}
+
 .map-popup-scroll {
   max-height: 280px;
   overflow-x: hidden;
@@ -316,13 +321,17 @@ textarea::placeholder {
   z-index: 40 !important;
 }
 
-@keyframes marquee {
-  0% {
-    transform: translateX(-100%);
-  }
-  100% {
-    transform: translateX(100%);
-  }
+/* Keep Leaflet map stack under the fixed top HUD / filter ribbon (z-[45]) */
+.leaflet-container {
+  z-index: 0 !important;
+}
+
+.leaflet-pane.leaflet-tile-pane {
+  z-index: 200;
+}
+
+.leaflet-pane.leaflet-map-pane {
+  z-index: 400;
 }
 
 .leaflet-pane.leaflet-marker-pane {
@@ -330,22 +339,23 @@ textarea::placeholder {
 }
 
 .leaflet-pane.leaflet-popup-pane {
-  z-index: 700 !important;
-}
-
-.leaflet-pane.leaflet-map-pane {
-  z-index: 400;
+  z-index: 650 !important;
 }
 
 .leaflet-pane.leaflet-control-pane,
 .leaflet-top,
 .leaflet-bottom,
 .leaflet-control {
-  z-index: 400;
+  z-index: 700;
 }
 
-.leaflet-pane.leaflet-tile-pane {
-  z-index: 200;
+@keyframes marquee {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
 }
 
 .sos-floating-button {

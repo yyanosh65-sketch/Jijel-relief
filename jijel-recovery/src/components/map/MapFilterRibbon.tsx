@@ -50,6 +50,8 @@ type MapFilterRibbonProps = {
   className?: string;
   /** When true, renders inline (no fixed positioning) for MapTopHud stack */
   embedded?: boolean;
+  /** Merge chips into a parent flex scroll rail */
+  stripOnly?: boolean;
   onOpenAgroOlive?: () => void;
   onOpenAgroLivestock?: () => void;
 };
@@ -57,6 +59,7 @@ type MapFilterRibbonProps = {
 export default function MapFilterRibbon({
   className,
   embedded = false,
+  stripOnly = false,
   onOpenAgroOlive,
   onOpenAgroLivestock,
 }: MapFilterRibbonProps) {
@@ -85,9 +88,13 @@ export default function MapFilterRibbon({
   const rail = (
     <div
       className={cn(
-        "map-filter-rail flex w-full flex-nowrap items-center justify-start gap-1.5 overflow-x-auto py-1 md:justify-center",
-        "scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
-        embedded && "px-2",
+        stripOnly
+          ? "contents"
+          : cn(
+              "map-filter-rail flex w-full flex-nowrap items-center justify-start gap-1 overflow-x-auto py-0.5 md:justify-center",
+              "scrollbar-none [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden",
+              embedded && "px-1",
+            ),
       )}
       aria-label="تصفية سريعة"
     >
@@ -114,7 +121,7 @@ export default function MapFilterRibbon({
               })
             }
             className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-bold tracking-wide transition duration-200",
+              "shrink-0 rounded-full border px-2 py-1 text-[10px] font-bold tracking-wide transition duration-200",
               isActive ? glow.active : glow.idle,
             )}
           >
@@ -125,7 +132,7 @@ export default function MapFilterRibbon({
 
       <span
         aria-hidden
-        className="mx-0.5 h-4 w-px shrink-0 self-center bg-white/10"
+        className="mx-0.5 h-3.5 w-px shrink-0 self-center bg-white/10"
       />
 
       {SEARCH_CATEGORY_OPTIONS.map((option) => {
@@ -144,7 +151,7 @@ export default function MapFilterRibbon({
               })
             }
             className={cn(
-              "shrink-0 rounded-full border px-3 py-1.5 text-[11px] font-semibold transition duration-200",
+              "shrink-0 rounded-full border px-2 py-1 text-[10px] font-semibold transition duration-200",
               isActive ? CATEGORY_ACTIVE : CATEGORY_IDLE,
             )}
           >
@@ -153,10 +160,10 @@ export default function MapFilterRibbon({
         );
       })}
 
-      {(onOpenAgroOlive || onOpenAgroLivestock) ? (
+      {onOpenAgroOlive || onOpenAgroLivestock ? (
         <span
           aria-hidden
-          className="mx-0.5 h-4 w-px shrink-0 self-center bg-white/10"
+          className="mx-0.5 h-3.5 w-px shrink-0 self-center bg-white/10"
         />
       ) : null}
 
@@ -164,7 +171,7 @@ export default function MapFilterRibbon({
         <button
           type="button"
           onClick={onOpenAgroOlive}
-          className="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-950/60 px-3 py-1.5 text-[11px] font-semibold text-emerald-200 transition duration-200 hover:border-emerald-400/60 hover:bg-emerald-900/60"
+          className="shrink-0 rounded-full border border-emerald-500/40 bg-emerald-950/60 px-2 py-1 text-[10px] font-semibold text-emerald-200 transition duration-200 hover:border-emerald-400/60 hover:bg-emerald-900/60"
         >
           🌿 غراسة الزيتون
         </button>
@@ -174,7 +181,7 @@ export default function MapFilterRibbon({
         <button
           type="button"
           onClick={onOpenAgroLivestock}
-          className="shrink-0 rounded-full border border-amber-500/40 bg-amber-950/60 px-3 py-1.5 text-[11px] font-semibold text-amber-200 transition duration-200 hover:border-amber-400/60 hover:bg-amber-900/60"
+          className="shrink-0 rounded-full border border-amber-500/40 bg-amber-950/60 px-2 py-1 text-[10px] font-semibold text-amber-200 transition duration-200 hover:border-amber-400/60 hover:bg-amber-900/60"
         >
           🐝 المواشي وخلايا النحل
         </button>

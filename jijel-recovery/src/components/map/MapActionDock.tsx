@@ -7,8 +7,10 @@ import {
   ArrowLeftRight,
   Layers,
   MapPinned,
+  Phone,
   Sparkles,
   Truck,
+  Users,
 } from "lucide-react";
 
 import { cn } from "@/lib/utils";
@@ -19,6 +21,8 @@ type MapActionDockProps = {
   onTogglePinDrop?: () => void;
   onOpenGlobalAgent?: () => void;
   onOpenBarter?: () => void;
+  onOpenEmergencyDial?: () => void;
+  onOpenVolunteerRegister?: () => void;
   pinDropActive?: boolean;
   layersPanelOpen?: boolean;
   /** Hide when an inspection sheet is open (sheet covers dock at z-50) */
@@ -73,6 +77,8 @@ export default function MapActionDock({
   onTogglePinDrop,
   onOpenGlobalAgent,
   onOpenBarter,
+  onOpenEmergencyDial,
+  onOpenVolunteerRegister,
   pinDropActive = false,
   layersPanelOpen = false,
   hidden = false,
@@ -133,6 +139,27 @@ export default function MapActionDock({
           <DockIcon onClick={onOpenBarter} label="بورصة التبادل">
             <ArrowLeftRight className="h-5 w-5" />
           </DockIcon>
+        ) : null}
+
+        {onOpenVolunteerRegister ? (
+          <DockIcon
+            onClick={onOpenVolunteerRegister}
+            label="تسجيل أسطول ومتطوعين"
+          >
+            <Users className="h-5 w-5 text-emerald-300" />
+          </DockIcon>
+        ) : null}
+
+        {onOpenEmergencyDial ? (
+          <button
+            type="button"
+            onClick={onOpenEmergencyDial}
+            className="flex h-10 w-10 items-center justify-center rounded-2xl border border-rose-400/50 bg-rose-600 text-white shadow-[0_0_20px_rgba(225,29,72,0.55)] transition hover:bg-rose-500 active:scale-95 md:h-11 md:w-11"
+            aria-label="اتصال طوارئ مباشر"
+            title="اتصال طوارئ (14 / 1055)"
+          >
+            <Phone className="h-5 w-5" />
+          </button>
         ) : null}
 
         <button
