@@ -16,6 +16,7 @@
     "db:seed": "tsx src/db/seed.ts",
     "db:seed:needs": "tsx scripts/seed.ts",
     "db:seed:facilities": "tsx src/db/seed.ts",
+    "db:seed:regional": "tsx src/db/seed-regional.ts",
     "scraper:run": "tsx scripts/run-scraper.ts",
     "locations:fetch-osm": "tsx scripts/fetch-jijel-settlements.ts"
   },

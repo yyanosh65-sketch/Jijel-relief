@@ -8,6 +8,13 @@
       "when": 1788266069255,
       "tag": "0000_new_ozymandias",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1788512100000,
+      "tag": "0001_wilaya_multitenancy",
+      "breakpoints": true
     }
   ]
 }
